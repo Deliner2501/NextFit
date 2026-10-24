@@ -1,5 +1,7 @@
 package com.nextfit.ui;
 
+import com.nextfit.model.Role;
+
 import javax.swing.JComponent;
 
 /**
@@ -25,7 +27,7 @@ public interface ModulePanel {
     String title();
 
     /**
-     * Returns the name of the SVG icon under /icons, without extension.
+     * Returns the name of the icon, without extension (see {@code Icons}).
      *
      * @return the icon name
      */
@@ -40,5 +42,16 @@ public interface ModulePanel {
 
     /** Called every time the user navigates to this screen, to refresh its data. */
     default void onShow() {
+    }
+
+    /**
+     * Tells whether users with the given role may open this screen. By default
+     * every role may; a module that is restricted overrides this method.
+     *
+     * @param role the role of the signed-in user
+     * @return true when the screen must appear in the menu for that role
+     */
+    default boolean allowedFor(Role role) {
+        return true;
     }
 }
