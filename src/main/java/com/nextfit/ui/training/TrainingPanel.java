@@ -17,6 +17,7 @@ public class TrainingPanel implements ModulePanel {
 
     private final JTabbedPane tabs = new JTabbedPane();
     private final ExerciseCatalogView catalog;
+    private final TrainerListView trainers;
 
     /**
      * @param training the module with its services
@@ -24,8 +25,10 @@ public class TrainingPanel implements ModulePanel {
      */
     public TrainingPanel(TrainingModule training, Path dataDir) {
         this.catalog = new ExerciseCatalogView(training.exercises(), dataDir.resolve("images").resolve("exercises"));
+        this.trainers = new TrainerListView(training.trainers());
         tabs.setBackground(Theme.BACKGROUND);
         tabs.addTab("Ejercicios", catalog);
+        tabs.addTab("Entrenadores", trainers);
     }
 
     @Override
@@ -48,10 +51,11 @@ public class TrainingPanel implements ModulePanel {
         return tabs;
     }
 
-    // Cada vez que se abre el módulo se recarga el catálogo.
+    // Cada vez que se abre el módulo se recargan las pestañas.
     @Override
     public void onShow() {
         catalog.refresh();
+        trainers.refresh();
     }
 
     // Solo el administrador y el entrenador pueden entrar a este módulo.
