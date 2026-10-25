@@ -81,4 +81,5 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP and reuse | `PictureSource`, `Avatar`, `ImageCard` | Finding a picture, showing a person and showing an item are separate classes that any module can reuse |
 | Testability (DIP) | `RoutineAssignmentServiceTest`, `TrainingSessionServiceTest` | `SubscriptionChecker` is replaced by a lambda in tests because the services depend on an interface, not on the membership module |
 | GRASP Controller and low coupling | `ExerciseCatalogView`, `ExerciseFormDialog` | The screens collect input and delegate to `ExerciseService`; they hold no business rules |
+| OCP | `TrainingPanel` | A new tab (trainers, routines, sessions) is added to the panel without changing the existing tabs |
 
