@@ -55,3 +55,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `TrainerValidator`, `RoutineValidator` | The class that knows the rules is the one that applies them |
 | GRASP Low coupling | `Routine` | It references exercises and the trainer by id, not by object |
 | Inheritance (Liskov) | `Trainer extends Person` | A trainer can be used anywhere a `Person` is expected, and adds only its own data |
+| SRP | `ExerciseService`, `RoutineService`, `RoutineAssignmentService` | Each service holds the business rules of one concept; validation and storage live in other classes |
+| DIP | `RoutineAssignmentService` and `SubscriptionChecker`, `AssignmentRepository` | The service depends on interfaces, so the membership module and the CSV file can change or be faked in tests |
+| GRASP Information Expert | `RoutineAssignmentService.findCurrentFor` | The service that owns the assignments knows which one is active |
+| GRASP Information Expert | `ExerciseService.search` | The service that owns the catalog does the filtering, not the screen |
+| GRASP Low coupling | `RoutineAssignment` | It references the member and the routine by id, not by object |
+| Encapsulation | `RoutineAssignment` | `final` attributes; a change of state produces a copy (`withStatus`) |
