@@ -1,6 +1,12 @@
 package com.nextfit;
 
 import com.nextfit.model.Role;
+import com.nextfit.persistence.CsvMemberRepository;
+import com.nextfit.persistence.MemberRepository;
+import com.nextfit.service.MemberService;
+import com.nextfit.ui.members.MembersPanel;
+import com.nextfit.util.PhotoStorage;
+import com.nextfit.validation.MemberValidator;
 import com.nextfit.persistence.CsvUserRepository;
 import com.nextfit.persistence.UserRepository;
 import com.nextfit.service.AuthService;
@@ -45,13 +51,17 @@ public final class Main {
         auth.ensureDefaultAdmin();
         Session session = new Session();
 
+        // Members module
+        MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
+        MemberService memberService = new MemberService(memberRepository, new MemberValidator());
+        PhotoStorage photoStorage = new PhotoStorage(DATA_DIR.resolve("photos"));
+
         // Screens. Each owner replaces their placeholder with the real panel.
         List<ModulePanel> modules = List.of(
                 new PlaceholderPanel("dashboard", "Panel", "dashboard",
                         "Indicadores y gráficas del gimnasio."),
 
-                new PlaceholderPanel("members", "Socios", "members",
-                        "Fichas, salud y asistencia de los socios."),
+                new MembersPanel(memberService, photoStorage),
 
                 new PlaceholderPanel("billing", "Membresías y pagos", "payments",
                         "Planes, suscripciones y pagos.", Role.ADMIN, Role.RECEPTION),
