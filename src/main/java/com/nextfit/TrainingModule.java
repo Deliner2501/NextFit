@@ -27,6 +27,7 @@ import java.nio.file.Path;
 public final class TrainingModule {
 
     private final TrainerService trainers;
+    private final MemberService members;
     private final ExerciseService exercises;
     private final RoutineService routines;
     private final RoutineAssignmentService assignments;
@@ -39,6 +40,7 @@ public final class TrainingModule {
      */
     public TrainingModule(Path dataDir, MemberService members, SubscriptionChecker subscriptions) {
         // Los servicios se crean de abajo hacia arriba: primero los que no dependen de otros.
+        this.members = members;
         trainers = new TrainerService(
                 new CsvTrainerRepository(dataDir.resolve("trainers.csv")), new TrainerValidator());
         exercises = new ExerciseService(
@@ -52,6 +54,11 @@ public final class TrainingModule {
         sessions = new TrainingSessionService(
                 new CsvTrainingSessionRepository(dataDir.resolve("training_sessions.csv")),
                 new TrainingSessionValidator(), assignments, routines, subscriptions);
+    }
+    
+    /** The member service received at creation (the members module owns it). */
+    public MemberService members() {
+        return members;
     }
 
     public TrainerService trainers() {
