@@ -30,7 +30,17 @@ Each row links a principle or pattern to the class or method where it is applied
 
 ## Ronald: members and health
 
-Pending: Ronald adds his rows in his next Pull Request.
+| Principle or pattern | Class or method | Justification |
+|---|---|---|
+| Inheritance and polymorphism | `Person`, `Member`, `Person.getPersonType` | The shared personal data lives in the abstract class and each subclass says what kind of person it is; a trainer can extend `Person` without changing it |
+| Encapsulation and immutability | `Member`, `HealthProfile`, `Measurement`, `AttendanceRecord` | `final` attributes; changes produce copies (`withId`, `withActive`, `withCheckOut`) |
+| SRP | `MemberValidator`, `HealthValidator`, `MemberCsvMapper`, `HealthProfileCsvMapper`, `MeasurementCsvMapper`, `AttendanceCsvMapper` | Each class has one reason to change: checking data or converting rows |
+| GRASP Information Expert | `MemberValidator`, `HealthValidator`, `AttendanceRecord.isOpen`, `BmiCategory.fromBmi`, `HealthService.calculateBmi` | The class that owns the data or the rule is the one that applies it |
+| DIP | `MemberService`, `HealthService`, `AttendanceService` and their repositories | Services depend on the repository interfaces, not on the CSV files |
+| GRASP Protected Variations | `MemberRepository`, `HealthProfileRepository`, `MeasurementRepository`, `AttendanceRepository` | Moving from CSV to a database changes only the implementation, never the services |
+| ISP and DIP | `AttendanceService` and `SubscriptionChecker` | Attendance depends on a one-method contract, not on the membership module, and the tests use a fake one |
+| GRASP Low coupling | `HealthService`, `AttendanceService` and `MemberService.findById` | They ask the member service whether a member exists instead of reading the members file |
+| Dependency injection | `AttendanceService` constructor with `Clock` | The clock is received from outside so the tests can fix the time |
 
 ## Santiago: training
 
