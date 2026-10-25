@@ -44,6 +44,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low coupling and reuse | `LineChart` | The chart receives plain `Point(label, value)` data and knows nothing about members or payments, so any screen can reuse it |
 | SRP | `LineChart` | It only draws a chart; services provide the data and each screen decides what to show |
 | GRASP High cohesion | `LineChart.drawGrid`, `drawLineAndArea`, `drawPoints`, `drawTooltip` | Each private method draws one part of the chart |
+| GRASP Controller | `MembersPanel`, `MemberFormDialog` | The screens collect what the user types and delegate every rule to `MemberService`; they hold no business rules |
+| Low coupling | `MembersPanel` and `MemberService` | The screen depends only on the service, never on repositories or CSV files |
+| OCP | `MembersPanel` implements `ModulePanel` | The module joins the menu by replacing a placeholder in `Main`; the main window does not change |
+| SRP | `PhotoStorage`, `MemberAvatar` | One only copies photos into the data folder, the other only draws a picture or initials |
+| GRASP Pure Fabrication | `PhotoStorage` | It is not a gym concept, but it keeps file work out of the screens and the services |
 
 ## Santiago: training
 
