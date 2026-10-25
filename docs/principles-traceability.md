@@ -15,6 +15,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Controller and low coupling | `LoginFrame` | The window collects input and delegates to `AuthService`; it holds no business rules |
 | GRASP Pure Fabrication | `PasswordHasher`, `Session` | They are not gym concepts, but they concentrate a technical task and reduce coupling |
 | Encapsulation | `User`, `PasswordHasher` | `final` attributes; the hash is one-way and never exposes the password |
+| ISP and DIP | `SubscriptionChecker` | Other modules depend on a one-method contract, not on the membership module |
+| OCP and GRASP Polymorphism | `Discount`, `NoDiscount`, `PercentageDiscount`, `FixedDiscount` | A new kind of discount is a new subclass; the payment only calls `amountOff` |
+| Template Method | `Discount.amountOff` | The final method fixes the rule "never negative, never above the price"; subclasses only supply `calculate` |
+| GRASP Information Expert | `MembershipPlan.endDateFor`, `Subscription.statusOn`, `Subscription.daysLeftOn`, `Payment.getTotal` | The class that owns the data does the calculation |
+| Encapsulation | `MembershipPlan`, `Subscription`, `Payment` | `final` attributes; changes produce copies (`withId`, `cancel`) |
 
 ## Ronald: members and health
 
