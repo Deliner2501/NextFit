@@ -22,6 +22,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | Encapsulation | `MembershipPlan`, `Subscription`, `Payment` | `final` attributes; changes produce copies (`withId`, `cancel`) |
 | SRP | `MembershipPlanCsvMapper`, `SubscriptionCsvMapper`, `PaymentCsvMapper` and their `Csv...Repository` classes | Each mapper only converts rows; each repository decides when to read and save |
 | DIP | `MembershipPlanRepository`, `SubscriptionRepository`, `PaymentRepository` | Services depend on the interfaces, not on the CSV files |
+| SRP | `MembershipPlanValidator`, `PaymentValidator` | Validators only check data; business rules stay in the services |
+| DIP | `SubscriptionService` implements `SubscriptionChecker` | Attendance and training ask the contract, not the membership module |
+| DIP and testability | `Clock` injected in `SubscriptionService` and `PaymentService` | The rules can be tested on any date without waiting for real time |
+| GRASP Controller (use case) | `PaymentService.sellMembership` | One operation coordinates subscription and payment, and cancels the subscription if the payment cannot be stored |
+| GRASP Information Expert | `SubscriptionService.firstFreeDay`, `PaymentService.revenueByMonth` | The service that holds the data computes renewal dates and revenue totals |
 
 ## Ronald: members and health
 
