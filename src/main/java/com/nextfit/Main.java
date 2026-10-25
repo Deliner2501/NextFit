@@ -1,6 +1,18 @@
 package com.nextfit;
 
 import com.nextfit.model.Role;
+import com.nextfit.persistence.CsvAttendanceRepository;
+import com.nextfit.persistence.CsvHealthProfileRepository;
+import com.nextfit.persistence.CsvMeasurementRepository;
+import com.nextfit.persistence.CsvMembershipPlanRepository;
+import com.nextfit.persistence.CsvSubscriptionRepository;
+import com.nextfit.service.AttendanceService;
+import com.nextfit.service.HealthService;
+import com.nextfit.service.MembershipPlanService;
+import com.nextfit.service.SubscriptionService;
+import com.nextfit.validation.HealthValidator;
+import com.nextfit.validation.MembershipPlanValidator;
+import java.time.Clock;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.persistence.MemberRepository;
 import com.nextfit.service.MemberService;
@@ -56,12 +68,27 @@ public final class Main {
         MemberService memberService = new MemberService(memberRepository, new MemberValidator());
         PhotoStorage photoStorage = new PhotoStorage(DATA_DIR.resolve("photos"));
 
+        // Health, memberships and attendance (used by the member record)
+        HealthService healthService = new HealthService(memberService,
+                new CsvHealthProfileRepository(DATA_DIR.resolve("health_profiles.csv")),
+                new CsvMeasurementRepository(DATA_DIR.resolve("measurements.csv")),
+                new HealthValidator());
+        MembershipPlanService planService = new MembershipPlanService(
+                new CsvMembershipPlanRepository(DATA_DIR.resolve("plans.csv")),
+                new MembershipPlanValidator());
+        SubscriptionService subscriptionService = new SubscriptionService(
+                new CsvSubscriptionRepository(DATA_DIR.resolve("subscriptions.csv")),
+                planService, memberService, Clock.systemDefaultZone());
+        AttendanceService attendanceService = new AttendanceService(memberService,
+                new CsvAttendanceRepository(DATA_DIR.resolve("attendance.csv")),
+                subscriptionService);
+
         // Screens. Each owner replaces their placeholder with the real panel.
         List<ModulePanel> modules = List.of(
                 new PlaceholderPanel("dashboard", "Panel", "dashboard",
                         "Indicadores y gráficas del gimnasio."),
 
-                new MembersPanel(memberService, photoStorage),
+                new MembersPanel(memberService, photoStorage, healthService, attendanceService),
 
                 new PlaceholderPanel("billing", "Membresías y pagos", "payments",
                         "Planes, suscripciones y pagos.", Role.ADMIN, Role.RECEPTION),
