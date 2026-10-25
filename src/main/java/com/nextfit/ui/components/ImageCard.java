@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+import java.awt.Shape;
 
 /**
  * A reusable card with a picture on top and a title and subtitle below.
@@ -91,12 +92,14 @@ public class ImageCard extends JComponent {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             RoundRectangle2D shape = new RoundRectangle2D.Float(0, 0, width - 1, height - 1, ARC, ARC);
+            // Se guarda el recorte que Swing ya puso (el área visible del scroll) para restaurarlo después.
+            Shape visibleArea = g2.getClip();
             g2.setColor(hovered ? Theme.SURFACE_ALT : Theme.SURFACE);
             g2.fill(shape);
             paintPicture(g2, shape);
             paintTexts(g2);
             // Borde: de acento si está seleccionada o con el mouse encima.
-            g2.setClip(null);
+            g2.setClip(visibleArea);
             g2.setColor(selected || hovered ? Theme.ACCENT : Theme.SURFACE_ALT);
             g2.draw(shape);
         } finally {
@@ -107,7 +110,7 @@ public class ImageCard extends JComponent {
     // Dibuja la imagen en la parte superior, recortada a las esquinas redondeadas.
     private void paintPicture(Graphics2D g2, RoundRectangle2D shape) {
         int pictureHeight = height - TEXT_AREA;
-        g2.setClip(shape);
+        g2.clip(shape);   // clip() intersecta con el recorte actual; setClip() lo reemplazaría
         if (picture != null) {
             g2.drawImage(picture, 0, 0, null);
         } else {

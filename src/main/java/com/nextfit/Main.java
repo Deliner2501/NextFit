@@ -13,12 +13,9 @@ import com.nextfit.service.SubscriptionService;
 import com.nextfit.validation.HealthValidator;
 import com.nextfit.validation.MembershipPlanValidator;
 import java.time.Clock;
-import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.persistence.MemberRepository;
-import com.nextfit.service.MemberService;
 import com.nextfit.ui.members.MembersPanel;
 import com.nextfit.util.PhotoStorage;
-import com.nextfit.validation.MemberValidator;
 import com.nextfit.persistence.CsvUserRepository;
 import com.nextfit.persistence.UserRepository;
 import com.nextfit.service.AuthService;
@@ -28,6 +25,10 @@ import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
 import com.nextfit.ui.PlaceholderPanel;
 import com.nextfit.ui.Theme;
+import com.nextfit.persistence.CsvMemberRepository;
+import com.nextfit.service.MemberService;
+import com.nextfit.ui.training.TrainingPanel;
+import com.nextfit.validation.MemberValidator;
 
 import javax.swing.SwingUtilities;
 import java.nio.file.Path;
@@ -62,7 +63,7 @@ public final class Main {
         AuthService auth = new AuthService(users);
         auth.ensureDefaultAdmin();
         Session session = new Session();
-
+        
         // Members module
         MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
         MemberService memberService = new MemberService(memberRepository, new MemberValidator());
@@ -82,6 +83,9 @@ public final class Main {
         AttendanceService attendanceService = new AttendanceService(memberService,
                 new CsvAttendanceRepository(DATA_DIR.resolve("attendance.csv")),
                 subscriptionService);
+        
+        // Training module (exercises, routines, assignments and sessions)
+        TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
 
         // Screens. Each owner replaces their placeholder with the real panel.
         List<ModulePanel> modules = List.of(
@@ -93,8 +97,7 @@ public final class Main {
                 new PlaceholderPanel("billing", "Membresías y pagos", "payments",
                         "Planes, suscripciones y pagos.", Role.ADMIN, Role.RECEPTION),
 
-                new PlaceholderPanel("training", "Entrenamiento", "training",
-                        "Ejercicios, rutinas y sesiones.", Role.ADMIN, Role.TRAINER),
+                new TrainingPanel(training, DATA_DIR),
 
                 new PlaceholderPanel("users", "Usuarios", "shield",
                         "Cuentas y roles del sistema.", Role.ADMIN));
