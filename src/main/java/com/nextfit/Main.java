@@ -25,6 +25,7 @@ import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
 import com.nextfit.ui.PlaceholderPanel;
 import com.nextfit.ui.Theme;
+import com.nextfit.ui.billing.BillingPanel;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.ui.training.TrainingPanel;
@@ -94,8 +95,7 @@ public final class Main {
 
                 new MembersPanel(memberService, photoStorage, healthService, attendanceService),
 
-                new PlaceholderPanel("billing", "Membresías y pagos", "payments",
-                        "Planes, suscripciones y pagos.", Role.ADMIN, Role.RECEPTION),
+                new BillingPanel(planService),
 
                 new TrainingPanel(training, DATA_DIR),
 
