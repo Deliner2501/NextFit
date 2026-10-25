@@ -89,4 +89,5 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `TrainingPanel` | A new tab (trainers, routines, sessions) is added to the panel without changing the existing tabs |
 | SRP | `RoutineFormDialog.DayPanel`, `RoutineFormDialog.LineRow` | Each nested class handles one level of the routine (a day, a line); the dialog only assembles the result and delegates saving to `RoutineService` |
 | GRASP Information Expert | `AssignmentView` and `RoutineAssignmentService.findCurrentFor` | The screen asks the service which routine is current instead of filtering assignments itself |
+| DRY and SRP | `MemberPickerPanel` | The member search column is one reusable class instead of being copied into each screen |
 
