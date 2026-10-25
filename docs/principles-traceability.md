@@ -41,6 +41,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | ISP and DIP | `AttendanceService` and `SubscriptionChecker` | Attendance depends on a one-method contract, not on the membership module, and the tests use a fake one |
 | GRASP Low coupling | `HealthService`, `AttendanceService` and `MemberService.findById` | They ask the member service whether a member exists instead of reading the members file |
 | Dependency injection | `AttendanceService` constructor with `Clock` | The clock is received from outside so the tests can fix the time |
+| Low coupling and reuse | `LineChart` | The chart receives plain `Point(label, value)` data and knows nothing about members or payments, so any screen can reuse it |
+| SRP | `LineChart` | It only draws a chart; services provide the data and each screen decides what to show |
+| GRASP High cohesion | `LineChart.drawGrid`, `drawLineAndArea`, `drawPoints`, `drawTooltip` | Each private method draws one part of the chart |
 
 ## Santiago: training
 
