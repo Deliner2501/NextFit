@@ -49,6 +49,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `MembersPanel` implements `ModulePanel` | The module joins the menu by replacing a placeholder in `Main`; the main window does not change |
 | SRP | `PhotoStorage`, `MemberAvatar` | One only copies photos into the data folder, the other only draws a picture or initials |
 | GRASP Pure Fabrication | `PhotoStorage` | It is not a gym concept, but it keeps file work out of the screens and the services |
+| GRASP Controller | `MemberDetailPanel`, `HealthTab`, `MeasurementsTab`, `AttendanceTab` | Each tab collects input and delegates to `HealthService` or `AttendanceService`; none holds business rules |
+| High cohesion | `HealthTab`, `MeasurementsTab`, `AttendanceTab` | The member record is split into one class per topic instead of one huge screen |
+| Information Expert | `BmiGauge` | It knows how an index maps to a colored position and asks `BmiCategory` for the category |
+| Low coupling and reuse | `MeasurementsTab` uses `LineChart` | The weight chart reuses the generic component without changing it |
+| DIP | `Main` | Services are created with their CSV repositories in one place, so a database only changes those lines |
 
 ## Santiago: training
 
