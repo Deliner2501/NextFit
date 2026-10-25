@@ -1,5 +1,6 @@
 package com.nextfit.ui;
 
+import com.nextfit.ui.components.Branding;
 import com.nextfit.ui.components.Icons;
 
 import javax.swing.BorderFactory;
@@ -137,9 +138,7 @@ public class Sidebar extends JPanel {
                 int size = 40;
                 int x = (COLLAPSED_WIDTH - size) / 2;
                 int y = (getHeight() - size) / 2;
-                g2.setColor(Theme.ACCENT);
-                g2.fill(new RoundRectangle2D.Double(x, y, size, size, 14, 14));
-                Icons.of("training", 22, Theme.BACKGROUND).paintIcon(this, g2, x + 9, y + 9);
+                Branding.paintLogo(g2, x, y, size, this);
                 if (getWidth() >= TEXT_VISIBLE_FROM) {
                     g2.setColor(Theme.TEXT);
                     g2.setFont(getFont().deriveFont(Font.BOLD, 22f));

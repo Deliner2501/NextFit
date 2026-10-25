@@ -13,7 +13,7 @@ import java.awt.Graphics2D;
 import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.RoundRectangle2D;
+
 
 /**
  * Decorative panel of the sign-in screen: a dark gradient with two soft lights
@@ -68,9 +68,7 @@ public class BrandPanel extends JPanel {
 
             int x = 56;
             int y = Math.max(60, h / 2 - 150);
-            g2.setColor(Theme.ACCENT);
-            g2.fill(new RoundRectangle2D.Double(x, y, 68, 68, 22, 22));
-            Icons.of("training", 38, Theme.BACKGROUND).paintIcon(this, g2, x + 15, y + 15);
+            Branding.paintLogo(g2, x, y, 68, this);
 
             Font base = getFont();
             g2.setColor(Theme.TEXT);

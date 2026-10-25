@@ -5,6 +5,7 @@ import com.nextfit.model.User;
 import com.nextfit.service.AuthService;
 import com.nextfit.service.Session;
 import com.nextfit.ui.components.BrandPanel;
+import com.nextfit.ui.components.Branding;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -66,6 +67,7 @@ public class LoginFrame extends JFrame {
         setSize(1040, 660);
         setMinimumSize(new Dimension(900, 600));
         setLocationRelativeTo(null);
+         setIconImages(Branding.windowIcons());
         getRootPane().setDefaultButton(loginButton);
     }
 
