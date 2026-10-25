@@ -82,4 +82,5 @@ Each row links a principle or pattern to the class or method where it is applied
 | Testability (DIP) | `RoutineAssignmentServiceTest`, `TrainingSessionServiceTest` | `SubscriptionChecker` is replaced by a lambda in tests because the services depend on an interface, not on the membership module |
 | GRASP Controller and low coupling | `ExerciseCatalogView`, `ExerciseFormDialog` | The screens collect input and delegate to `ExerciseService`; they hold no business rules |
 | OCP | `TrainingPanel` | A new tab (trainers, routines, sessions) is added to the panel without changing the existing tabs |
+| SRP | `RoutineFormDialog.DayPanel`, `RoutineFormDialog.LineRow` | Each nested class handles one level of the routine (a day, a line); the dialog only assembles the result and delegates saving to `RoutineService` |
 
