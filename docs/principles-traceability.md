@@ -79,3 +79,5 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP | `TrainingSessionService` and `TrainingSessionRepository`, `SubscriptionChecker` | The service depends on interfaces, not on CSV or the membership module |
 | Encapsulation | `TrainingSession` | `final` attributes; the only copy allowed is `withId` |
 | SRP and reuse | `PictureSource`, `Avatar`, `ImageCard` | Finding a picture, showing a person and showing an item are separate classes that any module can reuse |
+| Testability (DIP) | `RoutineAssignmentServiceTest`, `TrainingSessionServiceTest` | `SubscriptionChecker` is replaced by a lambda in tests because the services depend on an interface, not on the membership module |
+
