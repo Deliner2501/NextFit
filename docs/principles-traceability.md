@@ -32,6 +32,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | Strategy (injected function) | `StatCard` constructor (`LongFunction`), `BarChart.setValueFormatter` | The way a number is written (pesos, count) is supplied from outside and the component does not change |
 | GRASP High cohesion | `DonutChart.drawRing`, `drawCenter`, `drawLegend`; `BarChart.drawGrid`, `drawBars`, `drawLabels`, `drawTooltip` | Each private method draws one part of the chart |
 | GRASP Information Expert | `BarChart.axisMax` | The chart owns the scale, so it rounds the axis to clean values itself |
+| SRP and GRASP Pure Fabrication | `Formats` | It is not a gym concept, but it concentrates how pesos and dates are written and read, so no screen repeats that code |
+| Testability | `FormatsTest` | The writing and reading rules are checked without opening any window |
+| GRASP Controller | `PlanListView`, `PlanFormDialog` | The screens collect clicks and typed text and delegate every rule to `MembershipPlanService`; they hold no business rules |
+| Low coupling | `PlanListView` and `MembershipPlanService` | The screen depends only on the service, never on repositories or CSV files |
+| High cohesion | `BillingPanel` | It only groups the screens of the module in tabs; each tab is its own class |
+| OCP | `BillingPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
 
 ## Ronald: members and health
 
