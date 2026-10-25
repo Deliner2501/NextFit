@@ -2,6 +2,8 @@ package com.nextfit.ui.members;
 
 import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.Member;
+import com.nextfit.service.AttendanceService;
+import com.nextfit.service.HealthService;
 import com.nextfit.service.MemberService;
 import com.nextfit.ui.ModulePanel;
 import com.nextfit.ui.Theme;
@@ -46,14 +48,21 @@ public class MembersPanel implements ModulePanel {
 
     private static final String LIST_CARD = "list";
     private static final String EMPTY_CARD = "empty";
+    private static final String LIST_SCREEN = "list-screen";
+    private static final String DETAIL_SCREEN = "detail-screen";
     private static final String[] COLUMNS = {"", "Nombre", "Documento", "Teléfono", "Ingreso", "Estado"};
     private static final int AVATAR_COLUMN = 0;
     private static final int STATE_COLUMN = 5;
 
     private final MemberService memberService;
     private final PhotoStorage photoStorage;
+    private final HealthService healthService;
+    private final AttendanceService attendanceService;
 
-    private final JPanel view = new JPanel(new BorderLayout(0, 16));
+    private final CardLayout screens = new CardLayout();
+    private final JPanel view = new JPanel(screens);
+    private final JPanel listScreen = new JPanel(new BorderLayout(0, 16));
+    private JComponent detailView;
     private final JLabel summary = new JLabel(" ");
     private final JTextField searchField = new JTextField();
     private final DefaultTableModel tableModel = new DefaultTableModel(COLUMNS, 0) {
@@ -65,6 +74,7 @@ public class MembersPanel implements ModulePanel {
     private final JTable table = new JTable(tableModel);
     private final CardLayout cards = new CardLayout();
     private final JPanel center = new JPanel(cards);
+    private final JButton recordButton = new JButton("Ver ficha");
     private final JButton editButton = new JButton("Editar");
     private final JButton toggleButton = new JButton("Dar de baja");
     private List<Member> shown = List.of();
@@ -74,10 +84,15 @@ public class MembersPanel implements ModulePanel {
      *
      * @param memberService the service that manages the members
      * @param photoStorage  where member photos are copied
+     * @param healthService the service used by the health and measurement tabs of the record
+     * @param attendanceService the service used by the attendance tab of the record
      */
-    public MembersPanel(MemberService memberService, PhotoStorage photoStorage) {
+    public MembersPanel(MemberService memberService, PhotoStorage photoStorage,
+                        HealthService healthService, AttendanceService attendanceService) {
         this.memberService = memberService;
         this.photoStorage = photoStorage;
+        this.healthService = healthService;
+        this.attendanceService = attendanceService;
         buildScreen();
         reload();
     }
@@ -104,18 +119,21 @@ public class MembersPanel implements ModulePanel {
 
     @Override
     public void onShow() {
+        showList();
         reload();
     }
 
     private void buildScreen() {
         view.setBackground(Theme.BACKGROUND);
-        view.setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
-        view.add(buildHeader(), BorderLayout.NORTH);
+        listScreen.setBackground(Theme.BACKGROUND);
+        listScreen.setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
+        view.add(listScreen, LIST_SCREEN);
+        listScreen.add(buildHeader(), BorderLayout.NORTH);
         center.setOpaque(false);
         center.add(buildTable(), LIST_CARD);
         center.add(buildEmptyState(), EMPTY_CARD);
-        view.add(center, BorderLayout.CENTER);
-        view.add(buildFooter(), BorderLayout.SOUTH);
+        listScreen.add(center, BorderLayout.CENTER);
+        listScreen.add(buildFooter(), BorderLayout.SOUTH);
     }
 
     private JPanel buildHeader() {
@@ -184,7 +202,7 @@ public class MembersPanel implements ModulePanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2 && selectedMember() != null) {
-                    openForm(selectedMember());
+                    openRecord(selectedMember());
                 }
             }
         });
@@ -220,10 +238,12 @@ public class MembersPanel implements ModulePanel {
     }
 
     private JPanel buildFooter() {
+        recordButton.addActionListener(e -> openRecord(selectedMember()));
         editButton.addActionListener(e -> openForm(selectedMember()));
         toggleButton.addActionListener(e -> toggleActive());
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         footer.setOpaque(false);
+        footer.add(recordButton);
         footer.add(editButton);
         footer.add(toggleButton);
         updateButtons();
@@ -261,9 +281,30 @@ public class MembersPanel implements ModulePanel {
 
     private void updateButtons() {
         Member selected = selectedMember();
+        recordButton.setEnabled(selected != null);
         editButton.setEnabled(selected != null);
         toggleButton.setEnabled(selected != null);
         toggleButton.setText(selected != null && !selected.isActive() ? "Reactivar" : "Dar de baja");
+    }
+
+    private void openRecord(Member member) {
+        if (member == null) {
+            return;
+        }
+        if (detailView != null) {
+            view.remove(detailView);
+        }
+        detailView = new MemberDetailPanel(member, healthService, attendanceService, this::showList);
+        view.add(detailView, DETAIL_SCREEN);
+        screens.show(view, DETAIL_SCREEN);
+    }
+
+    private void showList() {
+        screens.show(view, LIST_SCREEN);
+        if (detailView != null) {
+            view.remove(detailView);
+            detailView = null;
+        }
     }
 
     private void openForm(Member existing) {
