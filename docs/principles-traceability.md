@@ -27,6 +27,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP and testability | `Clock` injected in `SubscriptionService` and `PaymentService` | The rules can be tested on any date without waiting for real time |
 | GRASP Controller (use case) | `PaymentService.sellMembership` | One operation coordinates subscription and payment, and cancels the subscription if the payment cannot be stored |
 | GRASP Information Expert | `SubscriptionService.firstFreeDay`, `PaymentService.revenueByMonth` | The service that holds the data computes renewal dates and revenue totals |
+| SRP | `StatCard`, `DonutChart`, `BarChart` | Each class only draws; the screen decides which data to show and how to write it |
+| Low coupling and reuse | `DonutChart.Slice`, `BarChart.Bar` | The charts receive plain records and know nothing about memberships or payments, so any screen can reuse them |
+| Strategy (injected function) | `StatCard` constructor (`LongFunction`), `BarChart.setValueFormatter` | The way a number is written (pesos, count) is supplied from outside and the component does not change |
+| GRASP High cohesion | `DonutChart.drawRing`, `drawCenter`, `drawLegend`; `BarChart.drawGrid`, `drawBars`, `drawLabels`, `drawTooltip` | Each private method draws one part of the chart |
+| GRASP Information Expert | `BarChart.axisMax` | The chart owns the scale, so it rounds the axis to clean values itself |
 
 ## Ronald: members and health
 
