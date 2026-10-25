@@ -51,7 +51,7 @@ public class Avatar extends JComponent {
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
             Ellipse2D circle = new Ellipse2D.Float(0, 0, size - 1, size - 1);
-            g2.setClip(circle);   // todo lo que se dibuje queda dentro del círculo
+            g2.clip(circle);   // clip() intersecta con el recorte actual: todo queda dentro del círculo
             if (picture != null) {
                 g2.drawImage(picture, 0, 0, null);
             } else {
