@@ -20,6 +20,7 @@ public class TrainingPanel implements ModulePanel {
     private final TrainerListView trainers;
     private final RoutineListView routines;
     private final AssignmentView assignmentView;
+    private final SessionView sessionView;
 
     /**
      * @param training the module with its services
@@ -34,6 +35,9 @@ public class TrainingPanel implements ModulePanel {
         tabs.addTab("Rutinas", routines);
         this.assignmentView = new AssignmentView(training.assignments(), training.routines(), training.members());
         tabs.addTab("Asignación", assignmentView);
+        this.sessionView = new SessionView(training.sessions(), training.assignments(),
+                training.routines(), training.members());
+        tabs.addTab("Sesiones", sessionView);
         tabs.addTab("Entrenadores", trainers);
     }
 
@@ -63,6 +67,7 @@ public class TrainingPanel implements ModulePanel {
         catalog.refresh();
         routines.refresh();
         assignmentView.refresh();
+        sessionView.refresh();
         trainers.refresh();
     }
 
