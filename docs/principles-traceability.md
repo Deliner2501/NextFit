@@ -73,3 +73,4 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `TrainingSessionService.log` | The service that records sessions knows which rules a session must satisfy |
 | DIP | `TrainingSessionService` and `TrainingSessionRepository`, `SubscriptionChecker` | The service depends on interfaces, not on CSV or the membership module |
 | Encapsulation | `TrainingSession` | `final` attributes; the only copy allowed is `withId` |
+| SRP and reuse | `PictureSource`, `Avatar`, `ImageCard` | Finding a picture, showing a person and showing an item are separate classes that any module can reuse |
