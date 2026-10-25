@@ -1,0 +1,42 @@
+# Principles Traceability
+
+Each row links a principle or pattern to the class or method where it is applied and explains why. Each team member adds their own rows in the same Pull Request where their code is created.
+
+## Deiner: core and access
+
+| Principle or pattern | Class or method | Justification |
+|---|---|---|
+| SRP | `PasswordHasher`, `UserValidator`, `UserCsvMapper`, `Session` | Each class has a single reason to change: hashing, validating, converting rows, or remembering the active user |
+| GRASP Information Expert | `UserValidator` | The class that knows the user rules is the one that checks them |
+| GRASP Information Expert | `AuthService.login` | Sign-in rules live in the service, not in the window |
+| DIP | `AuthService` and `UserRepository` | The service depends on the interface, not on the CSV file |
+| GRASP Protected Variations | `CsvStore` | The file format is isolated in one class; moving to a database does not touch the services |
+| OCP | `ModulePanel` and `MainWindow` | A new module is added to the list without editing the main window |
+| GRASP Controller and low coupling | `LoginFrame` | The window collects input and delegates to `AuthService`; it holds no business rules |
+| GRASP Pure Fabrication | `PasswordHasher`, `Session` | They are not gym concepts, but they concentrate a technical task and reduce coupling |
+| Encapsulation | `User`, `PasswordHasher` | `final` attributes; the hash is one-way and never exposes the password |
+| ISP and DIP | `SubscriptionChecker` | Other modules depend on a one-method contract, not on the membership module |
+| OCP and GRASP Polymorphism | `Discount`, `NoDiscount`, `PercentageDiscount`, `FixedDiscount` | A new kind of discount is a new subclass; the payment only calls `amountOff` |
+| Template Method | `Discount.amountOff` | The final method fixes the rule "never negative, never above the price"; subclasses only supply `calculate` |
+| GRASP Information Expert | `MembershipPlan.endDateFor`, `Subscription.statusOn`, `Subscription.daysLeftOn`, `Payment.getTotal` | The class that owns the data does the calculation |
+| Encapsulation | `MembershipPlan`, `Subscription`, `Payment` | `final` attributes; changes produce copies (`withId`, `cancel`) |
+| SRP | `MembershipPlanCsvMapper`, `SubscriptionCsvMapper`, `PaymentCsvMapper` and their `Csv...Repository` classes | Each mapper only converts rows; each repository decides when to read and save |
+| DIP | `MembershipPlanRepository`, `SubscriptionRepository`, `PaymentRepository` | Services depend on the interfaces, not on the CSV files |
+
+## Ronald: members and health
+
+Pending: Ronald adds his rows in his next Pull Request.
+
+## Santiago: training
+
+| Principle or pattern | Class or method | Justification |
+|---|---|---|
+| Encapsulation | `Exercise`, `Routine`, `RoutineDay`, `RoutineExercise`, `Trainer` | `final` attributes; changes produce copies (`withId`, `withActive`), and lists are copied with `List.copyOf` |
+| SRP | `ExerciseValidator`, `RoutineValidator`, `TrainerValidator` | Each class only checks data; storing and business rules live elsewhere |
+| SRP | `ExerciseCsvMapper`, `RoutineCsvMapper`, `TrainerCsvMapper` | Each class only converts objects to CSV rows and back |
+| DIP | `TrainerService` and `TrainerRepository` | The service depends on the interface, not on the CSV file |
+| GRASP Protected Variations | `ExerciseRepository`, `RoutineRepository`, `TrainerRepository` | Moving from CSV to Oracle means replacing the implementation only; the rest of the code does not change |
+| GRASP Information Expert | `RoutineDay.getTotalSets`, `Routine.getTotalSets` | The class that holds the exercises does the calculation |
+| GRASP Information Expert | `TrainerValidator`, `RoutineValidator` | The class that knows the rules is the one that applies them |
+| GRASP Low coupling | `Routine` | It references exercises and the trainer by id, not by object |
+| Inheritance (Liskov) | `Trainer extends Person` | A trainer can be used anywhere a `Person` is expected, and adds only its own data |

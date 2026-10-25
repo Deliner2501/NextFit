@@ -2,6 +2,7 @@ package com.nextfit.ui;
 
 import com.nextfit.model.User;
 import com.nextfit.service.Session;
+import com.nextfit.ui.components.Branding;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -63,6 +64,7 @@ public class MainWindow extends JFrame {
         setSize(1360, 840);
         setMinimumSize(new Dimension(1000, 640));
         setLocationRelativeTo(null);
+        setIconImages(Branding.windowIcons());
         if (!modules.isEmpty()) {
             show(modules.get(0));
         }
