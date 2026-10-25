@@ -54,6 +54,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `BmiGauge` | It knows how an index maps to a colored position and asks `BmiCategory` for the category |
 | Low coupling and reuse | `MeasurementsTab` uses `LineChart` | The weight chart reuses the generic component without changing it |
 | DIP | `Main` | Services are created with their CSV repositories in one place, so a database only changes those lines |
+| Testability (DIP) | `BillingFakeRepositories` | The billing services are tested with in-memory repositories because they depend on interfaces, not on CSV files |
+| Testability (DIP) | `Clock.fixed` in `SubscriptionServiceTest`, `PaymentServiceTest` | The rules about dates (start, renewal, expiry, revenue by month) are checked on a known day |
+| GRASP Information Expert | `MembershipPlanServiceTest.endDateCountsTheStartingDayAsTheFirstDay` | The plan owns the duration, so the test checks the end date on the plan itself |
+| OCP and polymorphism | `PaymentServiceTest` with `PercentageDiscount`, `FixedDiscount` | The same sale code works with every kind of discount without changes |
+| GRASP Controller (use case) | `PaymentServiceTest.ifThePaymentCannotBeStoredTheSubscriptionIsCancelled` | The test proves that selling is one operation: no subscription is left without its payment |
 
 ## Santiago: training
 
