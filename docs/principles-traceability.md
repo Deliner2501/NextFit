@@ -27,4 +27,14 @@ Pending: Ronald adds his rows in his next Pull Request.
 
 ## Santiago: training
 
-Pending: Santiago adds his rows in his next Pull Request.
+| Principle or pattern | Class or method | Justification |
+|---|---|---|
+| Encapsulation | `Exercise`, `Routine`, `RoutineDay`, `RoutineExercise`, `Trainer` | `final` attributes; changes produce copies (`withId`, `withActive`), and lists are copied with `List.copyOf` |
+| SRP | `ExerciseValidator`, `RoutineValidator`, `TrainerValidator` | Each class only checks data; storing and business rules live elsewhere |
+| SRP | `ExerciseCsvMapper`, `RoutineCsvMapper`, `TrainerCsvMapper` | Each class only converts objects to CSV rows and back |
+| DIP | `TrainerService` and `TrainerRepository` | The service depends on the interface, not on the CSV file |
+| GRASP Protected Variations | `ExerciseRepository`, `RoutineRepository`, `TrainerRepository` | Moving from CSV to Oracle means replacing the implementation only; the rest of the code does not change |
+| GRASP Information Expert | `RoutineDay.getTotalSets`, `Routine.getTotalSets` | The class that holds the exercises does the calculation |
+| GRASP Information Expert | `TrainerValidator`, `RoutineValidator` | The class that knows the rules is the one that applies them |
+| GRASP Low coupling | `Routine` | It references exercises and the trainer by id, not by object |
+| Inheritance (Liskov) | `Trainer extends Person` | A trainer can be used anywhere a `Person` is expected, and adds only its own data |
