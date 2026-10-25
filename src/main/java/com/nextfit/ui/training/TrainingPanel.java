@@ -18,6 +18,7 @@ public class TrainingPanel implements ModulePanel {
     private final JTabbedPane tabs = new JTabbedPane();
     private final ExerciseCatalogView catalog;
     private final TrainerListView trainers;
+    private final RoutineListView routines;
 
     /**
      * @param training the module with its services
@@ -28,6 +29,8 @@ public class TrainingPanel implements ModulePanel {
         this.trainers = new TrainerListView(training.trainers());
         tabs.setBackground(Theme.BACKGROUND);
         tabs.addTab("Ejercicios", catalog);
+        this.routines = new RoutineListView(training.routines(), training.trainers(), training.exercises());
+        tabs.addTab("Rutinas", routines);
         tabs.addTab("Entrenadores", trainers);
     }
 
@@ -55,6 +58,7 @@ public class TrainingPanel implements ModulePanel {
     @Override
     public void onShow() {
         catalog.refresh();
+        routines.refresh();
         trainers.refresh();
     }
 
