@@ -20,6 +20,8 @@ Each row links a principle or pattern to the class or method where it is applied
 | Template Method | `Discount.amountOff` | The final method fixes the rule "never negative, never above the price"; subclasses only supply `calculate` |
 | GRASP Information Expert | `MembershipPlan.endDateFor`, `Subscription.statusOn`, `Subscription.daysLeftOn`, `Payment.getTotal` | The class that owns the data does the calculation |
 | Encapsulation | `MembershipPlan`, `Subscription`, `Payment` | `final` attributes; changes produce copies (`withId`, `cancel`) |
+| SRP | `MembershipPlanCsvMapper`, `SubscriptionCsvMapper`, `PaymentCsvMapper` and their `Csv...Repository` classes | Each mapper only converts rows; each repository decides when to read and save |
+| DIP | `MembershipPlanRepository`, `SubscriptionRepository`, `PaymentRepository` | Services depend on the interfaces, not on the CSV files |
 
 ## Ronald: members and health
 
