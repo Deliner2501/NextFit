@@ -12,6 +12,7 @@ import com.nextfit.service.HealthService;
 import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.PaymentService;
+import com.nextfit.service.DashboardService;
 import com.nextfit.validation.HealthValidator;
 import com.nextfit.validation.MembershipPlanValidator;
 import com.nextfit.validation.PaymentValidator;
@@ -29,6 +30,7 @@ import com.nextfit.ui.ModulePanel;
 import com.nextfit.ui.PlaceholderPanel;
 import com.nextfit.ui.Theme;
 import com.nextfit.ui.billing.BillingPanel;
+import com.nextfit.ui.dashboard.DashboardPanel;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.ui.training.TrainingPanel;
@@ -90,14 +92,15 @@ public final class Main {
         AttendanceService attendanceService = new AttendanceService(memberService,
                 new CsvAttendanceRepository(DATA_DIR.resolve("attendance.csv")),
                 subscriptionService);
+        DashboardService dashboardService = new DashboardService(
+                subscriptionService, paymentService, attendanceService, Clock.systemDefaultZone());
         
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
 
         // Screens. Each owner replaces their placeholder with the real panel.
         List<ModulePanel> modules = List.of(
-                new PlaceholderPanel("dashboard", "Panel", "dashboard",
-                        "Indicadores y gráficas del gimnasio."),
+                new DashboardPanel(dashboardService, session),
 
                 new MembersPanel(memberService, photoStorage, healthService, attendanceService),
 
