@@ -63,6 +63,10 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `UsersPanel` implements `ModulePanel` | The module replaced its placeholder in `Main`; the main window did not change |
 | GRASP Controller | `UsersPanel`, `UserFormDialog` | The screens collect clicks and delegate every rule to `UserService` |
 | Security | `UserService.resetPassword`, `LoginFrame` | Only the hash is stored; the default credentials are no longer shown on screen |
+| SRP | `GymArt`, `MuscleArt`, `HeroBanner` | One only draws equipment, one only draws muscle groups, one only paints a banner |
+| Low coupling and reuse | `GymArt` | The login and the dashboard share the same drawings without knowing each other |
+| GRASP Protected Variations | `PictureSource` with the `art:` path | Screens ask for a picture by path; whether it is a photo or a drawing is hidden |
+| OCP | `MuscleArt` and `ImageCard` | The catalog gained illustrations without changing how `ImageCard` draws |
 
 ## Ronald: members and health
 

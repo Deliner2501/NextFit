@@ -12,7 +12,10 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 
 ## Illustrations
 
-Pending: muscle group illustrations for the exercise gallery (original vector drawings).
+| Drawing | Used in | Author | License |
+|---|---|---|---|
+| Muscle group illustrations (`MuscleArt`) | Exercise catalog when an exercise has no photo | Original vector drawings in code, designed with AI assistance (Claude) | Own work, no third-party material |
+| Dumbbell and plates (`GymArt`) | Login background and dashboard banner | Original vector drawings in code, designed with AI assistance (Claude) | Own work, no third-party material |
 
 ## Photographs
 
