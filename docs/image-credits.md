@@ -33,5 +33,9 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 | `images/exercises/core.jpg` | Core exercises | Eduardo Cano | https://unsplash.com/es/fotos/mancuerna-roja-y-negra-sobre-suelo-negro-9xL_8KCEQqE | Unsplash License |
 | `images/exercises/cardio.jpg` | Cardio exercises | Craig Lovelidge | https://unsplash.com/es/fotos/un-piso-de-gimnasio-con-un-patron-a-cuadros-c9wa9EWN_fw | Unsplash License |
 | `images/exercises/full_body.jpg` | Full body exercises | Sergio Kian | https://unsplash.com/es/fotos/un-hombre-y-una-mujer-haciendo-ejercicio-en-un-gimnasio-G6svDyPVRrc | Unsplash License |
+| `images/exercises/chest.jpg` | Chest exercises | Shoham Avisrur | https://unsplash.com/es/fotos/un-hombre-haciendo-un-press-de-banca-con-una-barra-Dueawl5Q75s | Unsplash License |
+| `images/exercises/shoulders.jpg` | Shoulders exercises | Luke Witter | https://unsplash.com/es/fotos/un-hombre-sosteniendo-una-mancuerna-en-un-gimnasio-k47w6BeapCs | Unsplash License |
+| `images/exercises/legs.jpg` | Legs exercises | Meghan Holmes | https://unsplash.com/es/fotos/personas-realizando-ejercicios-de-saltos-en-caja-wy_L8W0zcpI | Unsplash License |
+| `images/exercises/glutes.jpg` | Glutes exercises | Gabrielle Durant | https://www.pexels.com/es-es/foto/blanco-y-negro-persona-pantalones-cortos-shorts-13122465/ | Pexels License |
 
 Rules: only pictures with a license that allows free use (for example Unsplash or Pexels licenses), the author and URL must be written here, and the file name in `src/main/resources/images/` must match the one listed.
