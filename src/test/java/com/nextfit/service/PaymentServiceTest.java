@@ -172,6 +172,24 @@ class PaymentServiceTest {
         assertEquals(0L, result.get(PaymentMethod.CARD));
     }
 
+    @Test
+    void findSaleRebuildsTheSaleFromItsPayment() {
+        MembershipSale sold = service.sellMembership(member.getId(), monthly.getId(), null,
+                PaymentMethod.CARD, new PercentageDiscount(10), "admin");
+
+        MembershipSale again = service.findSale(sold.payment().getId());
+
+        assertEquals(sold.payment().getId(), again.payment().getId());
+        assertEquals(sold.subscription().getId(), again.subscription().getId());
+        assertEquals(monthly.getId(), again.plan().getId());
+        assertEquals(72_000, again.payment().getTotal());
+    }
+
+    @Test
+    void findSaleFailsWhenThePaymentDoesNotExist() {
+        assertThrows(ResourceNotFoundException.class, () -> service.findSale(99));
+    }
+
     private void savePayment(LocalDateTime when, long price) {
         savePayment(when, price, PaymentMethod.CASH);
     }
