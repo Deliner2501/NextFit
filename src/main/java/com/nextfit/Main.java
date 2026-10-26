@@ -33,6 +33,7 @@ import com.nextfit.ui.Theme;
 import com.nextfit.ui.billing.BillingPanel;
 import com.nextfit.ui.dashboard.DashboardPanel;
 import com.nextfit.ui.users.UsersPanel;
+import com.nextfit.ui.BannerModule;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.ui.training.TrainingPanel;
@@ -100,16 +101,22 @@ public final class Main {
         
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
-
+        
         // Screens. Each owner replaces their placeholder with the real panel.
         List<ModulePanel> modules = List.of(
                 new DashboardPanel(dashboardService, session),
 
-                new MembersPanel(memberService, photoStorage, healthService, attendanceService),
+                new BannerModule(new MembersPanel(memberService, photoStorage, healthService, attendanceService),
+                        "Socios", "Registra, consulta y da seguimiento a cada socio",
+                        "/images/banners/members.jpg", 0.30),
 
-                new BillingPanel(planService, subscriptionService, paymentService, memberService, session),
+                new BannerModule(new BillingPanel(planService, subscriptionService, paymentService, memberService, session),
+                        "Membresías y pagos", "Planes, ventas y comprobantes",
+                        "/images/banners/billing.jpg", 0.30),
 
-                new TrainingPanel(training, DATA_DIR),
+                new BannerModule(new TrainingPanel(training, DATA_DIR),
+                        "Entrenamiento", "Ejercicios, rutinas y sesiones",
+                        "/images/banners/training.jpg", 0.55),
 
                 new UsersPanel(userService, session));
 
