@@ -38,6 +38,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low coupling | `PlanListView` and `MembershipPlanService` | The screen depends only on the service, never on repositories or CSV files |
 | High cohesion | `BillingPanel` | It only groups the screens of the module in tabs; each tab is its own class |
 | OCP | `BillingPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
+| GRASP Controller (use case) | `SaleView` | The screen collects member, plan, method and discount and delegates the sale to `PaymentService.sellMembership`; it holds no business rules |
+| OCP and polymorphism | `SaleView.buildDiscount` | The screen builds a `NoDiscount`, `PercentageDiscount` or `FixedDiscount` and passes it as a `Discount`; the service does not need to know which one |
+| SRP and testability | `ReceiptText`, `ReceiptTextTest` | One class only builds the receipt text, without Swing, so the window, the clipboard and the tests use the same text |
+| SRP | `ReceiptDialog` | It only shows the text and copies it; it never calculates amounts |
+| Low coupling | `SaleView` and `PaymentService`, `SubscriptionService`, `MembershipPlanService` | The screen depends only on services, never on repositories or CSV files |
+| Reuse | `MemberPickerPanel` in `SaleView` | The member search column built for training is reused instead of writing it again |
 
 ## Ronald: members and health
 
