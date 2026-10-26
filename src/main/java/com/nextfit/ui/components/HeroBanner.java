@@ -25,7 +25,9 @@ import java.awt.geom.RoundRectangle2D;
 public class HeroBanner extends JPanel {
 
     private static final int ARC = 24;
-    private static final int HEIGHT = 120;
+    private static final int DEFAULT_HEIGHT = 120;
+
+    private final CoverPhoto photo;
 
     /**
      * Creates the banner.
@@ -33,11 +35,26 @@ public class HeroBanner extends JPanel {
      * @param content what to show over the drawing, placed on the left
      */
     public HeroBanner(JComponent content) {
+        this(content, null, 0.5, 0.5, DEFAULT_HEIGHT);
+    }
+
+    /**
+     * Creates the banner over a photo. When the photo is missing it falls back
+     * to the drawn background, so the screen still looks right.
+     *
+     * @param content   what to show over the picture, placed on the left
+     * @param photoPath stored path of the photo, or null for the drawn background
+     * @param focusX    horizontal point of the photo to keep, from 0 to 1
+     * @param focusY    vertical point of the photo to keep, from 0 to 1
+     * @param height    height of the banner in pixels
+     */
+    public HeroBanner(JComponent content, String photoPath, double focusX, double focusY, int height) {
         super(new BorderLayout());
+        this.photo = photoPath == null ? null : CoverPhoto.load(photoPath, focusX, focusY);
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(0, 32, 0, 32));
-        setPreferredSize(new Dimension(0, HEIGHT));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, HEIGHT));
+        setPreferredSize(new Dimension(0, height));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, height));
         content.setOpaque(false);
         // Centered vertically and kept on the left, so the text sits in the middle of the banner.
         JPanel holder = new JPanel(new GridBagLayout());
@@ -60,6 +77,19 @@ public class HeroBanner extends JPanel {
             g2.setPaint(new GradientPaint(0, 0, Theme.SURFACE, w, h, new Color(0x1B2A10)));
             g2.fill(shape);
             g2.clip(shape);
+            if (photo != null && photo.isAvailable()) {
+                photo.paint(g2, w, h);
+                // The left side is darkened so the text stays readable over any photo.
+                g2.setPaint(new GradientPaint(0, 0, new Color(14, 16, 20, 235), w * 0.85f, 0,
+                        new Color(14, 16, 20, 70)));
+                g2.fillRect(0, 0, w, h);
+                g2.setPaint(new GradientPaint(0, h - 4, new Color(182, 255, 59, 0), 0, h, Theme.ACCENT));
+                g2.fillRect(0, h - 4, w, 4);
+                g2.setClip(null);
+                g2.setColor(Theme.SURFACE_ALT);
+                g2.draw(shape);
+                return;
+            }
             g2.setPaint(new RadialGradientPaint(w * 0.82f, h * 0.5f, h * 1.6f, new float[]{0f, 1f},
                     new Color[]{new Color(182, 255, 59, 60), new Color(182, 255, 59, 0)}));
             g2.fillRect(0, 0, w, h);
