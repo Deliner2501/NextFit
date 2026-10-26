@@ -67,6 +67,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low coupling and reuse | `GymArt` | The login and the dashboard share the same drawings without knowing each other |
 | GRASP Protected Variations | `PictureSource` with the `art:` path | Screens ask for a picture by path; whether it is a photo or a drawing is hidden |
 | OCP | `MuscleArt` and `ImageCard` | The catalog gained illustrations without changing how `ImageCard` draws |
+| SRP | `CoverPhoto` | It only fits a photo into an area and keeps the scaled copy; screens decide where to use it |
+| Decorator | `BannerModule` | It adds a banner to any `ModulePanel` and forwards every call, so the modules stay unchanged |
+| GRASP Protected Variations | `HeroBanner`, `MuscleArt.pathFor` | A missing photo falls back to the drawing, so the screens never break |
 
 ## Ronald: members and health
 
