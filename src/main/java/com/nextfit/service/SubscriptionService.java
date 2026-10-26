@@ -109,6 +109,38 @@ public class SubscriptionService implements SubscriptionChecker {
     }
 
     /**
+     * Returns every subscription, the newest first.
+     *
+     * @return the subscriptions
+     */
+    public List<Subscription> findAll() {
+        return subscriptions.findAll().stream()
+                .sorted(Comparator.comparing(Subscription::getStartDate).reversed()
+                        .thenComparing(Comparator.comparingLong(Subscription::getId).reversed()))
+                .toList();
+    }
+
+    /**
+     * Works out the situation of a subscription today.
+     *
+     * @param subscription the subscription
+     * @return upcoming, active, expired or cancelled
+     */
+    public SubscriptionStatus statusOf(Subscription subscription) {
+        return subscription.statusOn(today());
+    }
+
+    /**
+     * Counts the days left of a subscription from today.
+     *
+     * @param subscription the subscription
+     * @return the remaining days, zero when it is not active today
+     */
+    public long daysLeftOf(Subscription subscription) {
+        return subscription.daysLeftOn(today());
+    }
+
+    /**
      * Returns every subscription of a member, the newest first.
      *
      * @param memberId the identifier of the member
