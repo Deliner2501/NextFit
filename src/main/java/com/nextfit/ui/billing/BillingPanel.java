@@ -14,13 +14,14 @@ import javax.swing.JTabbedPane;
 
 /**
  * Main screen of the memberships and payments module. It groups the screens of
- * the module in tabs; the other tabs (subscriptions, payments) are added here
- * as they are built.
+ * the module in tabs: sale, subscriptions, payments and plans.
  */
 public class BillingPanel implements ModulePanel {
 
     private final JTabbedPane tabs = new JTabbedPane();
     private final SaleView sale;
+    private final SubscriptionListView subscriptions;
+    private final PaymentListView payments;
     private final PlanListView plans;
 
     /**
@@ -35,10 +36,17 @@ public class BillingPanel implements ModulePanel {
     public BillingPanel(MembershipPlanService planService, SubscriptionService subscriptionService,
                         PaymentService paymentService, MemberService memberService, Session session) {
         this.plans = new PlanListView(planService);
+        this.subscriptions = new SubscriptionListView(subscriptionService, planService, memberService);
+        this.payments = new PaymentListView(paymentService, memberService);
         this.sale = new SaleView(planService, subscriptionService, paymentService, memberService, session,
-                () -> { });
+                () -> {
+                    subscriptions.refresh();
+                    payments.refresh();
+                });
         tabs.setBackground(Theme.BACKGROUND);
         tabs.addTab("Venta", sale);
+        tabs.addTab("Suscripciones", subscriptions);
+        tabs.addTab("Pagos", payments);
         tabs.addTab("Planes", plans);
         // A plan created, edited or withdrawn in one tab must show up in the other.
         tabs.addChangeListener(e -> refreshSelectedTab());
@@ -67,12 +75,18 @@ public class BillingPanel implements ModulePanel {
     @Override
     public void onShow() {
         sale.refresh();
+        subscriptions.refresh();
+        payments.refresh();
         plans.refresh();
     }
 
     private void refreshSelectedTab() {
         if (tabs.getSelectedComponent() == sale) {
             sale.refresh();
+        } else if (tabs.getSelectedComponent() == subscriptions) {
+            subscriptions.refresh();
+        } else if (tabs.getSelectedComponent() == payments) {
+            payments.refresh();
         } else if (tabs.getSelectedComponent() == plans) {
             plans.refresh();
         }
