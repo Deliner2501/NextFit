@@ -126,7 +126,7 @@ public class DashboardPanel implements ModulePanel {
         titles.add(greeting);
         titles.add(dateLabel);
 
-        HeroBanner banner = new HeroBanner(titles);
+        HeroBanner banner = new HeroBanner(titles, "/images/banners/dashboard.jpg", 0.5, 0.5, 120);
 
         JPanel cards = new JPanel(new GridLayout(1, 4, 16, 0));
 
