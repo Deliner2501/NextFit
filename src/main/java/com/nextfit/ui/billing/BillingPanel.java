@@ -1,7 +1,11 @@
 package com.nextfit.ui.billing;
 
 import com.nextfit.model.Role;
+import com.nextfit.service.MemberService;
 import com.nextfit.service.MembershipPlanService;
+import com.nextfit.service.PaymentService;
+import com.nextfit.service.Session;
+import com.nextfit.service.SubscriptionService;
 import com.nextfit.ui.ModulePanel;
 import com.nextfit.ui.Theme;
 
@@ -10,23 +14,34 @@ import javax.swing.JTabbedPane;
 
 /**
  * Main screen of the memberships and payments module. It groups the screens of
- * the module in tabs; the other tabs (sale, subscriptions, payments) are added
- * here as they are built.
+ * the module in tabs; the other tabs (subscriptions, payments) are added here
+ * as they are built.
  */
 public class BillingPanel implements ModulePanel {
 
     private final JTabbedPane tabs = new JTabbedPane();
+    private final SaleView sale;
     private final PlanListView plans;
 
     /**
      * Creates the screen.
      *
-     * @param planService the service that manages the plans
+     * @param planService         the service that manages the plans
+     * @param subscriptionService the service that knows the memberships of each member
+     * @param paymentService      the service that sells memberships
+     * @param memberService       the service used to find members
+     * @param session             the session, to know who is selling
      */
-    public BillingPanel(MembershipPlanService planService) {
+    public BillingPanel(MembershipPlanService planService, SubscriptionService subscriptionService,
+                        PaymentService paymentService, MemberService memberService, Session session) {
         this.plans = new PlanListView(planService);
+        this.sale = new SaleView(planService, subscriptionService, paymentService, memberService, session,
+                () -> { });
         tabs.setBackground(Theme.BACKGROUND);
+        tabs.addTab("Venta", sale);
         tabs.addTab("Planes", plans);
+        // A plan created, edited or withdrawn in one tab must show up in the other.
+        tabs.addChangeListener(e -> refreshSelectedTab());
     }
 
     @Override
@@ -51,7 +66,16 @@ public class BillingPanel implements ModulePanel {
 
     @Override
     public void onShow() {
+        sale.refresh();
         plans.refresh();
+    }
+
+    private void refreshSelectedTab() {
+        if (tabs.getSelectedComponent() == sale) {
+            sale.refresh();
+        } else if (tabs.getSelectedComponent() == plans) {
+            plans.refresh();
+        }
     }
 
     /** Only the administrator and the reception can open this module. */
