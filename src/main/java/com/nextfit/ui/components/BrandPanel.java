@@ -24,6 +24,8 @@ public class BrandPanel extends JPanel {
 
     private static final int WIDTH = 480;
     private static final int FRAME_MS = 33;
+    private static final String PHOTO = "/images/login/background.jpg";
+    private final CoverPhoto photo = CoverPhoto.load(PHOTO, 0.5, 0.35);
 
     private float phase;
     private final Timer timer = new Timer(FRAME_MS, e -> {
@@ -61,12 +63,19 @@ public class BrandPanel extends JPanel {
 
             g2.setPaint(new GradientPaint(0, 0, new Color(0x0B0D11), w, h, new Color(0x16200C)));
             g2.fillRect(0, 0, w, h);
+            if (photo.isAvailable()) {
+                photo.paint(g2, w, h);
+                g2.setPaint(new GradientPaint(0, 0, new Color(11, 13, 17, 205), 0, h, new Color(14, 22, 8, 235)));
+                g2.fillRect(0, 0, w, h);
+            }
             glow(g2, w * 0.25f + (float) Math.sin(phase) * 50, h * 0.28f + (float) Math.cos(phase * 0.8) * 40,
                     320, Theme.ACCENT, 0.20f);
             glow(g2, w * 0.85f + (float) Math.cos(phase * 0.7) * 40, h * 0.82f + (float) Math.sin(phase * 0.9) * 50,
                     360, Theme.ACCENT_ALT, 0.14f);
 
-            paintGymArt(g2, w, h);
+            if (!photo.isAvailable()) {
+                paintGymArt(g2, w, h);
+            }
             int x = 56;
             int y = Math.max(60, h / 2 - 150);
             Branding.paintLogo(g2, x, y, 68, this);

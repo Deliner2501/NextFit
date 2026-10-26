@@ -44,13 +44,16 @@ public final class MuscleArt {
     }
 
     /**
-     * Returns the stored path that asks for the illustration of a group.
+     * Returns the stored path of the picture that represents a group: a photo
+     * from the application resources when one was added for it (for example
+     * {@code /images/exercises/back.jpg}), otherwise the drawn illustration.
      *
      * @param group the muscle group
      * @return the path, e.g. "art:CHEST"
      */
     public static String pathFor(MuscleGroup group) {
-        return PREFIX + group.name();
+        String photo = "/images/exercises/" + group.name().toLowerCase() + ".jpg";
+        return MuscleArt.class.getResource(photo) != null ? photo : PREFIX + group.name();
     }
 
     /**
