@@ -134,4 +134,27 @@ class SubscriptionServiceTest {
         assertEquals(member.getId(), expiring.get(0).getMemberId());
         assertEquals(2, service.countActive());
     }
+
+    @Test
+    void findAllReturnsEverySubscriptionNewestFirst() {
+        Member other = members.register(FakeRepositories.newMember("1065999999"));
+        Subscription first = service.subscribe(member.getId(), monthly.getId(), null);
+        Subscription second = service.subscribe(other.getId(), monthly.getId(), TODAY.plusDays(3));
+
+        var all = service.findAll();
+
+        assertEquals(2, all.size());
+        assertEquals(second.getId(), all.get(0).getId());
+        assertEquals(first.getId(), all.get(1).getId());
+    }
+
+    @Test
+    void statusAndDaysLeftAreWorkedOutFromToday() {
+        Subscription s = service.subscribe(member.getId(), monthly.getId(), null);
+
+        assertEquals(SubscriptionStatus.ACTIVE, service.statusOf(s));
+        assertEquals(29, service.daysLeftOf(s));
+        assertEquals(SubscriptionStatus.CANCELLED, service.statusOf(service.cancel(s.getId())));
+        assertEquals(0, service.daysLeftOf(service.findById(s.getId())));
+    }
 }
