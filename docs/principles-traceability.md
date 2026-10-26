@@ -44,6 +44,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `ReceiptDialog` | It only shows the text and copies it; it never calculates amounts |
 | Low coupling | `SaleView` and `PaymentService`, `SubscriptionService`, `MembershipPlanService` | The screen depends only on services, never on repositories or CSV files |
 | Reuse | `MemberPickerPanel` in `SaleView` | The member search column built for training is reused instead of writing it again |
+| GRASP Information Expert | `SubscriptionService.statusOf`, `daysLeftOf` | The service owns the clock, so "what state is it in today" is answered there and no screen reads the date itself |
+| GRASP Information Expert | `PaymentService.findSale` | The service that owns payments, subscriptions and plans rebuilds the sale; the screen does not chain three lookups |
+| GRASP Controller | `SubscriptionListView`, `PaymentListView` | The screens collect search text, filters and clicks and delegate to the services; they hold no business rules |
+| Low coupling | `SubscriptionListView`, `PaymentListView` and the services | Each screen depends only on services, never on repositories or CSV files |
+| Low coupling (callback) | `SaleView` `onSold` and `BillingPanel` | The sale screen only runs an action after selling; it does not know which other tabs need to refresh |
+| Testability | `SubscriptionServiceTest.statusAndDaysLeftAreWorkedOutFromToday`, `PaymentServiceTest.findSaleRebuildsTheSaleFromItsPayment` | The new service methods are checked with a fixed `Clock` and in-memory repositories |
 
 ## Ronald: members and health
 
