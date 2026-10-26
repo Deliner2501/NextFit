@@ -6,12 +6,15 @@ import com.nextfit.persistence.CsvHealthProfileRepository;
 import com.nextfit.persistence.CsvMeasurementRepository;
 import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
+import com.nextfit.persistence.CsvPaymentRepository;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
 import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.SubscriptionService;
+import com.nextfit.service.PaymentService;
 import com.nextfit.validation.HealthValidator;
 import com.nextfit.validation.MembershipPlanValidator;
+import com.nextfit.validation.PaymentValidator;
 import java.time.Clock;
 import com.nextfit.persistence.MemberRepository;
 import com.nextfit.ui.members.MembersPanel;
@@ -81,6 +84,9 @@ public final class Main {
         SubscriptionService subscriptionService = new SubscriptionService(
                 new CsvSubscriptionRepository(DATA_DIR.resolve("subscriptions.csv")),
                 planService, memberService, Clock.systemDefaultZone());
+        PaymentService paymentService = new PaymentService(
+                new CsvPaymentRepository(DATA_DIR.resolve("payments.csv")),
+                subscriptionService, planService, new PaymentValidator(), Clock.systemDefaultZone());
         AttendanceService attendanceService = new AttendanceService(memberService,
                 new CsvAttendanceRepository(DATA_DIR.resolve("attendance.csv")),
                 subscriptionService);
@@ -95,7 +101,7 @@ public final class Main {
 
                 new MembersPanel(memberService, photoStorage, healthService, attendanceService),
 
-                new BillingPanel(planService),
+                new BillingPanel(planService, subscriptionService, paymentService, memberService, session),
 
                 new TrainingPanel(training, DATA_DIR),
 
