@@ -1,6 +1,6 @@
 package com.nextfit;
 
-import com.nextfit.model.Role;
+
 import com.nextfit.persistence.CsvAttendanceRepository;
 import com.nextfit.persistence.CsvHealthProfileRepository;
 import com.nextfit.persistence.CsvMeasurementRepository;
@@ -13,9 +13,11 @@ import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.PaymentService;
 import com.nextfit.service.DashboardService;
+import com.nextfit.service.UserService;
 import com.nextfit.validation.HealthValidator;
 import com.nextfit.validation.MembershipPlanValidator;
 import com.nextfit.validation.PaymentValidator;
+import com.nextfit.validation.UserValidator;
 import java.time.Clock;
 import com.nextfit.persistence.MemberRepository;
 import com.nextfit.ui.members.MembersPanel;
@@ -27,10 +29,10 @@ import com.nextfit.service.Session;
 import com.nextfit.ui.LoginFrame;
 import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
-import com.nextfit.ui.PlaceholderPanel;
 import com.nextfit.ui.Theme;
 import com.nextfit.ui.billing.BillingPanel;
 import com.nextfit.ui.dashboard.DashboardPanel;
+import com.nextfit.ui.users.UsersPanel;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.ui.training.TrainingPanel;
@@ -69,6 +71,7 @@ public final class Main {
         AuthService auth = new AuthService(users);
         auth.ensureDefaultAdmin();
         Session session = new Session();
+        UserService userService = new UserService(users, new UserValidator());
         
         // Members module
         MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
@@ -108,8 +111,7 @@ public final class Main {
 
                 new TrainingPanel(training, DATA_DIR),
 
-                new PlaceholderPanel("users", "Usuarios", "shield",
-                        "Cuentas y roles del sistema.", Role.ADMIN));
+                new UsersPanel(userService, session));
 
         SwingUtilities.invokeLater(() -> showLogin(auth, session, modules));
     }

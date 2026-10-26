@@ -57,6 +57,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | Reuse | `StatCard`, `DonutChart`, `BarChart`, `LineChart` in `DashboardPanel` | The components built with plain data are reused without any change |
 | OCP | `DashboardPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
 | Least privilege | `DashboardPanel.allowedFor` | The trainer role does not see the income numbers, because the screen is hidden from that role |
+| SRP | `UserService`, `UserValidator` | The validator only checks data; the service holds the account rules |
+| DIP | `UserService` and `UserRepository` | The service depends on the interface, not on the CSV file |
+| GRASP Information Expert | `UserService.ensureAnotherActiveAdmin` | The service that sees every account is the one that protects the last administrator |
+| OCP | `UsersPanel` implements `ModulePanel` | The module replaced its placeholder in `Main`; the main window did not change |
+| GRASP Controller | `UsersPanel`, `UserFormDialog` | The screens collect clicks and delegate every rule to `UserService` |
+| Security | `UserService.resetPassword`, `LoginFrame` | Only the hash is stored; the default credentials are no longer shown on screen |
 
 ## Ronald: members and health
 

@@ -108,10 +108,6 @@ public class LoginFrame extends JFrame {
         loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         loginButton.addActionListener(e -> attemptLogin());
 
-        JLabel hint = new JLabel("Primer ingreso: usuario admin · contraseña admin123");
-        hint.setFont(hint.getFont().deriveFont(Font.PLAIN, 12f));
-        hint.setForeground(Theme.TEXT_MUTED);
-
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -142,9 +138,6 @@ public class LoginFrame extends JFrame {
         c.gridy = 7;
         c.insets = new Insets(0, 0, 22, 0);
         form.add(loginButton, c);
-        c.gridy = 8;
-        c.insets = new Insets(0, 0, 0, 0);
-        form.add(hint, c);
 
         side.add(form);
         return side;
