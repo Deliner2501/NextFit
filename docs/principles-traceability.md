@@ -70,6 +70,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `CoverPhoto` | It only fits a photo into an area and keeps the scaled copy; screens decide where to use it |
 | Decorator | `BannerModule` | It adds a banner to any `ModulePanel` and forwards every call, so the modules stay unchanged |
 | GRASP Protected Variations | `HeroBanner`, `MuscleArt.pathFor` | A missing photo falls back to the drawing, so the screens never break |
+| DIP and reuse | `DemoData` | It creates the example data through the same services the screens use, so it follows the same rules and needs no special code path |
+| DIP and testability | `DemoData.at` with `Clock.fixed` | Each past day is reproduced with its own fixed clock, so "a membership must be valid to enter" holds on that day |
+| GRASP Protected Variations | `DemoData.isEmptyInstallation` | Example data is only created when nothing exists, so real data is never mixed with it |
 
 ## Ronald: members and health
 
