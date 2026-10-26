@@ -100,6 +100,20 @@ public class PaymentService {
     }
 
     /**
+     * Rebuilds a past sale from its payment, so its receipt can be printed again.
+     *
+     * @param paymentId the identifier of the payment
+     * @return the payment together with its subscription and plan
+     * @throws ResourceNotFoundException when the payment, its subscription or its plan does not exist
+     */
+    public MembershipSale findSale(long paymentId) {
+        Payment payment = findById(paymentId);
+        Subscription subscription = subscriptions.findById(payment.getSubscriptionId());
+        MembershipPlan plan = plans.findById(subscription.getPlanId());
+        return new MembershipSale(subscription, payment, plan);
+    }
+
+    /**
      * Returns every payment, the newest first.
      *
      * @return the payments
