@@ -1,0 +1,77 @@
+package com.nextfit.ui.components;
+
+import com.nextfit.ui.Theme;
+
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GradientPaint;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
+import java.awt.geom.RoundRectangle2D;
+
+/**
+ * Wide banner for the top of a screen. It paints a gym-style background
+ * (gradient, soft light, barbell plates and a dumbbell) and shows the
+ * component it receives, usually a greeting, on the left.
+ */
+public class HeroBanner extends JPanel {
+
+    private static final int ARC = 24;
+    private static final int HEIGHT = 120;
+
+    /**
+     * Creates the banner.
+     *
+     * @param content what to show over the drawing, placed on the left
+     */
+    public HeroBanner(JComponent content) {
+        super(new BorderLayout());
+        setOpaque(false);
+        setBorder(BorderFactory.createEmptyBorder(0, 32, 0, 32));
+        setPreferredSize(new Dimension(0, HEIGHT));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, HEIGHT));
+        content.setOpaque(false);
+        // Centered vertically and kept on the left, so the text sits in the middle of the banner.
+        JPanel holder = new JPanel(new GridBagLayout());
+        holder.setOpaque(false);
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.WEST;
+        c.weightx = 1;
+        holder.add(content, c);
+        add(holder, BorderLayout.CENTER);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        try {
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            int w = getWidth();
+            int h = getHeight();
+            RoundRectangle2D shape = new RoundRectangle2D.Float(0, 0, w - 1, h - 1, ARC, ARC);
+            g2.setPaint(new GradientPaint(0, 0, Theme.SURFACE, w, h, new Color(0x1B2A10)));
+            g2.fill(shape);
+            g2.clip(shape);
+            g2.setPaint(new RadialGradientPaint(w * 0.82f, h * 0.5f, h * 1.6f, new float[]{0f, 1f},
+                    new Color[]{new Color(182, 255, 59, 60), new Color(182, 255, 59, 0)}));
+            g2.fillRect(0, 0, w, h);
+            GymArt.plate(g2, w - 70, h * 0.85, h * 0.95, 5, Theme.ACCENT, 46);
+            GymArt.plate(g2, w * 0.58, -h * 0.2, h * 0.7, 4, Theme.ACCENT_ALT, 28);
+            GymArt.dumbbell(g2, w - 190, h * 0.52, Math.min(300, w * 0.32), Math.toRadians(-14),
+                    Theme.ACCENT, 150);
+            g2.setClip(null);
+            g2.setColor(Theme.SURFACE_ALT);
+            g2.draw(shape);
+        } finally {
+            g2.dispose();
+        }
+    }
+}
