@@ -50,6 +50,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low coupling | `SubscriptionListView`, `PaymentListView` and the services | Each screen depends only on services, never on repositories or CSV files |
 | Low coupling (callback) | `SaleView` `onSold` and `BillingPanel` | The sale screen only runs an action after selling; it does not know which other tabs need to refresh |
 | Testability | `SubscriptionServiceTest.statusAndDaysLeftAreWorkedOutFromToday`, `PaymentServiceTest.findSaleRebuildsTheSaleFromItsPayment` | The new service methods are checked with a fixed `Clock` and in-memory repositories |
+| GRASP Pure Fabrication | `DashboardService` | It is not a gym concept, but it gathers numbers from the membership, payment and attendance services so no screen does that math |
+| Encapsulation | `DashboardService.Summary` | One immutable record carries every number of the dashboard from the service to the screen |
+| Low coupling | `DashboardPanel` and `DashboardService` | The panel depends on one service and only draws; it knows nothing about repositories, CSV files or the other services |
+| DIP and testability | `DashboardServiceTest` | The summary is checked with a fixed `Clock` and in-memory repositories, with memberships in every state |
+| Reuse | `StatCard`, `DonutChart`, `BarChart`, `LineChart` in `DashboardPanel` | The components built with plain data are reused without any change |
+| OCP | `DashboardPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
+| Least privilege | `DashboardPanel.allowedFor` | The trainer role does not see the income numbers, because the screen is hidden from that role |
 
 ## Ronald: members and health
 
