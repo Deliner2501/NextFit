@@ -32,10 +32,10 @@ class MuscleArtTest {
 
     @Test
     void theStoredPathLoadsTheIllustration() {
-        String path = MuscleArt.pathFor(MuscleGroup.BACK);
-
-        assertEquals("art:BACK", path);
-        assertTrue(PictureSource.load(path).isPresent());
+        for (MuscleGroup group : MuscleGroup.values()) {
+            assertTrue(PictureSource.load(MuscleArt.pathFor(group)).isPresent(), group.name());
+        }
+        assertTrue(PictureSource.load("art:BACK").isPresent());
     }
 
     @Test
