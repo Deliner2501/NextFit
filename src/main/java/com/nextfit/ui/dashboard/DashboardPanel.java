@@ -130,7 +130,6 @@ public class DashboardPanel implements ModulePanel {
 
         JPanel cards = new JPanel(new GridLayout(1, 4, 16, 0));
 
-        JPanel cards = new JPanel(new GridLayout(1, 4, 16, 0));
         cards.setOpaque(false);
         cards.add(activeCard);
         cards.add(incomeCard);
