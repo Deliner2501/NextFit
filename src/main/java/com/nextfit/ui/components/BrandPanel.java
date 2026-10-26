@@ -66,6 +66,7 @@ public class BrandPanel extends JPanel {
             glow(g2, w * 0.85f + (float) Math.cos(phase * 0.7) * 40, h * 0.82f + (float) Math.sin(phase * 0.9) * 50,
                     360, Theme.ACCENT_ALT, 0.14f);
 
+            paintGymArt(g2, w, h);
             int x = 56;
             int y = Math.max(60, h / 2 - 150);
             Branding.paintLogo(g2, x, y, 68, this);
@@ -90,7 +91,15 @@ public class BrandPanel extends JPanel {
             g2.dispose();
         }
     }
-
+    
+    // Pesas decorativas en la parte baja: se dibujan muy suaves para no tapar el texto.
+    private void paintGymArt(Graphics2D g2, int w, int h) {
+        float drift = (float) Math.sin(phase * 0.6) * 6;
+        GymArt.plate(g2, w * 0.92, h * 0.93, 230, 6, Theme.ACCENT, 40);
+        GymArt.plate(g2, w * 0.05, h * 0.02, 170, 5, Theme.ACCENT_ALT, 28);
+        GymArt.dumbbell(g2, w * 0.66, h * 0.74 + drift, 380, Math.toRadians(-16), Theme.ACCENT, 64);
+    }
+    
     private static void glow(Graphics2D g2, float cx, float cy, float radius, Color color, float alpha) {
         Color center = new Color(color.getRed(), color.getGreen(), color.getBlue(), Math.round(255 * alpha));
         Color edge = new Color(color.getRed(), color.getGreen(), color.getBlue(), 0);

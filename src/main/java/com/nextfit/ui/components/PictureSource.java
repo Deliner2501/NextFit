@@ -27,6 +27,12 @@ public final class PictureSource {
         if (path == null || path.isBlank()) {
             return Optional.empty();
         }
+
+        // Una ruta "art:GRUPO" pide la ilustración dibujada de un grupo muscular.
+        if (path.startsWith(MuscleArt.PREFIX)) {
+            return MuscleArt.fromPath(path);
+        }
+
         // Primero se busca como archivo en el disco (fotos subidas por el usuario).
         try {
             Path file = Path.of(path);

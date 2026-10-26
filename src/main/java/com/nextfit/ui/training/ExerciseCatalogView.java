@@ -6,6 +6,7 @@ import com.nextfit.model.MuscleGroup;
 import com.nextfit.service.ExerciseService;
 import com.nextfit.ui.Theme;
 import com.nextfit.ui.components.ImageCard;
+import com.nextfit.ui.components.MuscleArt;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -183,8 +184,11 @@ public class ExerciseCatalogView extends JPanel {
             JPanel grid = new JPanel(new GridLayout(0, columns, GAP, GAP));
             grid.setOpaque(false);
             for (Exercise exercise : shown) {
+                // Sin foto propia, la tarjeta muestra la ilustración de su grupo muscular.
+                String picture = exercise.getImagePath() == null || exercise.getImagePath().isBlank()
+                        ? MuscleArt.pathFor(exercise.getMuscleGroup()) : exercise.getImagePath();
                 grid.add(new ImageCard(exercise.getName(), exercise.getMuscleGroup().getLabel()
-                        + " · " + exercise.getDifficulty().getLabel(), exercise.getImagePath(),
+                        + " · " + exercise.getDifficulty().getLabel(), picture,
                         CARD_WIDTH, CARD_HEIGHT, () -> openForm(exercise)));
             }
             gridHolder.add(grid);

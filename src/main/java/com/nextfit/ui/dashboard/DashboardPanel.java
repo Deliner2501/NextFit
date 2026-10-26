@@ -11,6 +11,7 @@ import com.nextfit.ui.components.BarChart;
 import com.nextfit.ui.components.DonutChart;
 import com.nextfit.ui.components.LineChart;
 import com.nextfit.ui.components.StatCard;
+import com.nextfit.ui.components.HeroBanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -117,7 +118,7 @@ public class DashboardPanel implements ModulePanel {
         incomeChart.setDecimals(2);
         incomeChart.setEmptyMessage("Aún no hay pagos");
 
-        greeting.setFont(greeting.getFont().deriveFont(Font.BOLD, 24f));
+        greeting.setFont(greeting.getFont().deriveFont(Font.BOLD, 28f));
         greeting.setForeground(Theme.TEXT);
         dateLabel.setForeground(Theme.TEXT_MUTED);
         JPanel titles = new JPanel(new GridLayout(2, 1));
@@ -125,7 +126,10 @@ public class DashboardPanel implements ModulePanel {
         titles.add(greeting);
         titles.add(dateLabel);
 
+        HeroBanner banner = new HeroBanner(titles);
+
         JPanel cards = new JPanel(new GridLayout(1, 4, 16, 0));
+
         cards.setOpaque(false);
         cards.add(activeCard);
         cards.add(incomeCard);
@@ -144,14 +148,14 @@ public class DashboardPanel implements ModulePanel {
         JPanel body = new JPanel();
         body.setOpaque(false);
         body.setLayout(new javax.swing.BoxLayout(body, javax.swing.BoxLayout.Y_AXIS));
-        body.add(titles);
+        body.add(banner);
         body.add(javax.swing.Box.createVerticalStrut(18));
         body.add(cards);
         body.add(javax.swing.Box.createVerticalStrut(16));
         body.add(charts);
         body.add(javax.swing.Box.createVerticalStrut(16));
         body.add(income);
-        for (JComponent part : List.of(titles, cards, charts, income)) {
+        for (JComponent part : List.of(banner, cards, charts, income)) {
             part.setAlignmentX(JComponent.LEFT_ALIGNMENT);
         }
         charts.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
