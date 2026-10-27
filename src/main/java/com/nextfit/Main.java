@@ -65,6 +65,9 @@ public final class Main {
         System.setProperty("swing.aatext", "true");
         Theme.install();
 
+        // First run only: fills an empty installation with example data.
+        DemoData.seedIfEmpty(DATA_DIR);
+        
         // Storage. To use a database, replace these repositories only.
         UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
 
