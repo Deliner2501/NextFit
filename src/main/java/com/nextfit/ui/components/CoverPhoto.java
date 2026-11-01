@@ -16,6 +16,7 @@ public final class CoverPhoto {
     private final double focusX;
     private final double focusY;
     private BufferedImage cached;
+    private double cachedDensity;
 
     private CoverPhoto(BufferedImage source, double focusX, double focusY) {
         this.source = source;
@@ -56,10 +57,16 @@ public final class CoverPhoto {
         if (source == null || width <= 0 || height <= 0) {
             return;
         }
-        if (cached == null || cached.getWidth() != width || cached.getHeight() != height) {
-            cached = render(width, height);
+        // La copia se prepara con los píxeles reales de la pantalla (zoom de Windows 125 %, 150 %...).
+        double density = Images.deviceScale(g2);
+        int pixelsWide = (int) Math.round(width * density);
+        int pixelsHigh = (int) Math.round(height * density);
+        if (cached == null || cachedDensity != density
+                || cached.getWidth() != pixelsWide || cached.getHeight() != pixelsHigh) {
+            cached = render(pixelsWide, pixelsHigh);
+            cachedDensity = density;
         }
-        g2.drawImage(cached, 0, 0, null);
+        g2.drawImage(cached, 0, 0, width, height, null);
     }
 
     private BufferedImage render(int width, int height) {
