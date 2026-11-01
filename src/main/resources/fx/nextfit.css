@@ -1,0 +1,166 @@
+/* NextFit, interfaz JavaFX. Todos los colores viven aquí: las pantallas nunca los escriben en código. */
+
+.root.dark {
+    -nf-bg: #0E1014;
+    -nf-surface: #171A21;
+    -nf-surface-alt: #1F232C;
+    -nf-border: #262B36;
+    -nf-text: #E8ECF1;
+    -nf-muted: #8B93A1;
+    -nf-accent: #B6FF3B;
+    -nf-accent-text: #B6FF3B;
+    -nf-accent-soft: rgba(182, 255, 59, 0.14);
+    -nf-success: #3DDC97;
+    -nf-warning: #FFB020;
+    -nf-danger: #FF4D4F;
+    -nf-shade-start: rgba(14, 16, 20, 0.15);
+    -nf-shade-end: rgba(14, 16, 20, 0.92);
+}
+
+.root.light {
+    -nf-bg: #F3F5F8;
+    -nf-surface: #FFFFFF;
+    -nf-surface-alt: #EAEEF3;
+    -nf-border: #DCE1E8;
+    -nf-text: #14181F;
+    -nf-muted: #5E6776;
+    -nf-accent: #B6FF3B;
+    -nf-accent-text: #3F6A12;
+    -nf-accent-soft: rgba(120, 190, 30, 0.18);
+    -nf-success: #1FAE74;
+    -nf-warning: #E69500;
+    -nf-danger: #E03438;
+    -nf-shade-start: rgba(14, 16, 20, 0.25);
+    -nf-shade-end: rgba(14, 16, 20, 0.88);
+}
+
+.nf-bg { -fx-background-color: -nf-bg; }
+
+/* ---------- Texto ---------- */
+.nf-title { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
+.nf-muted { -fx-text-fill: -nf-muted; -fx-font-size: 14px; }
+.nf-muted-small { -fx-text-fill: -nf-muted; -fx-font-size: 12px; }
+.nf-card-title { -fx-text-fill: -nf-text; -fx-font-size: 16px; -fx-font-weight: bold; }
+.nf-field-label { -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-error { -fx-text-fill: -nf-danger; -fx-font-size: 13px; -fx-padding: 10 0 6 0; }
+.nf-user-name { -fx-text-fill: -nf-text; -fx-font-weight: bold; -fx-font-size: 14px; }
+.nf-sidebar-brand { -fx-text-fill: -nf-text; -fx-font-size: 22px; -fx-font-weight: bold; }
+
+/* ---------- Tarjetas ---------- */
+.nf-card {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+}
+.nf-kpi-value { -fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
+.nf-badge { -fx-background-color: -nf-accent-soft; -fx-background-radius: 12; }
+.nf-badge .nf-icon { -fx-background-color: -nf-accent-text; }
+
+/* ---------- Iconos ---------- */
+.nf-icon { -fx-background-color: -nf-muted; }
+
+/* ---------- Barra lateral ---------- */
+.nf-sidebar {
+    -fx-background-color: -nf-surface;
+    -fx-border-color: -nf-border;
+    -fx-border-width: 0 1 0 0;
+}
+.nf-nav {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-text-fill: -nf-muted;
+    -fx-font-size: 15px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 16;
+    -fx-graphic-text-gap: 14;
+    -fx-cursor: hand;
+}
+.nf-nav:hover { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-text; }
+.nf-nav:hover .nf-icon { -fx-background-color: -nf-text; }
+.nf-nav.selected { -fx-background-color: -nf-accent-soft; -fx-text-fill: -nf-accent-text; -fx-font-weight: bold; }
+.nf-nav.selected .nf-icon { -fx-background-color: -nf-accent-text; }
+
+/* ---------- Botones ---------- */
+.nf-primary {
+    -fx-background-color: -nf-accent;
+    -fx-text-fill: #0E1014;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 14;
+    -fx-cursor: hand;
+}
+.nf-primary:hover { -fx-background-color: derive(-nf-accent, -8%); }
+.nf-primary:disabled { -fx-opacity: 0.6; }
+.nf-icon-button {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+}
+.nf-icon-button:hover { -fx-background-color: -nf-surface-alt; }
+.nf-icon-button .nf-icon { -fx-background-color: -nf-text; }
+
+/* ---------- Campos ---------- */
+.nf-input {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 14;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 14;
+    -fx-text-fill: -nf-text;
+    -fx-prompt-text-fill: -nf-muted;
+    -fx-font-size: 15px;
+    -fx-padding: 0 16;
+}
+.nf-input:focused { -fx-border-color: -nf-accent; -fx-border-width: 2; }
+
+/* ---------- Avatar ---------- */
+.nf-avatar { -fx-background-color: -nf-accent; -fx-background-radius: 999; }
+.nf-avatar-text { -fx-text-fill: #0E1014; -fx-font-weight: bold; -fx-font-size: 16px; }
+
+/* ---------- Pantalla de ingreso y banner ---------- */
+.nf-brand-shade { -fx-background-color: linear-gradient(to bottom, -nf-shade-start, -nf-shade-end); }
+.nf-brand-name { -fx-text-fill: white; -fx-font-size: 48px; -fx-font-weight: bold; }
+.nf-brand-slogan { -fx-text-fill: #B6FF3B; -fx-font-size: 22px; }
+.nf-brand-text { -fx-text-fill: #C9CFD8; -fx-font-size: 16px; }
+.nf-brand-credit { -fx-text-fill: #9AA2AF; -fx-font-size: 12px; }
+.nf-hero-shade { -fx-background-color: linear-gradient(to right, rgba(14,16,20,0.85), rgba(14,16,20,0.15)); }
+.nf-hero-title { -fx-text-fill: white; -fx-font-size: 28px; -fx-font-weight: bold; }
+.nf-hero-text { -fx-text-fill: #D5DAE1; -fx-font-size: 14px; }
+
+/* ---------- Desplazamiento ---------- */
+.nf-scroll, .nf-scroll > .viewport { -fx-background-color: transparent; -fx-background: transparent; }
+.nf-scroll { -fx-padding: 0; -fx-border-color: transparent; }
+
+/* ---------- Gráficos ---------- */
+.chart { -fx-background-color: transparent; }
+.chart-plot-background { -fx-background-color: transparent; }
+.chart-horizontal-grid-lines, .chart-vertical-grid-lines { -fx-stroke: -nf-border; }
+.chart-horizontal-zero-line, .chart-vertical-zero-line { -fx-stroke: -nf-border; }
+.axis { -fx-tick-label-fill: -nf-muted; }
+.axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: transparent; }
+.axis:top, .axis:bottom, .axis:left, .axis:right { -fx-border-color: transparent; }
+.chart-legend { -fx-background-color: transparent; }
+.chart-legend-item { -fx-text-fill: -nf-muted; }
+
+.default-color0.chart-bar { -fx-bar-fill: -nf-accent; }
+.chart-bar { -fx-background-radius: 6 6 0 0; }
+.default-color0.chart-series-line { -fx-stroke: -nf-accent; -fx-stroke-width: 3px; }
+.default-color0.chart-line-symbol { -fx-background-color: -nf-accent, -nf-surface; }
+.default-color0.chart-series-area-fill { -fx-fill: -nf-accent-soft; }
+
+.default-color0.chart-pie { -fx-pie-color: -nf-accent; -fx-border-color: -nf-surface; }
+.default-color1.chart-pie { -fx-pie-color: -nf-warning; -fx-border-color: -nf-surface; }
+.default-color2.chart-pie { -fx-pie-color: -nf-success; -fx-border-color: -nf-surface; }
+.default-color3.chart-pie { -fx-pie-color: -nf-danger; -fx-border-color: -nf-surface; }
+.default-color4.chart-pie { -fx-pie-color: -nf-muted; -fx-border-color: -nf-surface; }
+.chart-legend-item-symbol { -fx-background-radius: 999; }
+.default-color0.chart-legend-item-symbol { -fx-background-color: -nf-accent; }
+.default-color1.chart-legend-item-symbol { -fx-background-color: -nf-warning; }
+.default-color2.chart-legend-item-symbol { -fx-background-color: -nf-success; }
+.default-color3.chart-legend-item-symbol { -fx-background-color: -nf-danger; }
+.default-color4.chart-legend-item-symbol { -fx-background-color: -nf-muted; }
+.chart-pie { -fx-background-color: -fx-pie-color; -fx-background-insets: 0; -fx-border-width: 2; }
+.chart-pie-label { -fx-fill: -nf-text; }
