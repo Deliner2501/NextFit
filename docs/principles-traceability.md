@@ -81,6 +81,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP and GRASP Information Expert | `DashboardView` | It only draws the `Summary` that `DashboardService` calculates; no business rule is repeated in the view |
 | OCP | `Main` (flag `--fx`) | The new interface is added next to the Swing one without changing services, model or persistence |
 | SRP | `LoginView`, `ShellView`, `FxIcons`, `FxImages` | One class per concern: sign-in screen, main window, vector icons, photo areas |
+| OCP and polymorphism | `FxModule`, `DashboardModule`, `PendingModule`, `UsersModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
+| GRASP Pure Fabrication and DRY | `FxDialogs` | Forms and messages shared by every module, so no module builds its own window; the form stays open and shows the business error |
+| SRP and DIP | `UsersModule` | It only collects clicks and shows data; every rule (last administrator, own account, password strength) stays in `UserService` |
 
 ## Ronald: members and health
 
