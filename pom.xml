@@ -11,6 +11,8 @@
         <maven.compiler.release>21</maven.compiler.release>
         <exec.mainClass>com.nextfit.Main</exec.mainClass>
         <flatlaf.version>3.5.4</flatlaf.version>
+        <javafx.version>21.0.5</javafx.version>
+        <atlantafx.version>2.0.1</atlantafx.version>
     </properties>
     <dependencies>
         <dependency>
@@ -27,6 +29,16 @@
             <groupId>com.miglayout</groupId>
             <artifactId>miglayout-swing</artifactId>
             <version>11.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.mkpaz</groupId>
+            <artifactId>atlantafx-base</artifactId>
+            <version>${atlantafx.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

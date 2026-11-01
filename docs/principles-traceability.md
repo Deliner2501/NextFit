@@ -76,6 +76,14 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert and SRP | `Images.deviceScale` | The only place that knows how to read the screen density from a `Graphics2D`; `CoverPhoto` and `ImageCard` ask it instead of repeating the calculation |
 | GRASP Protected Variations | `CoverPhoto.paint`, `ImageCard.paintPicture` | The photo is prepared at the real pixel size of the screen, so Windows scaling (125 %, 150 %) changes nothing for the callers, who keep drawing in logical pixels |
 | SRP | `Images.scale` | One class owns the quality of resizing (progressive halving plus bicubic), so every screen gets the same sharpness |
+| GRASP Protected Variations | `FxTheme` and `nextfit.css` | Dark and light modes change only the values of the style sheet; no screen writes a color in code, so a new mode does not touch any screen |
+| DIP | `FxApp.run` | The JavaFX interface receives `AuthService`, `Session` and `DashboardService` from `Main` and never creates a repository; the Swing and JavaFX interfaces share the same services |
+| SRP and GRASP Information Expert | `DashboardView` | It only draws the `Summary` that `DashboardService` calculates; no business rule is repeated in the view |
+| OCP | `Main` (flag `--fx`) | The new interface is added next to the Swing one without changing services, model or persistence |
+| SRP | `LoginView`, `ShellView`, `FxIcons`, `FxImages` | One class per concern: sign-in screen, main window, vector icons, photo areas |
+| OCP and polymorphism | `FxModule`, `DashboardModule`, `PendingModule`, `UsersModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
+| GRASP Pure Fabrication and DRY | `FxDialogs` | Forms and messages shared by every module, so no module builds its own window; the form stays open and shows the business error |
+| SRP and DIP | `UsersModule` | It only collects clicks and shows data; every rule (last administrator, own account, password strength) stays in `UserService` |
 
 ## Ronald: members and health
 
