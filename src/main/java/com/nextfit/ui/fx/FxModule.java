@@ -1,0 +1,55 @@
+package com.nextfit.ui.fx;
+
+import com.nextfit.model.Role;
+import javafx.scene.Node;
+
+/**
+ * Contract every JavaFX screen implements so the main window can host it in
+ * the sidebar. It mirrors the Swing {@code ModulePanel}: each team member
+ * delivers a module as an implementation, so adding a screen never requires
+ * editing {@link ShellView} (Open/Closed).
+ */
+public interface FxModule {
+
+    /**
+     * Returns the stable identifier of the screen, e.g. "users".
+     *
+     * @return the identifier
+     */
+    String id();
+
+    /**
+     * Returns the text shown in the sidebar (Spanish).
+     *
+     * @return the title
+     */
+    String title();
+
+    /**
+     * Returns the SVG path of the sidebar icon (see {@link FxIcons}).
+     *
+     * @return the path data
+     */
+    String icon();
+
+    /**
+     * Returns the screen itself.
+     *
+     * @return the node to display
+     */
+    Node view();
+
+    /** Called every time the user navigates to this screen, to refresh its data. */
+    default void onShow() {
+    }
+
+    /**
+     * Tells whether users with the given role may open this screen.
+     *
+     * @param role the role of the signed-in user
+     * @return true when the screen must appear in the menu for that role
+     */
+    default boolean allowedFor(Role role) {
+        return true;
+    }
+}
