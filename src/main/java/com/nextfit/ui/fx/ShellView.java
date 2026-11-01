@@ -2,7 +2,6 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
-import com.nextfit.service.DashboardService;
 import com.nextfit.service.Session;
 import com.nextfit.ui.Formats;
 import javafx.animation.FadeTransition;
@@ -30,47 +29,35 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Main window of the pilot: sidebar, top bar and the screen of the chosen
- * module. In the pilot only the home screen is real; the other entries show a
- * notice until their module is migrated.
+ * Main window: sidebar, top bar and the screen of the chosen module. It only
+ * knows the {@link FxModule} contract, so a new module appears in the menu
+ * without changing this class.
  */
 final class ShellView extends BorderPane {
 
-    private record NavItem(String id, String title, String icon, Set<Role> roles) {
-    }
-
-    private static final List<NavItem> ITEMS = List.of(
-            new NavItem("panel", "Panel", FxIcons.PANEL, Set.of(Role.ADMIN, Role.RECEPTION)),
-            new NavItem("members", "Socios", FxIcons.MEMBERS, Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
-            new NavItem("billing", "Membresías y pagos", FxIcons.BILLING, Set.of(Role.ADMIN, Role.RECEPTION)),
-            new NavItem("training", "Entrenamiento", FxIcons.TRAINING, Set.of(Role.ADMIN, Role.TRAINER)),
-            new NavItem("users", "Usuarios", FxIcons.USERS, Set.of(Role.ADMIN)));
-
     private final Session session;
     private final FxTheme theme;
-    private final DashboardView dashboard;
     private final Label title = new Label();
     private final Label subtitle = new Label();
     private final StackPane host = new StackPane();
     private final List<Button> buttons = new ArrayList<>();
-    private final List<NavItem> visible = new ArrayList<>();
+    private final List<FxModule> visible = new ArrayList<>();
 
     /**
      * @param session   the signed-in user
-     * @param service   the source of the home screen numbers
+     * @param modules   every module of the application, in sidebar order
      * @param theme     the dark and light modes
      * @param onLogout  action to run when the user signs out
      */
-    ShellView(Session session, DashboardService service, FxTheme theme, Runnable onLogout) {
+    ShellView(Session session, List<FxModule> modules, FxTheme theme, Runnable onLogout) {
         this.session = session;
         this.theme = theme;
-        this.dashboard = new DashboardView(service, session);
         getStyleClass().add("nf-bg");
 
         Role role = session.getCurrentUser().map(User::getRole).orElse(Role.RECEPTION);
-        for (NavItem item : ITEMS) {
-            if (item.roles().contains(role)) {
-                visible.add(item);
+        for (FxModule module : modules) {
+            if (module.allowedFor(role)) {
+                visible.add(module);
             }
         }
         setLeft(buildSidebar());
@@ -103,7 +90,7 @@ final class ShellView extends BorderPane {
         brand.getChildren().add(name);
         sidebar.getChildren().add(brand);
 
-        for (NavItem item : visible) {
+        for (FxModule item : visible) {
             Button button = new Button(item.title(), FxIcons.of(item.icon(), 20));
             button.getStyleClass().add("nf-nav");
             button.setMaxWidth(Double.MAX_VALUE);
@@ -154,6 +141,7 @@ final class ShellView extends BorderPane {
 
         ScrollPane scroll = new ScrollPane(host);
         scroll.setFitToWidth(true);
+        scroll.setFitToHeight(true);
         scroll.getStyleClass().add("nf-scroll");
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
@@ -167,7 +155,7 @@ final class ShellView extends BorderPane {
         return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
 
-    private void show(NavItem item) {
+    private void show(FxModule item) {
         for (int i = 0; i < buttons.size(); i++) {
             buttons.get(i).getStyleClass().remove("selected");
             if (visible.get(i) == item) {
@@ -176,18 +164,8 @@ final class ShellView extends BorderPane {
         }
         title.setText(item.title());
         subtitle.setText(longDate(LocalDate.now()));
-        Node screen;
-        if ("panel".equals(item.id())) {
-            dashboard.refresh();
-            screen = dashboard;
-        } else {
-            Label notice = new Label("Este módulo se migrará a la interfaz nueva en la semana 2.");
-            notice.getStyleClass().add("nf-muted");
-            StackPane box = new StackPane(notice);
-            box.getStyleClass().add("nf-card");
-            box.setMinHeight(240);
-            screen = box;
-        }
+        item.onShow();
+        Node screen = item.view();
         host.getChildren().setAll(screen);
         FadeTransition fade = new FadeTransition(Duration.millis(220), screen);
         fade.setFromValue(0);

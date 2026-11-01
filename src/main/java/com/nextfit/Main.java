@@ -29,7 +29,12 @@ import com.nextfit.service.Session;
 import com.nextfit.ui.LoginFrame;
 import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
+import com.nextfit.model.Role;
+import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
+import com.nextfit.ui.fx.FxIcons;
+import com.nextfit.ui.fx.PendingModule;
+import com.nextfit.ui.fx.UsersModule;
 import com.nextfit.ui.Theme;
 import com.nextfit.ui.billing.BillingPanel;
 import com.nextfit.ui.dashboard.DashboardPanel;
@@ -43,6 +48,7 @@ import com.nextfit.validation.MemberValidator;
 import javax.swing.SwingUtilities;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Application entry point. Repositories, services and screens are wired here
@@ -108,7 +114,16 @@ public final class Main {
         
         // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
         if (fx) {
-            FxApp.run(auth, session, dashboardService);
+            // The modules are built by a supplier because JavaFX controls can only be created after the toolkit starts.
+            FxApp.run(auth, session, () -> List.of(
+                    new DashboardModule(dashboardService, session),
+                    new PendingModule("members", "Socios", FxIcons.MEMBERS,
+                            Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
+                    new PendingModule("billing", "Membresías y pagos", FxIcons.BILLING,
+                            Set.of(Role.ADMIN, Role.RECEPTION)),
+                    new PendingModule("training", "Entrenamiento", FxIcons.TRAINING,
+                            Set.of(Role.ADMIN, Role.TRAINER)),
+                    new UsersModule(userService, session)));
             return;
         }
 
