@@ -29,6 +29,7 @@ import com.nextfit.service.Session;
 import com.nextfit.ui.LoginFrame;
 import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
+import com.nextfit.ui.fx.FxApp;
 import com.nextfit.ui.Theme;
 import com.nextfit.ui.billing.BillingPanel;
 import com.nextfit.ui.dashboard.DashboardPanel;
@@ -61,9 +62,12 @@ public final class Main {
      * @param args unused
      */
     public static void main(String[] args) {
-        System.setProperty("awt.useSystemAAFontSettings", "on");
-        System.setProperty("swing.aatext", "true");
-        Theme.install();
+        boolean fx = List.of(args).contains("--fx");
+        if (!fx) {
+            System.setProperty("awt.useSystemAAFontSettings", "on");
+            System.setProperty("swing.aatext", "true");
+            Theme.install();
+        }
 
         // First run only: fills an empty installation with example data.
         DemoData.seedIfEmpty(DATA_DIR);
@@ -102,6 +106,12 @@ public final class Main {
         DashboardService dashboardService = new DashboardService(
                 subscriptionService, paymentService, attendanceService, Clock.systemDefaultZone());
         
+        // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
+        if (fx) {
+            FxApp.run(auth, session, dashboardService);
+            return;
+        }
+
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
         
