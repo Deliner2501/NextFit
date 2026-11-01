@@ -59,11 +59,26 @@ public final class Images {
         return resample(current, width, height);
     }
 
+    /**
+     * Tells how many real screen pixels there are for each logical pixel of a
+     * surface. It is 1 on a normal screen and bigger (1.25, 1.5, 2...) when the
+     * operating system scales the interface. Pictures are prepared at this
+     * density so they stay sharp instead of being stretched by the system.
+     *
+     * @param g2 the surface being painted
+     * @return the density, never less than 1
+     */
+    public static double deviceScale(Graphics2D g2) {
+        return Math.max(1.0, g2.getTransform().getScaleX());
+    }
+
     private static BufferedImage resample(BufferedImage source, int width, int height) {
-        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        // Las fotos no tienen transparencia: RGB es más rápido y ocupa menos memoria.
+        int type = source.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+        BufferedImage result = new BufferedImage(width, height, type);
         Graphics2D g2 = result.createGraphics();
         try {
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2.drawImage(source, 0, 0, width, height, null);

@@ -39,3 +39,7 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 | `images/exercises/glutes.jpg` | Glutes exercises | Gabrielle Durant | https://www.pexels.com/es-es/foto/blanco-y-negro-persona-pantalones-cortos-shorts-13122465/ | Pexels License |
 
 Rules: only pictures with a license that allows free use (for example Unsplash or Pexels licenses), the author and URL must be written here, and the file name in `src/main/resources/images/` must match the one listed.
+
+## Image quality
+
+The photographs are exported from the original files at 1600 px (exercises) and 2560 px (banners) on the long side, saved as progressive JPEG at quality 88, and drawn at the real pixel size of the screen. Keep the originals outside the repository and export new pictures at the same sizes.

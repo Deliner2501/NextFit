@@ -30,7 +30,10 @@ public class ImageCard extends JComponent {
     private final int height;
     private final String title;
     private final String subtitle;
-    private final BufferedImage picture;   // recortada al área de la imagen; null si no hay
+    private final String imagePath;        // ruta de la foto; la foto completa no se guarda para ahorrar memoria
+    private boolean missing;               // true cuando la foto no existe
+    private BufferedImage picture;         // copia recortada a la densidad de la pantalla
+    private double pictureDensity;
     private boolean hovered;
     private boolean selected;
 
@@ -48,9 +51,7 @@ public class ImageCard extends JComponent {
         this.height = height;
         this.title = title == null ? "" : title;
         this.subtitle = subtitle == null ? "" : subtitle;
-        this.picture = PictureSource.load(imagePath)
-                .map(image -> PictureSource.cover(image, width, height - TEXT_AREA))
-                .orElse(null);
+        this.imagePath = imagePath;
         setPreferredSize(new Dimension(width, height));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         addMouseListener(new MouseAdapter() {
@@ -111,8 +112,18 @@ public class ImageCard extends JComponent {
     private void paintPicture(Graphics2D g2, RoundRectangle2D shape) {
         int pictureHeight = height - TEXT_AREA;
         g2.clip(shape);   // clip() intersecta con el recorte actual; setClip() lo reemplazaría
+        double density = Images.deviceScale(g2);
+        if (!missing && (picture == null || pictureDensity != density)) {
+            // Se prepara a los píxeles reales de la pantalla para que no se vea borrosa con zoom.
+            picture = PictureSource.load(imagePath)
+                    .map(image -> PictureSource.cover(image, (int) Math.round(width * density),
+                            (int) Math.round(pictureHeight * density)))
+                    .orElse(null);
+            pictureDensity = density;
+            missing = picture == null;
+        }
         if (picture != null) {
-            g2.drawImage(picture, 0, 0, null);
+            g2.drawImage(picture, 0, 0, width, pictureHeight, null);
         } else {
             // Sin imagen: bloque de color con la inicial del título.
             g2.setColor(Theme.BACKGROUND);

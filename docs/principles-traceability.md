@@ -73,6 +73,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP and reuse | `DemoData` | It creates the example data through the same services the screens use, so it follows the same rules and needs no special code path |
 | DIP and testability | `DemoData.at` with `Clock.fixed` | Each past day is reproduced with its own fixed clock, so "a membership must be valid to enter" holds on that day |
 | GRASP Protected Variations | `DemoData.isEmptyInstallation` | Example data is only created when nothing exists, so real data is never mixed with it |
+| GRASP Information Expert and SRP | `Images.deviceScale` | The only place that knows how to read the screen density from a `Graphics2D`; `CoverPhoto` and `ImageCard` ask it instead of repeating the calculation |
+| GRASP Protected Variations | `CoverPhoto.paint`, `ImageCard.paintPicture` | The photo is prepared at the real pixel size of the screen, so Windows scaling (125 %, 150 %) changes nothing for the callers, who keep drawing in logical pixels |
+| SRP | `Images.scale` | One class owns the quality of resizing (progressive halving plus bicubic), so every screen gets the same sharpness |
 
 ## Ronald: members and health
 
