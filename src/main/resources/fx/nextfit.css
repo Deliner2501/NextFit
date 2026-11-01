@@ -164,3 +164,61 @@
 .default-color4.chart-legend-item-symbol { -fx-background-color: -nf-muted; }
 .chart-pie { -fx-background-color: -fx-pie-color; -fx-background-insets: 0; -fx-border-width: 2; }
 .chart-pie-label { -fx-fill: -nf-text; }
+
+/* ---------- Botones secundarios y pequeños ---------- */
+.nf-secondary {
+    -fx-background-color: -nf-surface;
+    -fx-text-fill: -nf-text;
+    -fx-background-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 12;
+    -fx-padding: 10 16;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+.nf-secondary:hover { -fx-background-color: -nf-surface-alt; }
+.nf-primary-small {
+    -fx-background-color: -nf-accent;
+    -fx-text-fill: #0E1014;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-radius: 12;
+    -fx-padding: 10 18;
+    -fx-cursor: hand;
+}
+.nf-primary-small:hover { -fx-background-color: derive(-nf-accent, -8%); }
+
+/* ---------- Ventanas de diálogo ---------- */
+.nf-dialog-title { -fx-text-fill: -nf-text; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-dialog .combo-box { -fx-pref-height: 44; }
+
+/* ---------- Tablas ---------- */
+.nf-table {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-padding: 4;
+}
+.nf-table .column-header-background { -fx-background-color: transparent; }
+.nf-table .column-header, .nf-table .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -nf-border transparent;
+    -fx-size: 44;
+}
+.nf-table .column-header .label { -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-table .table-row-cell { -fx-background-color: transparent; -fx-border-color: transparent; }
+.nf-table .table-row-cell:hover { -fx-background-color: -nf-surface-alt; }
+.nf-table .table-row-cell:selected { -fx-background-color: -nf-accent-soft; }
+.nf-table .table-cell { -fx-text-fill: -nf-text; -fx-alignment: CENTER_LEFT; -fx-font-size: 14px; -fx-border-color: transparent; }
+.nf-table .table-row-cell:selected .table-cell { -fx-text-fill: -nf-text; }
+.nf-table .table-cell.nf-state-on { -fx-text-fill: -nf-success; -fx-font-weight: bold; }
+.nf-table .table-cell.nf-state-off { -fx-text-fill: -nf-muted; -fx-font-weight: bold; }
+
+/* Filas vacías transparentes y estados que conservan su color al seleccionar */
+.nf-table .table-row-cell:empty { -fx-background-color: transparent; -fx-border-color: transparent; }
+.nf-table .table-row-cell:odd, .nf-table .table-row-cell:even { -fx-background-color: transparent; }
+.nf-table .table-row-cell:odd:hover, .nf-table .table-row-cell:even:hover { -fx-background-color: -nf-surface-alt; }
+.nf-table .table-row-cell:filled:selected, .nf-table .table-row-cell:filled:selected:hover { -fx-background-color: -nf-accent-soft; }
+.nf-table .table-row-cell:selected .table-cell.nf-state-on { -fx-text-fill: -nf-success; }
+.nf-table .table-row-cell:selected .table-cell.nf-state-off { -fx-text-fill: -nf-muted; }
