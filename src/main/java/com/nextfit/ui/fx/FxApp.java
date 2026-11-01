@@ -1,7 +1,6 @@
 package com.nextfit.ui.fx;
 
 import com.nextfit.service.AuthService;
-import com.nextfit.service.DashboardService;
 import com.nextfit.service.Session;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
@@ -13,6 +12,9 @@ import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.List;
+import java.util.function.Supplier;
+
 /**
  * Entry point of the JavaFX interface. It owns the only window and swaps its
  * content between the sign-in screen and the main shell. The services come from
@@ -23,7 +25,8 @@ public final class FxApp extends Application {
 
     private static AuthService auth;
     private static Session session;
-    private static DashboardService dashboard;
+    private static Supplier<List<FxModule>> moduleFactory;
+    private static List<FxModule> modules;
 
     private final FxTheme theme = new FxTheme();
     private Scene scene;
@@ -33,19 +36,22 @@ public final class FxApp extends Application {
      *
      * @param authService      the sign-in rules
      * @param activeSession    where the signed-in user is stored
-     * @param dashboardService the source of the home screen numbers
+     * @param factory          builds every module, in sidebar order; it is called after JavaFX has started,
+     *                         because controls cannot be created before that
      */
-    public static void run(AuthService authService, Session activeSession, DashboardService dashboardService) {
+    public static void run(AuthService authService, Session activeSession, Supplier<List<FxModule>> factory) {
         auth = authService;
         session = activeSession;
-        dashboard = dashboardService;
+        moduleFactory = factory;
         launch(FxApp.class);
     }
 
     @Override
     public void start(Stage stage) {
+        modules = moduleFactory.get();
         scene = new Scene(new Region(), 1360, 840);
         theme.attach(scene);
+        FxDialogs.useTheme(theme);
         stage.setScene(scene);
         stage.setTitle("NextFit");
         stage.setMinWidth(1040);
@@ -65,7 +71,7 @@ public final class FxApp extends Application {
     }
 
     private void showMain() {
-        setRoot(new ShellView(session, dashboard, theme, this::logout));
+        setRoot(new ShellView(session, modules, theme, this::logout));
     }
 
     private void logout() {
