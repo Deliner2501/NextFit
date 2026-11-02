@@ -167,7 +167,7 @@ public final class FxDialogs {
         body.setEditable(false);
         body.setWrapText(false);
         body.setPrefColumnCount(44);
-        body.setPrefRowCount(Math.min(24, text.split("\n").length + 1));
+        body.setPrefRowCount(Math.min(26, text.split("\n").length + 3));
         body.getStyleClass().add("nf-receipt");
         Button copy = new Button("Copiar");
         copy.getStyleClass().add("nf-secondary");
