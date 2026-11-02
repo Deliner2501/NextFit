@@ -268,3 +268,10 @@
 .nf-table .table-cell.nf-state-warn, .nf-table .table-row-cell:selected .table-cell.nf-state-warn { -fx-text-fill: -nf-warning; -fx-font-weight: bold; }
 .nf-table .table-cell.nf-state-bad, .nf-table .table-row-cell:selected .table-cell.nf-state-bad { -fx-text-fill: -nf-danger; -fx-font-weight: bold; }
 .nf-footer-total { -fx-text-fill: -nf-accent-text; -fx-font-size: 16px; -fx-font-weight: bold; }
+
+/* ---------- Acento de marca en los controles de AtlantaFX (foco, selección, calendario) ---------- */
+.root.dark, .root.light {
+    -color-accent-emphasis: -nf-accent;
+    -color-accent-fg: -nf-accent-text;
+    -color-accent-subtle: -nf-accent-soft;
+}
