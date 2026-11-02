@@ -7,6 +7,9 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -112,6 +115,76 @@ public final class FxDialogs {
         HBox buttons = new HBox(ok);
         buttons.setAlignment(Pos.CENTER_RIGHT);
         show(stage, new VBox(16, heading, text, buttons));
+    }
+
+    /**
+     * Asks the user to confirm an action and waits for the answer.
+     *
+     * @param owner       a node of the window the dialog belongs to
+     * @param title       the title
+     * @param message     the question
+     * @param confirmText the text of the confirm button
+     * @return true when the user confirmed
+     */
+    public static boolean confirm(Node owner, String title, String message, String confirmText) {
+        boolean[] accepted = {false};
+        Stage stage = newStage(owner, title);
+        Label heading = new Label(title);
+        heading.getStyleClass().add("nf-dialog-title");
+        Label text = new Label(message);
+        text.getStyleClass().add("nf-muted");
+        text.setWrapText(true);
+        Button cancel = new Button("Cancelar");
+        cancel.getStyleClass().add("nf-secondary");
+        cancel.setCancelButton(true);
+        cancel.setOnAction(e -> stage.close());
+        Button confirm = new Button(confirmText);
+        confirm.getStyleClass().add("nf-primary");
+        confirm.setDefaultButton(true);
+        confirm.setOnAction(e -> {
+            accepted[0] = true;
+            stage.close();
+        });
+        HBox buttons = new HBox(10, cancel, confirm);
+        buttons.setAlignment(Pos.CENTER_RIGHT);
+        show(stage, new VBox(16, heading, text, buttons));
+        return accepted[0];
+    }
+
+    /**
+     * Shows a read-only text, such as a receipt, with a button to copy it.
+     *
+     * @param owner   a node of the window the dialog belongs to
+     * @param title   the window title
+     * @param heading the heading inside the dialog
+     * @param text    the text to show, in a monospaced font
+     */
+    public static void document(Node owner, String title, String heading, String text) {
+        Stage stage = newStage(owner, title);
+        Label head = new Label(heading);
+        head.getStyleClass().add("nf-success-title");
+        TextArea body = new TextArea(text);
+        body.setEditable(false);
+        body.setWrapText(false);
+        body.setPrefColumnCount(44);
+        body.setPrefRowCount(Math.min(26, text.split("\n").length + 3));
+        body.getStyleClass().add("nf-receipt");
+        Button copy = new Button("Copiar");
+        copy.getStyleClass().add("nf-secondary");
+        copy.setOnAction(e -> {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(text);
+            Clipboard.getSystemClipboard().setContent(content);
+            copy.setText("Copiado");
+        });
+        Button close = new Button("Cerrar");
+        close.getStyleClass().add("nf-primary");
+        close.setDefaultButton(true);
+        close.setCancelButton(true);
+        close.setOnAction(e -> stage.close());
+        HBox buttons = new HBox(10, copy, close);
+        buttons.setAlignment(Pos.CENTER_RIGHT);
+        show(stage, new VBox(16, head, body, buttons));
     }
 
     /**

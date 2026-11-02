@@ -218,7 +218,60 @@
 /* Filas vacías transparentes y estados que conservan su color al seleccionar */
 .nf-table .table-row-cell:empty { -fx-background-color: transparent; -fx-border-color: transparent; }
 .nf-table .table-row-cell:odd, .nf-table .table-row-cell:even { -fx-background-color: transparent; }
-.nf-table .table-row-cell:odd:hover, .nf-table .table-row-cell:even:hover { -fx-background-color: -nf-surface-alt; }
+.nf-table .table-row-cell:filled:odd:hover, .nf-table .table-row-cell:filled:even:hover { -fx-background-color: -nf-surface-alt; }
 .nf-table .table-row-cell:filled:selected, .nf-table .table-row-cell:filled:selected:hover { -fx-background-color: -nf-accent-soft; }
 .nf-table .table-row-cell:selected .table-cell.nf-state-on { -fx-text-fill: -nf-success; }
 .nf-table .table-row-cell:selected .table-cell.nf-state-off { -fx-text-fill: -nf-muted; }
+
+/* ---------- Pestañas ---------- */
+.nf-tabs { -fx-background-color: transparent; -fx-background-insets: 0; }
+.nf-tabs > .tab-header-area { -fx-background-color: transparent; -fx-padding: 0; }
+.nf-tabs > .tab-header-area > .headers-region { -fx-background-color: transparent; }
+.nf-tabs > .tab-header-area > .tab-header-background { -fx-background-color: transparent; }
+.nf-tabs > .tab-header-area .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent -nf-border transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 8 18;
+}
+.nf-tabs > .tab-header-area .tab .tab-label { -fx-text-fill: -nf-muted; -fx-font-size: 14px; }
+.nf-tabs > .tab-header-area .tab:hover .tab-label { -fx-text-fill: -nf-text; }
+.nf-tabs > .tab-header-area .tab:selected { -fx-border-color: transparent transparent -nf-accent transparent; }
+.nf-tabs > .tab-header-area .tab:selected .tab-label { -fx-text-fill: -nf-accent-text; -fx-font-weight: bold; }
+.nf-tabs > .tab-content-area { -fx-background-color: transparent; }
+
+/* ---------- Títulos de sección y listas ---------- */
+.nf-section-title { -fx-text-fill: -nf-text; -fx-font-size: 22px; -fx-font-weight: bold; }
+.nf-member-name { -fx-text-fill: -nf-text; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-list {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-padding: 4;
+}
+.nf-list .list-cell { -fx-background-color: transparent; -fx-background-radius: 10; -fx-padding: 8 12; }
+.nf-list .list-cell:empty { -fx-background-color: transparent; }
+.nf-list .list-cell:filled:hover { -fx-background-color: -nf-surface-alt; }
+.nf-list .list-cell:filled:selected, .nf-list .list-cell:filled:selected:hover { -fx-background-color: -nf-accent-soft; }
+.nf-list-name { -fx-text-fill: -nf-text; -fx-font-size: 14px; -fx-font-weight: bold; }
+
+/* ---------- Resumen de venta y comprobante ---------- */
+.nf-summary { -fx-background-color: -nf-surface-alt; -fx-background-radius: 14; }
+.nf-total { -fx-text-fill: -nf-accent-text; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-success-title { -fx-text-fill: -nf-success; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-receipt { -fx-font-family: "Consolas", "Courier New", monospace; -fx-font-size: 14px; -fx-text-fill: -nf-text; }
+.nf-receipt .content { -fx-background-color: -nf-surface-alt; -fx-background-radius: 12; }
+
+/* ---------- Estados de color en tablas y total del pie ---------- */
+.nf-table .table-cell.nf-state-warn, .nf-table .table-row-cell:selected .table-cell.nf-state-warn { -fx-text-fill: -nf-warning; -fx-font-weight: bold; }
+.nf-table .table-cell.nf-state-bad, .nf-table .table-row-cell:selected .table-cell.nf-state-bad { -fx-text-fill: -nf-danger; -fx-font-weight: bold; }
+.nf-footer-total { -fx-text-fill: -nf-accent-text; -fx-font-size: 16px; -fx-font-weight: bold; }
+
+/* ---------- Acento de marca en los controles de AtlantaFX (foco, selección, calendario) ---------- */
+.root.dark, .root.light {
+    -color-accent-emphasis: -nf-accent;
+    -color-accent-fg: -nf-accent-text;
+    -color-accent-subtle: -nf-accent-soft;
+}

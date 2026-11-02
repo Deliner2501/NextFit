@@ -23,6 +23,16 @@ public final class Formats {
     }
 
     /**
+     * Writes a number of days with the right singular or plural.
+     *
+     * @param days the number of days
+     * @return the text, e.g. "1 día" or "30 días"
+     */
+    public static String days(int days) {
+        return days == 1 ? "1 día" : days + " días";
+    }
+
+    /**
      * Writes an amount of pesos with a dot between thousands.
      *
      * @param pesos the amount

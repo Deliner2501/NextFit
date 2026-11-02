@@ -35,7 +35,7 @@ public final class ReceiptText {
         text.append("Socio: ").append(member.getFullName())
                 .append(" (documento ").append(member.getDocumentNumber()).append(")\n");
         text.append("Plan: ").append(plan.getName())
-                .append(" (").append(plan.getDurationDays()).append(" días)\n");
+                .append(" (").append(Formats.days(plan.getDurationDays())).append(")\n");
         text.append("Vigencia: ").append(Formats.date(subscription.getStartDate()))
                 .append(" al ").append(Formats.date(subscription.getEndDate())).append('\n');
         text.append("Método de pago: ").append(payment.getMethod().getLabel()).append('\n');

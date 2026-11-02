@@ -22,6 +22,12 @@ class FormatsTest {
     }
 
     @Test
+    void daysUseSingularForOne() {
+        assertEquals("1 día", Formats.days(1));
+        assertEquals("30 días", Formats.days(30));
+    }
+
+    @Test
     void moneyKeepsTheSignOfNegativeAmounts() {
         assertEquals("-$ 1.500", Formats.money(-1_500));
     }

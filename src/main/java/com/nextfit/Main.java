@@ -30,6 +30,7 @@ import com.nextfit.ui.LoginFrame;
 import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
 import com.nextfit.model.Role;
+import com.nextfit.ui.fx.BillingModule;
 import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
 import com.nextfit.ui.fx.FxIcons;
@@ -119,8 +120,7 @@ public final class Main {
                     new DashboardModule(dashboardService, session),
                     new PendingModule("members", "Socios", FxIcons.MEMBERS,
                             Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
-                    new PendingModule("billing", "Membresías y pagos", FxIcons.BILLING,
-                            Set.of(Role.ADMIN, Role.RECEPTION)),
+                    new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                     new PendingModule("training", "Entrenamiento", FxIcons.TRAINING,
                             Set.of(Role.ADMIN, Role.TRAINER)),
                     new UsersModule(userService, session)));
