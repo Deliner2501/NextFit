@@ -84,6 +84,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP and polymorphism | `FxModule`, `DashboardModule`, `PendingModule`, `UsersModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
 | GRASP Pure Fabrication and DRY | `FxDialogs` | Forms and messages shared by every module, so no module builds its own window; the form stays open and shows the business error |
 | SRP and DIP | `UsersModule` | It only collects clicks and shows data; every rule (last administrator, own account, password strength) stays in `UserService` |
+| DRY and GRASP Pure Fabrication | `MemberPicker` | The member search column is one reusable class that any module (sales, training, members) can use instead of copying it |
+| SRP and DIP | `SalePane`, `PlansPane` | They only collect data and show the total; the discount math is the `Discount` hierarchy and the sale rules are in `PaymentService` |
+| OCP | `BillingModule` | The four tabs are added to one module; the subscriptions and payments tabs replace their placeholders without changing the module contract |
 
 ## Ronald: members and health
 
