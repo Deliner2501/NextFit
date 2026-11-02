@@ -69,7 +69,7 @@ final class PlansPane extends VBox {
 
     private Node buildTable() {
         TableColumn<MembershipPlan, String> name = column("Plan", 200, MembershipPlan::getName);
-        TableColumn<MembershipPlan, String> duration = column("Duración", 110, p -> p.getDurationDays() + " días");
+        TableColumn<MembershipPlan, String> duration = column("Duración", 110, p -> Formats.days(p.getDurationDays()));
         TableColumn<MembershipPlan, String> price = column("Precio", 140, p -> Formats.money(p.getPrice()));
         TableColumn<MembershipPlan, String> description = column("Descripción", 360, MembershipPlan::getDescription);
         TableColumn<MembershipPlan, String> state = column("Estado", 130, p -> p.isActive() ? ON_SALE : "Retirado");

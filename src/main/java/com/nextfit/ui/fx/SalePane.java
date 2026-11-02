@@ -116,7 +116,7 @@ final class SalePane extends HBox {
         memberInfo.setWrapText(true);
 
         planBox.setConverter(converter(plan -> plan == null ? ""
-                : plan.getName() + "  ·  " + plan.getDurationDays() + " días  ·  " + Formats.money(plan.getPrice())));
+                : plan.getName() + "  ·  " + Formats.days(plan.getDurationDays()) + "  ·  " + Formats.money(plan.getPrice())));
         methodBox.getItems().addAll(PaymentMethod.values());
         methodBox.setConverter(converter(method -> method == null ? "" : method.getLabel()));
         methodBox.setValue(PaymentMethod.CASH);
