@@ -4,13 +4,11 @@ import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.MembershipPlan;
 import com.nextfit.service.MembershipPlanService;
 import com.nextfit.ui.Formats;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -19,7 +17,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * Screen with the membership plans the gym sells: a table where the user can
@@ -68,24 +65,12 @@ final class PlansPane extends VBox {
     }
 
     private Node buildTable() {
-        TableColumn<MembershipPlan, String> name = column("Plan", 200, MembershipPlan::getName);
-        TableColumn<MembershipPlan, String> duration = column("Duración", 110, p -> Formats.days(p.getDurationDays()));
-        TableColumn<MembershipPlan, String> price = column("Precio", 140, p -> Formats.money(p.getPrice()));
-        TableColumn<MembershipPlan, String> description = column("Descripción", 360, MembershipPlan::getDescription);
-        TableColumn<MembershipPlan, String> state = column("Estado", 130, p -> p.isActive() ? ON_SALE : "Retirado");
-        state.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String value, boolean empty) {
-                super.updateItem(value, empty);
-                getStyleClass().removeAll("nf-state-on", "nf-state-off");
-                if (empty || value == null) {
-                    setText(null);
-                } else {
-                    setText(value);
-                    getStyleClass().add(ON_SALE.equals(value) ? "nf-state-on" : "nf-state-off");
-                }
-            }
-        });
+        TableColumn<MembershipPlan, String> name = FxTables.column("Plan", 200, MembershipPlan::getName);
+        TableColumn<MembershipPlan, String> duration = FxTables.column("Duración", 110, p -> Formats.days(p.getDurationDays()));
+        TableColumn<MembershipPlan, String> price = FxTables.column("Precio", 140, p -> Formats.money(p.getPrice()));
+        TableColumn<MembershipPlan, String> description = FxTables.column("Descripción", 360, MembershipPlan::getDescription);
+        TableColumn<MembershipPlan, String> state = FxTables.column("Estado", 130, p -> p.isActive() ? ON_SALE : "Retirado");
+        FxTables.colorize(state, value -> ON_SALE.equals(value) ? "nf-state-on" : "nf-state-off");
         table.getColumns().addAll(List.of(name, duration, price, description, state));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setFixedCellSize(46);
@@ -100,15 +85,6 @@ final class PlansPane extends VBox {
         });
         table.setMinHeight(300);
         return table;
-    }
-
-    private static TableColumn<MembershipPlan, String> column(String title, double width,
-                                                              Function<MembershipPlan, String> value) {
-        TableColumn<MembershipPlan, String> column = new TableColumn<>(title);
-        column.setCellValueFactory(cell -> new SimpleStringProperty(value.apply(cell.getValue())));
-        column.setPrefWidth(width);
-        column.setSortable(false);
-        return column;
     }
 
     /** Reloads the plans from the service. */

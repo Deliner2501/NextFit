@@ -14,7 +14,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -107,23 +106,11 @@ public final class UsersModule implements FxModule {
     }
 
     private Node buildTable() {
-        TableColumn<User, String> username = column("Usuario", 200, User::getUsername);
-        TableColumn<User, String> name = column("Nombre", 340, User::getFullName);
-        TableColumn<User, String> role = column("Rol", 200, u -> u.getRole().getLabel());
-        TableColumn<User, String> state = column("Estado", 160, u -> u.isActive() ? "Activo" : "Desactivado");
-        state.setCellFactory(col -> new TableCell<>() {
-            @Override
-            protected void updateItem(String value, boolean empty) {
-                super.updateItem(value, empty);
-                getStyleClass().removeAll("nf-state-on", "nf-state-off");
-                if (empty || value == null) {
-                    setText(null);
-                } else {
-                    setText(value);
-                    getStyleClass().add("Activo".equals(value) ? "nf-state-on" : "nf-state-off");
-                }
-            }
-        });
+        TableColumn<User, String> username = FxTables.column("Usuario", 200, User::getUsername);
+        TableColumn<User, String> name = FxTables.column("Nombre", 340, User::getFullName);
+        TableColumn<User, String> role = FxTables.column("Rol", 200, u -> u.getRole().getLabel());
+        TableColumn<User, String> state = FxTables.column("Estado", 160, u -> u.isActive() ? "Activo" : "Desactivado");
+        FxTables.colorize(state, value -> "Activo".equals(value) ? "nf-state-on" : "nf-state-off");
         table.getColumns().addAll(java.util.List.of(username, name, role, state));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setFixedCellSize(46);
@@ -138,15 +125,6 @@ public final class UsersModule implements FxModule {
         });
         table.setMinHeight(320);
         return table;
-    }
-
-    private TableColumn<User, String> column(String title, double width,
-                                             java.util.function.Function<User, String> value) {
-        TableColumn<User, String> column = new TableColumn<>(title);
-        column.setCellValueFactory(cell -> new javafx.beans.property.SimpleStringProperty(value.apply(cell.getValue())));
-        column.setPrefWidth(width);
-        column.setSortable(false);
-        return column;
     }
 
     private void refresh() {
