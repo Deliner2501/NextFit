@@ -147,4 +147,15 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `RoutineFormDialog.DayPanel`, `RoutineFormDialog.LineRow` | Each nested class handles one level of the routine (a day, a line); the dialog only assembles the result and delegates saving to `RoutineService` |
 | GRASP Information Expert | `AssignmentView` and `RoutineAssignmentService.findCurrentFor` | The screen asks the service which routine is current instead of filtering assignments itself |
 | DRY and SRP | `MemberPickerPanel` | The member search column is one reusable class instead of being copied into each screen |
-
+| SRP | `SuggestionRequest`, `SuggestionSettings`, `WeeklySplit` | One class only carries what was asked, one only holds the adjustable settings and one only decides the days; none of them builds a routine |
+| OCP and ISP | `SuggestionRule`, `BmiRule`, `MedicalConditionRule` | A new rule is a new class that implements a one-method interface; `SuggestionService` does not change |
+| DIP | `SuggestionService` and `SuggestionRule`, `ExerciseService`, `HealthService` | The service receives its rules and collaborators through the constructor and depends on the interface, not on concrete rules |
+| GRASP Information Expert | `TrainingGoal` | Each goal knows its own sets, repetitions, rest and whether it needs cardio, so no chain of `if` is needed |
+| GRASP Information Expert | `SuggestionSettings.allows` | The settings own the limits, so they decide whether an exercise can be suggested |
+| Encapsulation and immutability | `SuggestionRequest`, `SuggestionSettings`, `SuggestedRoutine` | Records with copied collections; each rule returns a new copy instead of changing the previous one |
+| GRASP Controller (use case) | `SuggestionService.suggest` | One operation coordinates the rules, the weekly split and the catalog to build the draft; it holds no screen code and saves nothing |
+| GRASP Low coupling | `SuggestionRequest` | The rules read a BMI category and a text, not the member or the health service, so they are tested alone |
+| GRASP Protected Variations | `MedicalConditionRule.normalize` | The free text typed by people is normalized (case and accents) in one place, so the key words match however they were written |
+| GRASP Pure Fabrication | `WeeklySplit` | It is not a gym concept, but it concentrates the weekly layout so the service does not repeat it |
+| DIP and testability | `SuggestionService` with `Clock` | The creation date is checked with a fixed clock |
+| Testability | `SuggestionRulesTest`, `SuggestionServiceTest` | The rules are tested alone and the service with CSV files in a temporary folder |
