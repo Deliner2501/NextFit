@@ -87,6 +87,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | DRY and GRASP Pure Fabrication | `MemberPicker` | The member search column is one reusable class that any module (sales, training, members) can use instead of copying it |
 | SRP and DIP | `SalePane`, `PlansPane` | They only collect data and show the total; the discount math is the `Discount` hierarchy and the sale rules are in `PaymentService` |
 | OCP | `BillingModule` | The four tabs are added to one module; the subscriptions and payments tabs replace their placeholders without changing the module contract |
+| DRY and GRASP Pure Fabrication | `FxTables` | Text columns and colored state columns are built in one place; `UsersModule`, `PlansPane`, `SubscriptionsPane` and `PaymentsPane` no longer repeat the cell code |
+| SRP and DIP | `SubscriptionsPane`, `PaymentsPane` | They filter, search and show rows; the state of a membership (`statusOf`, `daysLeftOf`) and the receipt (`findSale`) come from the services |
+| DRY | `ReceiptText` reused by `FxDialogs.document` | The receipt text is built once and shown by both the Swing and the JavaFX interface |
 
 ## Ronald: members and health
 
