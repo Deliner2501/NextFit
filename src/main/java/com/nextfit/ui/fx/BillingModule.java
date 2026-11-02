@@ -8,7 +8,6 @@ import com.nextfit.service.Session;
 import com.nextfit.service.SubscriptionService;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
@@ -22,6 +21,8 @@ public final class BillingModule implements FxModule {
 
     private final TabPane tabs = new TabPane();
     private final SalePane sale;
+    private final SubscriptionsPane subscriptions;
+    private final PaymentsPane payments;
     private final PlansPane plans;
 
     /**
@@ -34,11 +35,16 @@ public final class BillingModule implements FxModule {
     public BillingModule(MembershipPlanService planService, SubscriptionService subscriptionService,
                          PaymentService paymentService, MemberService memberService, Session session) {
         this.plans = new PlansPane(planService);
+        this.subscriptions = new SubscriptionsPane(subscriptionService, planService, memberService);
+        this.payments = new PaymentsPane(paymentService, memberService);
         this.sale = new SalePane(planService, subscriptionService, paymentService, memberService, session,
-                () -> { });
+                () -> {
+                    subscriptions.refresh();
+                    payments.refresh();
+                });
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
-        tabs.getTabs().addAll(tab("Venta", sale), tab("Suscripciones", pending()), tab("Pagos", pending()),
+        tabs.getTabs().addAll(tab("Venta", sale), tab("Suscripciones", subscriptions), tab("Pagos", payments),
                 tab("Planes", plans));
         // A plan created, edited or withdrawn in one tab must show up in the other.
         tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> refreshTabs());
@@ -77,6 +83,8 @@ public final class BillingModule implements FxModule {
 
     private void refreshTabs() {
         sale.refresh();
+        subscriptions.refresh();
+        payments.refresh();
         plans.refresh();
     }
 
@@ -86,14 +94,5 @@ public final class BillingModule implements FxModule {
         Tab tab = new Tab(title, holder);
         tab.setClosable(false);
         return tab;
-    }
-
-    private static Node pending() {
-        Label notice = new Label("Esta pestaña se migra en la siguiente entrega.");
-        notice.getStyleClass().add("nf-muted");
-        StackPane box = new StackPane(notice);
-        box.getStyleClass().add("nf-card");
-        box.setMinHeight(240);
-        return box;
     }
 }
