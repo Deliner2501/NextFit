@@ -90,6 +90,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | DRY and GRASP Pure Fabrication | `FxTables` | Text columns and colored state columns are built in one place; `UsersModule`, `PlansPane`, `SubscriptionsPane` and `PaymentsPane` no longer repeat the cell code |
 | SRP and DIP | `SubscriptionsPane`, `PaymentsPane` | They filter, search and show rows; the state of a membership (`statusOf`, `daysLeftOf`) and the receipt (`findSale`) come from the services |
 | DRY | `ReceiptText` reused by `FxDialogs.document` | The receipt text is built once and shown by both the Swing and the JavaFX interface |
+| SRP | `CarnetCode`, `AccessService`, `AccessResult` | One class defines what the QR carries, one decides entry, exit or denial, and one carries the answer; none draws anything |
+| DIP and ISP | `MembershipExpiry` | The access service asks a one-method interface when the membership ends, so it does not know the membership module and is tested with a lambda |
+| GRASP Controller (use case) | `AccessService.process` | One operation turns a scan into an entry or an exit and reuses `AttendanceService` for the rules instead of repeating them |
+| GRASP Protected Variations | `CarnetCode.decode` | The scanner format (prefix, case, spaces, typed document) is normalized in one place, so a different reader does not change the service |
+| GRASP Low coupling | `AccessResult` | The kiosk shows a record with the outcome and the message; it never catches rule exceptions itself |
+| GRASP Pure Fabrication | `QrImage`, `MemberAvatar` | Small helpers that draw the QR and the photo, shared by the kiosk and the carnet screen |
+| Testability | `AccessServiceTest` | Entry, exit, denial, unknown code and the last day of the membership are tested with a fixed clock |
 
 ## Ronald: members and health
 

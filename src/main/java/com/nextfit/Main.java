@@ -7,6 +7,7 @@ import com.nextfit.persistence.CsvMeasurementRepository;
 import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
 import com.nextfit.persistence.CsvPaymentRepository;
+import com.nextfit.service.AccessService;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
 import com.nextfit.service.MembershipPlanService;
@@ -30,6 +31,8 @@ import com.nextfit.ui.LoginFrame;
 import com.nextfit.ui.MainWindow;
 import com.nextfit.ui.ModulePanel;
 import com.nextfit.model.Role;
+import com.nextfit.model.Subscription;
+import com.nextfit.ui.fx.AccessModule;
 import com.nextfit.ui.fx.BillingModule;
 import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
@@ -110,6 +113,9 @@ public final class Main {
         AttendanceService attendanceService = new AttendanceService(memberService,
                 new CsvAttendanceRepository(DATA_DIR.resolve("attendance.csv")),
                 subscriptionService);
+        AccessService accessService = new AccessService(memberService, attendanceService,
+                memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
+                Clock.systemDefaultZone());
         DashboardService dashboardService = new DashboardService(
                 subscriptionService, paymentService, attendanceService, Clock.systemDefaultZone());
         
@@ -123,6 +129,7 @@ public final class Main {
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                     new PendingModule("training", "Entrenamiento", FxIcons.TRAINING,
                             Set.of(Role.ADMIN, Role.TRAINER)),
+                    new AccessModule(accessService, attendanceService, memberService, subscriptionService),
                     new UsersModule(userService, session)));
             return;
         }
