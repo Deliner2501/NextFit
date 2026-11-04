@@ -301,6 +301,8 @@
 .nf-carnet-kind  { -fx-text-fill: #57606A; -fx-font-size: 11px; -fx-font-weight: bold; }
 .nf-carnet-name  { -fx-text-fill: #1F2328; -fx-font-size: 20px; -fx-font-weight: bold; }
 .nf-carnet-text  { -fx-text-fill: #57606A; -fx-font-size: 13px; }
+.nf-carnet .nf-avatar { -fx-background-color: #DDF3E8; }
+.nf-carnet .nf-avatar-initials { -fx-text-fill: #0B7A53; }
 
 /* ---------- Acento de marca en los controles de AtlantaFX (foco, selección, calendario) ---------- */
 .root.dark, .root.light {
