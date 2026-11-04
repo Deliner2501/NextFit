@@ -269,6 +269,39 @@
 .nf-table .table-cell.nf-state-bad, .nf-table .table-row-cell:selected .table-cell.nf-state-bad { -fx-text-fill: -nf-danger; -fx-font-weight: bold; }
 .nf-footer-total { -fx-text-fill: -nf-accent-text; -fx-font-size: 16px; -fx-font-weight: bold; }
 
+/* ---------- Control de acceso (kiosco) y carnet ---------- */
+.nf-access-card {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-width: 2;
+    -fx-background-color: -nf-surface;
+    -fx-border-color: -nf-border;
+}
+.nf-access-idle .nf-icon { -fx-background-color: -nf-muted; }
+.nf-access-ok     { -fx-background-color: derive(-nf-success, -72%); -fx-border-color: -nf-success; }
+.nf-access-exit   { -fx-background-color: -nf-accent-soft;           -fx-border-color: -nf-accent; }
+.nf-access-denied { -fx-background-color: derive(-nf-danger, -72%);  -fx-border-color: -nf-danger; }
+.nf-access-verdict { -fx-text-fill: -nf-text; -fx-font-size: 28px; -fx-font-weight: bold; }
+.nf-access-ok .nf-access-verdict     { -fx-text-fill: -nf-success; }
+.nf-access-exit .nf-access-verdict   { -fx-text-fill: -nf-accent; }
+.nf-access-denied .nf-access-verdict { -fx-text-fill: -nf-danger; }
+.nf-access-name    { -fx-text-fill: -nf-text; -fx-font-size: 22px; -fx-font-weight: bold; }
+.nf-access-message { -fx-text-fill: -nf-text; -fx-font-size: 16px; -fx-text-alignment: center; }
+.nf-avatar { -fx-background-color: -nf-accent-soft; }
+.nf-avatar-initials { -fx-text-fill: -nf-accent; -fx-font-weight: bold; }
+
+/* The carnet is printed on paper, so it keeps its own colors in both themes. */
+.nf-carnet {
+    -fx-background-color: white;
+    -fx-background-radius: 18;
+    -fx-border-color: #D0D7DE;
+    -fx-border-radius: 18;
+}
+.nf-carnet-brand { -fx-text-fill: #0F9D6B; -fx-font-size: 26px; -fx-font-weight: bold; }
+.nf-carnet-kind  { -fx-text-fill: #57606A; -fx-font-size: 11px; -fx-font-weight: bold; }
+.nf-carnet-name  { -fx-text-fill: #1F2328; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-carnet-text  { -fx-text-fill: #57606A; -fx-font-size: 13px; }
+
 /* ---------- Acento de marca en los controles de AtlantaFX (foco, selección, calendario) ---------- */
 .root.dark, .root.light {
     -color-accent-emphasis: -nf-accent;
