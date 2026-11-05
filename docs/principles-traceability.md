@@ -97,6 +97,14 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Low coupling | `AccessResult` | The kiosk shows a record with the outcome and the message; it never catches rule exceptions itself |
 | GRASP Pure Fabrication | `QrImage`, `MemberAvatar` | Small helpers that draw the QR and the photo, shared by the kiosk and the carnet screen |
 | Testability | `AccessServiceTest` | Entry, exit, denial, unknown code and the last day of the membership are tested with a fixed clock |
+| SRP | `OccupancyHeatmap`, `AnalyticsService` | One class only counts entries by weekday and hour; the other only joins attendance and memberships into a report; neither draws anything |
+| GRASP Information Expert | `OccupancyHeatmap` | The heatmap owns its counts, so it is the one that knows the maximum, the total and the peak slot |
+| GRASP Low coupling | `AnalyticsService.Report` | The screen receives one immutable report and never reads attendance or memberships itself |
+| GRASP Pure Fabrication | `OccupancyHeatmap` | It is not a gym concept, but it concentrates the counting so it can be tested without storage |
+| Encapsulation and immutability | `Report`, `AtRisk` | Records returned by a read-only service; the screen cannot change the numbers |
+| DIP and testability | `AnalyticsService` with `Clock` | Today is injected, so renewal and risk rules are tested with a fixed date |
+| OCP | `AnalyticsModule` | The screen is added as one more module in the list of `Main`; the shell does not change |
+| Testability | `AnalyticsServiceTest` | Heatmap window, average stay, renewal rate and at-risk members are tested with fake repositories |
 
 ## Ronald: members and health
 
