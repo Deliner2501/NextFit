@@ -38,6 +38,7 @@ import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
 import com.nextfit.ui.fx.FxIcons;
 import com.nextfit.ui.fx.PendingModule;
+import com.nextfit.ui.fx.TrainingFxModule;
 import com.nextfit.ui.fx.UsersModule;
 import com.nextfit.ui.Theme;
 import com.nextfit.ui.billing.BillingPanel;
@@ -120,6 +121,10 @@ public final class Main {
                 subscriptionService, paymentService, attendanceService, Clock.systemDefaultZone());
         
         // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
+        // Training module (exercises, routines, assignments and sessions)
+        TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
+
+        // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
         if (fx) {
             // The modules are built by a supplier because JavaFX controls can only be created after the toolkit starts.
             FxApp.run(auth, session, () -> List.of(
@@ -127,15 +132,13 @@ public final class Main {
                     new PendingModule("members", "Socios", FxIcons.MEMBERS,
                             Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session),
-                    new PendingModule("training", "Entrenamiento", FxIcons.TRAINING,
-                            Set.of(Role.ADMIN, Role.TRAINER)),
+                    new TrainingFxModule(training),
                     new AccessModule(accessService, attendanceService, memberService, subscriptionService),
                     new UsersModule(userService, session)));
             return;
         }
 
-        // Training module (exercises, routines, assignments and sessions)
-        TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
+
         
         // Screens. Each owner replaces their placeholder with the real panel.
         List<ModulePanel> modules = List.of(

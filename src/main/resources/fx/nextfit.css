@@ -310,3 +310,15 @@
     -color-accent-fg: -nf-accent-text;
     -color-accent-subtle: -nf-accent-soft;
 }
+
+
+/* ---------- Galería de ejercicios ---------- */
+.nf-exercise-card {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-cursor: hand;
+}
+.nf-exercise-card:hover { -fx-border-color: -nf-accent; }
+.nf-exercise-empty { -fx-background-color: -nf-surface-alt; }
