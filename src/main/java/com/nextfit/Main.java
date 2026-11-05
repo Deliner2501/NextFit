@@ -132,7 +132,7 @@ public final class Main {
                     new PendingModule("members", "Socios", FxIcons.MEMBERS,
                             Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session),
-                    new TrainingFxModule(training),
+                    new TrainingFxModule(training, DATA_DIR.resolve("images").resolve("exercises")),
                     new AccessModule(accessService, attendanceService, memberService, subscriptionService),
                     new UsersModule(userService, session)));
             return;

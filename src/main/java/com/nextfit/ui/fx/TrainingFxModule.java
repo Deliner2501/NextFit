@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
+import java.nio.file.Path;
 
 /**
  * Training module in JavaFX. It groups its screens in tabs: exercises, routines,
@@ -20,9 +21,10 @@ public final class TrainingFxModule implements FxModule {
 
     /**
      * @param training the object that builds and holds the training services
+     * @param imagesFolder folder where the exercise pictures are stored
      */
-    public TrainingFxModule(TrainingModule training) {
-        this.exercises = new ExercisesPane(training.exercises());
+        public TrainingFxModule(TrainingModule training, Path imagesFolder) {
+        this.exercises = new ExercisesPane(training.exercises(), imagesFolder);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().add(tab("Ejercicios", exercises));

@@ -8,6 +8,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -27,8 +28,9 @@ import java.util.List;
 
 /**
  * Gallery of the exercise catalog: a search box, two filters and one card with a photo
- * for each exercise. The rules live in {@link ExerciseService}; this class only collects
- * the search text and the filters, and shows the result.
+ * for each exercise. A click on a card edits that exercise and the button creates a new
+ * one. The rules live in {@link ExerciseService}; this class only collects the search
+ * text, the filters and the clicks, and shows the result.
  */
 final class ExercisesPane extends VBox {
 
@@ -38,6 +40,7 @@ final class ExercisesPane extends VBox {
     private static final double CARD_ARC = 32;
 
     private final ExerciseService service;
+    private final Path imagesFolder;
     private final Label countLabel = new Label();
     private final TextField searchField = new TextField();
     private final ComboBox<String> groupFilter = new ComboBox<>();
@@ -46,11 +49,13 @@ final class ExercisesPane extends VBox {
     private final ScrollPane scroll = new ScrollPane(grid);
 
     /**
-     * @param service the service that manages the exercise catalog
+     * @param service      the service that manages the exercise catalog
+     * @param imagesFolder folder where the pictures chosen in the form are stored
      */
-    ExercisesPane(ExerciseService service) {
+    ExercisesPane(ExerciseService service, Path imagesFolder) {
         super(16);
         this.service = service;
+        this.imagesFolder = imagesFolder;
         grid.setPadding(new Insets(2));
         scroll.setFitToWidth(true);
         scroll.getStyleClass().add("nf-scroll");
@@ -90,7 +95,11 @@ final class ExercisesPane extends VBox {
         groupFilter.getSelectionModel().selectedIndexProperty().addListener((obs, old, now) -> refresh());
         difficultyFilter.getSelectionModel().selectedIndexProperty().addListener((obs, old, now) -> refresh());
 
-        HBox header = new HBox(10, titles, searchField, groupFilter, difficultyFilter);
+        Button create = new Button("+ Nuevo ejercicio");
+        create.getStyleClass().add("nf-primary-small");
+        create.setOnAction(e -> openForm(null));
+
+        HBox header = new HBox(10, titles, searchField, groupFilter, difficultyFilter, create);
         header.setAlignment(Pos.CENTER_LEFT);
         return header;
     }
@@ -107,7 +116,7 @@ final class ExercisesPane extends VBox {
 
         grid.getChildren().clear();
         if (shown.isEmpty()) {
-            Label empty = new Label("No hay ejercicios con esos filtros.");
+            Label empty = new Label("No hay ejercicios con esos filtros. Crea uno con «+ Nuevo ejercicio».");
             empty.getStyleClass().add("nf-muted");
             grid.getChildren().add(empty);
             return;
@@ -115,6 +124,11 @@ final class ExercisesPane extends VBox {
         for (Exercise exercise : shown) {
             grid.getChildren().add(card(exercise));
         }
+    }
+
+    // Abre el formulario para crear (exercise null) o editar un ejercicio.
+    private void openForm(Exercise exercise) {
+        ExerciseForm.open(this, service, imagesFolder, exercise, this::refresh);
     }
 
     private Node card(Exercise exercise) {
@@ -133,6 +147,7 @@ final class ExercisesPane extends VBox {
         card.setMinSize(CARD_WIDTH, CARD_HEIGHT);
         card.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
         card.setMaxSize(CARD_WIDTH, CARD_HEIGHT);
+        card.setOnMouseClicked(e -> openForm(exercise));
         // EXPLICACIÓN: el recorte redondea las esquinas también en la foto.
         Rectangle clip = new Rectangle(CARD_WIDTH, CARD_HEIGHT);
         clip.setArcWidth(CARD_ARC);
@@ -163,7 +178,7 @@ final class ExercisesPane extends VBox {
     }
 
     // Foto propia del ejercicio; si no tiene o no se puede leer, la foto de su grupo muscular.
-    private static Image pictureOf(Exercise exercise) {
+    static Image pictureOf(Exercise exercise) {
         String path = exercise.getImagePath();
         Image image = null;
         if (path != null && !path.isBlank()) {
