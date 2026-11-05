@@ -44,11 +44,9 @@ final class AnalyticsView extends VBox {
     /** Works out the report again and redraws the whole screen. */
     void refresh() {
         Report report = service.report();
-        Label title = new Label("Analítica");
-        title.getStyleClass().add("nf-title");
         Label subtitle = new Label("Cuándo se llena el gimnasio y a quién hay que recuperar");
         subtitle.getStyleClass().add("nf-muted");
-        getChildren().setAll(new VBox(4, title, subtitle),
+        getChildren().setAll(subtitle,
                 row(peakCard(report.heatmap()), stayCard(report), renewalCard(report), riskCard(report)),
                 heatmapCard(report.heatmap()),
                 atRiskCard(report));
@@ -112,7 +110,7 @@ final class AnalyticsView extends VBox {
 
     private static Region riskCard(Report report) {
         return kpi("En riesgo", Integer.toString(report.atRisk().size()),
-                "con membresía vigente y sin venir hace " + AnalyticsService.AT_RISK_DAYS + " días o más",
+                "activos sin venir hace " + AnalyticsService.AT_RISK_DAYS + " días o más",
                 FxIcons.USERS);
     }
 
@@ -141,6 +139,7 @@ final class AnalyticsView extends VBox {
             int row = day.getValue();
             Label dayLabel = new Label(DAYS[row - 1].substring(0, 3));
             dayLabel.getStyleClass().add("nf-muted-small");
+            dayLabel.setMinWidth(Region.USE_PREF_SIZE);
             grid.add(dayLabel, 0, row);
             for (int h = first; h <= last; h++) {
                 grid.add(cell(map.count(day, h), max, day, h), h - first + 1, row);

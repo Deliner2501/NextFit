@@ -27,6 +27,8 @@ public class AnalyticsService {
     public static final int HEATMAP_WEEKS = 8;
     /** Days without a visit after which an active member is "at risk". */
     public static final int AT_RISK_DAYS = 14;
+    /** Visits longer than this are ignored for the average: they are almost always a forgotten exit. */
+    public static final int MAX_STAY_MINUTES = 6 * 60;
     /** Days back in which an ended membership counts for the renewal rate. */
     public static final int RENEWAL_WINDOW_DAYS = 60;
 
@@ -44,7 +46,7 @@ public class AnalyticsService {
      * Everything the analytics screen shows.
      *
      * @param heatmap          entries by weekday and hour in the last {@link #HEATMAP_WEEKS} weeks
-     * @param averageStayMin   average minutes between entry and exit, 0 when there is no closed visit
+     * @param averageStayMin   average minutes between entry and exit (visits over {@link #MAX_STAY_MINUTES} are ignored), 0 when there is none
      * @param renewalRate      share of ended memberships that were renewed, from 0 to 1, or -1 when none ended
      * @param renewalBase      how many ended memberships the rate is based on
      * @param atRisk           members to contact, the ones who never came or came longest ago first
@@ -97,7 +99,7 @@ public class AnalyticsService {
         for (AttendanceRecord r : records) {
             if (r.getCheckOut().isPresent()) {
                 long minutes = Duration.between(r.getCheckIn(), r.getCheckOut().get()).toMinutes();
-                if (minutes > 0) {
+                if (minutes > 0 && minutes <= MAX_STAY_MINUTES) {
                     totalMinutes += minutes;
                     visits++;
                 }

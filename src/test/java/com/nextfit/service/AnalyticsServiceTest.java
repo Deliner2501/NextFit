@@ -85,6 +85,14 @@ class AnalyticsServiceTest {
     }
 
     @Test
+    void averageStayIgnoresForgottenExits() {
+        visit(1, LocalDateTime.of(2026, 11, 3, 10, 0), LocalDateTime.of(2026, 11, 3, 11, 0));
+        visit(2, LocalDateTime.of(2026, 11, 3, 8, 0), LocalDateTime.of(2026, 11, 3, 23, 0)); // 15 hours
+
+        assertEquals(60, service.report().averageStayMin());
+    }
+
+    @Test
     void averageStayIsZeroWithoutClosedVisits() {
         assertEquals(0, service.report().averageStayMin());
     }
