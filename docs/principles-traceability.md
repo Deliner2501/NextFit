@@ -172,3 +172,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Pure Fabrication | `WeeklySplit` | It is not a gym concept, but it concentrates the weekly layout so the service does not repeat it |
 | DIP and testability | `SuggestionService` with `Clock` | The creation date is checked with a fixed clock |
 | Testability | `SuggestionRulesTest`, `SuggestionServiceTest` | The rules are tested alone and the service with CSV files in a temporary folder |
+| SRP | `ExercisesPane`, `ExerciseForm` | One class shows the gallery and filters; the other only collects the form fields; neither holds business rules |
+| GRASP Controller | `ExercisesPane`, `ExerciseForm` | They collect the search text, the filters and the clicks, and delegate every rule to `ExerciseService` |
+| GRASP Low coupling | `ExercisesPane` and `ExerciseService` | The screen depends only on the service, never on repositories or CSV files |
+| GRASP Information Expert | `ExerciseService.search` used by `ExercisesPane` | The service owns the catalog, so it does the filtering; the screen only passes the text and the filters |
+| OCP | `TrainingFxModule` implements `FxModule` | The module replaces its placeholder in `Main`; the main window does not change and each new tab is added without touching the others |
+| GRASP Protected Variations | `ExercisesPane.pictureOf` | A missing or unreadable photo falls back to the picture of the muscle group, so the screen never breaks |
+| Reuse | `FxDialogs.form` and `FxDialogs.labeled` in `ExerciseForm` | The form reuses the shared dialog, which shows the business errors inside the window without repeating that code |
+| GRASP Protected Variations | `nf-exercise-card`, `nf-textarea` in `nextfit.css` | The colors live in the style sheet, so the screens only add style classes and work in light and dark mode |

@@ -310,3 +310,29 @@
     -color-accent-fg: -nf-accent-text;
     -color-accent-subtle: -nf-accent-soft;
 }
+
+
+/* ---------- Galería de ejercicios ---------- */
+.nf-exercise-card {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-cursor: hand;
+}
+.nf-exercise-card:hover { -fx-border-color: -nf-accent; }
+.nf-exercise-empty { -fx-background-color: -nf-surface-alt; }
+
+
+/* ---------- Formulario de ejercicio ---------- */
+.nf-textarea {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 14;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 14;
+    -fx-text-fill: -nf-text;
+    -fx-prompt-text-fill: -nf-muted;
+    -fx-font-size: 15px;
+}
+.nf-textarea .content { -fx-background-color: transparent; -fx-padding: 10 14; }
+.nf-textarea:focused { -fx-border-color: -nf-accent; -fx-border-width: 2; }
