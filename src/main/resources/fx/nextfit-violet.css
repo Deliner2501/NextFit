@@ -1,0 +1,61 @@
+/*
+ * NextFit, segunda capa de diseño: contraste verde + violeta (#757992) y jerarquía visual.
+ * Se carga después de nextfit.css y solo sobrescribe lo necesario, así que las pantallas de los demás
+ * módulos siguen funcionando igual. Todos los colores nuevos viven aquí como variables.
+ */
+
+.root.dark {
+    -nf-bg: #0F1015;
+    -nf-surface: #181A22;
+    -nf-surface-alt: #21242F;
+    -nf-border: #2B2E3C;
+    -nf-shade-start: rgba(18, 19, 30, 0.15);
+    -nf-shade-end: rgba(18, 19, 30, 0.92);
+    /* Violeta de apoyo: lo secundario, las series de las gráficas y las tarjetas protagonistas. */
+    -nf-violet: #757992;
+    -nf-violet-text: #B4B8D0;
+    -nf-violet-soft: rgba(117, 121, 146, 0.24);
+    -nf-violet-deep: #2A2D42;
+}
+
+.root.light {
+    -nf-bg: #F2F3F8;
+    -nf-surface: #FFFFFF;
+    -nf-surface-alt: #E9EAF1;
+    -nf-border: #DCDEE8;
+    -nf-shade-start: rgba(18, 19, 30, 0.25);
+    -nf-shade-end: rgba(18, 19, 30, 0.88);
+    -nf-violet: #757992;
+    -nf-violet-text: #565A75;
+    -nf-violet-soft: rgba(117, 121, 146, 0.18);
+    -nf-violet-deep: #E4E5EF;
+}
+
+/* ---------- Jerarquía: tarjeta protagonista y datos de distinto tamaño ---------- */
+.nf-card-feature {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-surface);
+    -fx-background-radius: 20;
+    -fx-border-color: -nf-violet;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+}
+.nf-card-feature .nf-muted { -fx-text-fill: -nf-violet-text; }
+.nf-kpi-xl { -fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: -nf-accent-text; }
+.nf-kpi-value-small { -fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
+.nf-badge-violet { -fx-background-color: -nf-violet-soft; -fx-background-radius: 12; }
+.nf-badge-violet .nf-icon { -fx-background-color: -nf-violet-text; }
+
+/* ---------- Portada del panel con tinte violeta ---------- */
+.nf-hero-shade { -fx-background-color: linear-gradient(to right, rgba(30,32,52,0.90), rgba(30,32,52,0.10)); }
+
+/* ---------- Gráficas: violeta como serie base y verde para lo que importa ---------- */
+.default-color0.chart-bar { -fx-bar-fill: -nf-violet; }
+.chart-bar.nf-bar-today { -fx-bar-fill: -nf-accent; }
+.default-color2.chart-pie { -fx-pie-color: -nf-violet; -fx-border-color: -nf-surface; }
+.default-color2.chart-legend-item-symbol { -fx-background-color: -nf-violet; }
+.default-color0.chart-series-area-fill { -fx-fill: -nf-violet-soft; }
+.default-color0.chart-series-area-line { -fx-stroke: -nf-accent-text; -fx-stroke-width: 3px; }
+.default-color0.chart-area-symbol { -fx-background-color: -nf-accent-text, -nf-surface; }
+
+/* ---------- Mapa de calor: poca afluencia en violeta, mucha en verde ---------- */
+.nf-heat-low { -fx-background-color: -nf-violet; -fx-background-radius: 6; }

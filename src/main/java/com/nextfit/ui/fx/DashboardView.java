@@ -7,13 +7,15 @@ import com.nextfit.ui.Formats;
 import javafx.animation.Transition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.chart.AreaChart;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -30,8 +32,10 @@ import java.util.TreeMap;
 import java.util.function.LongFunction;
 
 /**
- * Home screen: a greeting, four key numbers and three charts. Every number is
- * worked out by {@link DashboardService}; this class only decides how to draw it.
+ * Home screen with visual hierarchy: a greeting, one large feature card (income
+ * of the month with its trend), three smaller key numbers beside it, and two
+ * charts of different width below. Every number is worked out by
+ * {@link DashboardService}; this class only decides how to draw it.
  */
 final class DashboardView extends VBox {
 
@@ -55,14 +59,62 @@ final class DashboardView extends VBox {
     void refresh() {
         Summary summary = service.summary();
         long vigentes = Math.max(0, summary.activeSubscriptions() - summary.expiringSoon());
+        VBox side = new VBox(16,
+                kpi("Membresías activas", summary.activeSubscriptions(), "socios con acceso hoy", FxIcons.MEMBERS,
+                        n -> Long.toString(n), false),
+                kpi("Por vencer", summary.expiringSoon(), "terminan en 7 días o menos", FxIcons.USERS,
+                        n -> Long.toString(n), true),
+                kpi("Asistencia de hoy", summary.checkInsToday(), "entradas registradas", FxIcons.PANEL,
+                        n -> Long.toString(n), true));
+        for (var child : side.getChildren()) {
+            VBox.setVgrow(child, Priority.ALWAYS);
+        }
         getChildren().setAll(
                 hero(summary),
-                row(kpi("Membresías activas", summary.activeSubscriptions(), "socios con acceso hoy", FxIcons.MEMBERS, n -> Long.toString(n)),
-                    kpi("Ingresos del mes", summary.incomeThisMonth(), "desde el primer día del mes", FxIcons.BILLING, Formats::money),
-                    kpi("Por vencer", summary.expiringSoon(), "terminan en 7 días o menos", FxIcons.USERS, n -> Long.toString(n)),
-                    kpi("Asistencia de hoy", summary.checkInsToday(), "entradas registradas", FxIcons.PANEL, n -> Long.toString(n))),
-                row(statusCard(vigentes, summary), weekdayCard(summary.checkInsByWeekday())),
-                incomeCard(summary.incomeByMonth()));
+                split(featureCard(summary), side, 68),
+                split(statusCard(vigentes, summary), weekdayCard(summary.checkInsByWeekday()), 38));
+    }
+
+    /** Places two cards side by side; the first one takes {@code percentFirst} percent of the width. */
+    private static GridPane split(Region first, Region second, double percentFirst) {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        ColumnConstraints left = new ColumnConstraints();
+        left.setPercentWidth(percentFirst);
+        ColumnConstraints right = new ColumnConstraints();
+        right.setPercentWidth(100 - percentFirst);
+        grid.getColumnConstraints().addAll(left, right);
+        grid.add(first, 0, 0);
+        grid.add(second, 1, 0);
+        first.setMaxWidth(Double.MAX_VALUE);
+        second.setMaxWidth(Double.MAX_VALUE);
+        return grid;
+    }
+
+    /** The protagonist card: the income of the month, big, with the trend of the last months under it. */
+    private Region featureCard(Summary summary) {
+        Label caption = new Label("Ingresos del mes");
+        caption.getStyleClass().add("nf-muted");
+        Label value = new Label(Formats.money(0));
+        value.getStyleClass().add("nf-kpi-xl");
+        Label hint = new Label("desde el primer día del mes · tendencia de los últimos meses");
+        hint.getStyleClass().add("nf-muted-small");
+        StackPane badge = new StackPane(FxIcons.of(FxIcons.BILLING, 22));
+        badge.getStyleClass().add("nf-badge");
+        badge.setMinSize(48, 48);
+        badge.setMaxSize(48, 48);
+        VBox texts = new VBox(6, caption, value, hint);
+        HBox.setHgrow(texts, Priority.ALWAYS);
+        HBox head = new HBox(texts, badge);
+        head.setAlignment(Pos.TOP_LEFT);
+
+        Region chart = incomeChart(summary.incomeByMonth());
+        VBox card = new VBox(14, head, chart);
+        card.getStyleClass().add("nf-card-feature");
+        card.setPadding(new Insets(26));
+        VBox.setVgrow(chart, Priority.ALWAYS);
+        countUp(value, summary.incomeThisMonth(), Formats::money);
+        return card;
     }
 
     private Region hero(Summary summary) {
@@ -95,35 +147,25 @@ final class DashboardView extends VBox {
         region.setClip(clip);
     }
 
-    private static HBox row(Region... cards) {
-        HBox row = new HBox(16, cards);
-        for (Region card : cards) {
-            HBox.setHgrow(card, Priority.ALWAYS);
-            card.setPrefWidth(10);
-            card.setMaxWidth(Double.MAX_VALUE);
-        }
-        return row;
-    }
-
     private static Region kpi(String caption, long value, String hint, String icon,
-                              LongFunction<String> format) {
+                              LongFunction<String> format, boolean violet) {
         Label captionLabel = new Label(caption);
         captionLabel.getStyleClass().add("nf-muted");
         Label valueLabel = new Label(format.apply(0));
-        valueLabel.getStyleClass().add("nf-kpi-value");
+        valueLabel.getStyleClass().add("nf-kpi-value-small");
         Label hintLabel = new Label(hint);
         hintLabel.getStyleClass().add("nf-muted-small");
         VBox texts = new VBox(6, captionLabel, valueLabel, hintLabel);
         HBox.setHgrow(texts, Priority.ALWAYS);
 
         StackPane badge = new StackPane(FxIcons.of(icon, 20));
-        badge.getStyleClass().add("nf-badge");
+        badge.getStyleClass().add(violet ? "nf-badge-violet" : "nf-badge");
         badge.setMinSize(44, 44);
         badge.setMaxSize(44, 44);
         HBox box = new HBox(texts, badge);
-        box.setAlignment(Pos.TOP_LEFT);
+        box.setAlignment(Pos.CENTER_LEFT);
         box.getStyleClass().add("nf-card");
-        box.setPadding(new Insets(20));
+        box.setPadding(new Insets(18, 20, 18, 20));
         countUp(valueLabel, value, format);
         return box;
     }
@@ -174,11 +216,22 @@ final class DashboardView extends VBox {
             series.getData().add(new XYChart.Data<>(DAY_NAMES[i], byDay.getOrDefault(days[i], 0L)));
         }
         chart.getData().add(series);
+        // Today's bar is lime; the others are violet, so the eye goes to today first.
+        int today = java.time.LocalDate.now().getDayOfWeek().getValue() - 1;
+        for (int i = 0; i < series.getData().size(); i++) {
+            if (i == today) {
+                series.getData().get(i).nodeProperty().addListener((obs, old, node) -> {
+                    if (node != null) {
+                        node.getStyleClass().add("nf-bar-today");
+                    }
+                });
+            }
+        }
         chart.setLegendVisible(false);
         chart.setBarGap(6);
         chart.setCategoryGap(18);
         chart.setMinHeight(280);
-        return card("Asistencia por día de la semana", chart);
+        return card("Asistencia por día de la semana (hoy en verde)", chart);
     }
 
     // Eje de números enteros con 5 divisiones, para que no salgan marcas como 2,5 o 12,5.
@@ -200,18 +253,19 @@ final class DashboardView extends VBox {
         return axis;
     }
 
-    private Region incomeCard(Map<YearMonth, Long> byMonth) {
+    private Region incomeChart(Map<YearMonth, Long> byMonth) {
         CategoryAxis x = new CategoryAxis();
         NumberAxis y = new NumberAxis();
-        LineChart<String, Number> chart = new LineChart<>(x, y);
+        y.setLabel("millones de pesos");
+        AreaChart<String, Number> chart = new AreaChart<>(x, y);
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         for (Map.Entry<YearMonth, Long> entry : new TreeMap<>(byMonth).entrySet()) {
             series.getData().add(new XYChart.Data<>(Formats.monthShort(entry.getKey()), entry.getValue() / 1_000_000.0));
         }
         chart.getData().add(series);
         chart.setLegendVisible(false);
-        chart.setMinHeight(260);
-        return card("Ingresos de los últimos meses (millones de pesos)", chart);
+        chart.setMinHeight(240);
+        return chart;
     }
 
     private static Region card(String title, Region content) {

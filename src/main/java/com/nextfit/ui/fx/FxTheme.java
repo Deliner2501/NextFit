@@ -24,6 +24,8 @@ public final class FxTheme {
 
     private static final String PREFERENCE_KEY = "theme";
     private static final String STYLE_SHEET = "/fx/nextfit.css";
+    /** Second layer: green and violet contrast and visual hierarchy. It loads after the first one. */
+    private static final String VIOLET_SHEET = "/fx/nextfit-violet.css";
 
     private final Preferences preferences = Preferences.userNodeForPackage(FxTheme.class);
     private final ObjectProperty<Mode> mode = new SimpleObjectProperty<>();
@@ -51,7 +53,8 @@ public final class FxTheme {
     public void attach(Scene target) {
         this.scene = target;
         String css = FxTheme.class.getResource(STYLE_SHEET).toExternalForm();
-        target.getStylesheets().setAll(css);
+        String violet = FxTheme.class.getResource(VIOLET_SHEET).toExternalForm();
+        target.getStylesheets().setAll(css, violet);
         apply();
     }
 

@@ -10,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -47,55 +48,65 @@ final class AnalyticsView extends VBox {
         Label subtitle = new Label("Cuándo se llena el gimnasio y a quién hay que recuperar");
         subtitle.getStyleClass().add("nf-muted");
         getChildren().setAll(subtitle,
-                row(peakCard(report.heatmap()), stayCard(report), renewalCard(report), riskCard(report)),
+                kpiRow(peakCard(report.heatmap()), stayCard(report), renewalCard(report), riskCard(report)),
                 heatmapCard(report.heatmap()),
                 atRiskCard(report));
     }
 
-    private static HBox row(Region... cards) {
-        HBox row = new HBox(16, cards);
-        for (Region card : cards) {
-            HBox.setHgrow(card, Priority.ALWAYS);
-            card.setPrefWidth(10);
-            card.setMaxWidth(Double.MAX_VALUE);
+    /** The first card (the busiest hour) is the protagonist: it is wider than the other three. */
+    private static GridPane kpiRow(Region... cards) {
+        GridPane grid = new GridPane();
+        grid.setHgap(16);
+        double[] percents = {31, 23, 23, 23};
+        for (int i = 0; i < cards.length; i++) {
+            ColumnConstraints column = new ColumnConstraints();
+            column.setPercentWidth(percents[i]);
+            grid.getColumnConstraints().add(column);
+            grid.add(cards[i], i, 0);
+            cards[i].setMaxWidth(Double.MAX_VALUE);
         }
-        return row;
+        return grid;
     }
 
     private static Region kpi(String caption, String value, String hint, String icon) {
+        return kpi(caption, value, hint, icon, false, false);
+    }
+
+    private static Region kpi(String caption, String value, String hint, String icon, boolean feature,
+                              boolean violet) {
         Label captionLabel = new Label(caption);
         captionLabel.getStyleClass().add("nf-muted");
         Label valueLabel = new Label(value);
-        valueLabel.getStyleClass().add("nf-kpi-value");
+        valueLabel.getStyleClass().add(feature ? "nf-kpi-xl" : "nf-kpi-value");
         Label hintLabel = new Label(hint);
         hintLabel.getStyleClass().add("nf-muted-small");
         hintLabel.setWrapText(true);
         VBox texts = new VBox(6, captionLabel, valueLabel, hintLabel);
         HBox.setHgrow(texts, Priority.ALWAYS);
         StackPane badge = new StackPane(FxIcons.of(icon, 20));
-        badge.getStyleClass().add("nf-badge");
+        badge.getStyleClass().add(violet ? "nf-badge-violet" : "nf-badge");
         badge.setMinSize(44, 44);
         badge.setMaxSize(44, 44);
         HBox box = new HBox(texts, badge);
         box.setAlignment(Pos.TOP_LEFT);
-        box.getStyleClass().add("nf-card");
-        box.setPadding(new Insets(20));
+        box.getStyleClass().add(feature ? "nf-card-feature" : "nf-card");
+        box.setPadding(new Insets(feature ? 26 : 20));
         return box;
     }
 
     private static Region peakCard(OccupancyHeatmap map) {
         OccupancyHeatmap.Slot peak = map.peak();
         if (peak.count() == 0) {
-            return kpi("Hora pico", "—", "aún no hay entradas registradas", FxIcons.ANALYTICS);
+            return kpi("Hora pico", "—", "aún no hay entradas registradas", FxIcons.ANALYTICS, true, false);
         }
         return kpi("Hora pico", DAYS[peak.day().getValue() - 1].substring(0, 3) + " " + hour(peak.hour()),
                 peak.count() + " entradas en las últimas " + AnalyticsService.HEATMAP_WEEKS + " semanas",
-                FxIcons.ANALYTICS);
+                FxIcons.ANALYTICS, true, false);
     }
 
     private static Region stayCard(Report report) {
         String value = report.averageStayMin() == 0 ? "—" : report.averageStayMin() + " min";
-        return kpi("Estancia promedio", value, "entre la entrada y la salida", FxIcons.TRAINING);
+        return kpi("Estancia promedio", value, "entre la entrada y la salida", FxIcons.TRAINING, false, true);
     }
 
     private static Region renewalCard(Report report) {
@@ -111,7 +122,7 @@ final class AnalyticsView extends VBox {
     private static Region riskCard(Report report) {
         return kpi("En riesgo", Integer.toString(report.atRisk().size()),
                 "activos sin venir hace " + AnalyticsService.AT_RISK_DAYS + " días o más",
-                FxIcons.USERS);
+                FxIcons.USERS, false, true);
     }
 
     private Region heatmapCard(OccupancyHeatmap map) {
@@ -148,7 +159,7 @@ final class AnalyticsView extends VBox {
         Label caption = new Label(map.total() == 0
                 ? "Todavía no hay entradas para dibujar. Registra visitas en Control de acceso."
                 : "Entradas por día y hora (últimas " + AnalyticsService.HEATMAP_WEEKS
-                        + " semanas). Más color significa más gente.");
+                        + " semanas). Violeta es poca gente y verde es mucha.");
         caption.getStyleClass().add("nf-muted-small");
         return card("Horas de mayor afluencia", new VBox(12, caption, grid));
     }
@@ -162,8 +173,10 @@ final class AnalyticsView extends VBox {
         if (count == 0) {
             cell.getStyleClass().add("nf-heat-empty");
         } else {
-            cell.getStyleClass().add("nf-heat-cell");
-            cell.setOpacity(0.22 + 0.78 * count / max);
+            // Quiet hours are violet and busy hours turn green, so the peaks stand out at once.
+            double ratio = (double) count / max;
+            cell.getStyleClass().add(ratio < 0.5 ? "nf-heat-low" : "nf-heat-cell");
+            cell.setOpacity(ratio < 0.5 ? 0.30 + 1.0 * ratio : 0.35 + 0.65 * ratio);
         }
         Tooltip.install(cell, new Tooltip(DAYS[day.getValue() - 1] + " " + hour(hour) + " · "
                 + (count == 1 ? "1 entrada" : count + " entradas")));

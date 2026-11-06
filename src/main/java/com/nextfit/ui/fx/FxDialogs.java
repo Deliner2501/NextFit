@@ -216,6 +216,7 @@ public final class FxDialogs {
         Scene scene = new Scene(content);
         if (theme != null) {
             scene.getStylesheets().add(FxDialogs.class.getResource("/fx/nextfit.css").toExternalForm());
+            scene.getStylesheets().add(FxDialogs.class.getResource("/fx/nextfit-violet.css").toExternalForm());
             theme.mark(content);
         }
         stage.setScene(scene);
