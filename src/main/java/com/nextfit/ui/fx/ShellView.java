@@ -98,12 +98,55 @@ final class ShellView extends BorderPane {
             buttons.add(button);
             sidebar.getChildren().add(button);
         }
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        sidebar.getChildren().addAll(spacer, buildPromo());
         return sidebar;
+    }
+
+    /**
+     * Motivational block at the foot of the sidebar. The picture (sidebar/promo.png) already carries the
+     * slogan; without it the block shows the slogan as text over a violet gradient.
+     */
+    private Node buildPromo() {
+        StackPane promo = new StackPane();
+        promo.getStyleClass().add("nf-promo");
+        Image athlete = FxImages.load("/images/sidebar/promo.png");
+        if (athlete != null) {
+            ImageView photo = new ImageView(athlete);
+            photo.setPreserveRatio(true);
+            photo.setSmooth(true);
+            photo.setFitWidth(228);
+            promo.getChildren().add(photo);
+        } else {
+            Label first = new Label("Entrena.");
+            first.getStyleClass().add("nf-promo-line1");
+            Label second = new Label("Mejora.");
+            second.getStyleClass().add("nf-promo-line1");
+            Label third = new Label("Supera tus límites.");
+            third.getStyleClass().add("nf-promo-line2");
+            VBox lines = new VBox(0, first, second, third);
+            lines.setAlignment(Pos.BOTTOM_LEFT);
+            lines.setPadding(new Insets(0, 0, 18, 18));
+            promo.setMinHeight(190);
+            promo.setPrefHeight(230);
+            promo.getChildren().add(lines);
+            StackPane.setAlignment(lines, Pos.BOTTOM_LEFT);
+        }
+        javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
+        clip.setArcWidth(36);
+        clip.setArcHeight(36);
+        clip.widthProperty().bind(promo.widthProperty());
+        clip.heightProperty().bind(promo.heightProperty());
+        promo.setClip(clip);
+        return promo;
     }
 
     private Node buildContent(Runnable onLogout) {
         title.getStyleClass().add("nf-title");
         subtitle.getStyleClass().add("nf-muted");
+        subtitle.setGraphic(FxIcons.of(FxIcons.CALENDAR, 16));
+        subtitle.setGraphicTextGap(8);
         VBox titles = new VBox(2, title, subtitle);
         HBox.setHgrow(titles, Priority.ALWAYS);
 
