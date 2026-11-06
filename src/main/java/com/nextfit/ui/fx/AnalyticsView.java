@@ -69,29 +69,13 @@ final class AnalyticsView extends VBox {
     }
 
     private static Region kpi(String caption, String value, String hint, String icon) {
-        return kpi(caption, value, hint, icon, false, false);
+        return new KpiCard(caption, value, hint, icon, KpiCard.Kind.LIME);
     }
 
     private static Region kpi(String caption, String value, String hint, String icon, boolean feature,
                               boolean violet) {
-        Label captionLabel = new Label(caption);
-        captionLabel.getStyleClass().add("nf-muted");
-        Label valueLabel = new Label(value);
-        valueLabel.getStyleClass().add(feature ? "nf-kpi-xl" : "nf-kpi-value");
-        Label hintLabel = new Label(hint);
-        hintLabel.getStyleClass().add("nf-muted-small");
-        hintLabel.setWrapText(true);
-        VBox texts = new VBox(6, captionLabel, valueLabel, hintLabel);
-        HBox.setHgrow(texts, Priority.ALWAYS);
-        StackPane badge = new StackPane(FxIcons.of(icon, 20));
-        badge.getStyleClass().add(violet ? "nf-badge-violet" : "nf-badge");
-        badge.setMinSize(44, 44);
-        badge.setMaxSize(44, 44);
-        HBox box = new HBox(texts, badge);
-        box.setAlignment(Pos.TOP_LEFT);
-        box.getStyleClass().add(feature ? "nf-card-feature" : "nf-card");
-        box.setPadding(new Insets(feature ? 26 : 20));
-        return box;
+        return new KpiCard(caption, value, hint, icon,
+                feature ? KpiCard.Kind.FEATURE : violet ? KpiCard.Kind.VIOLET : KpiCard.Kind.LIME);
     }
 
     private static Region peakCard(OccupancyHeatmap map) {
