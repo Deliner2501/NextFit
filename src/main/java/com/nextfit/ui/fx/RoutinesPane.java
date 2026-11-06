@@ -2,9 +2,11 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.Routine;
+import com.nextfit.service.ExerciseService;
+import com.nextfit.service.MemberService;
 import com.nextfit.service.RoutineService;
 import com.nextfit.service.TrainerService;
-import com.nextfit.service.ExerciseService;
+import com.nextfit.service.suggest.SuggestionService;
 import com.nextfit.ui.Formats;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -20,28 +22,35 @@ import javafx.scene.layout.VBox;
 import java.util.List;
 
 /**
- * Screen with the routines of the gym: a table where the user can create and edit
- * routines. The rules live in {@link RoutineService}; this class only collects clicks
- * and shows data.
+ * Screen with the routines of the gym: a table where the user can create, edit and
+ * ask for a suggested routine. The rules live in the services; this class only
+ * collects clicks and shows data.
  */
 final class RoutinesPane extends VBox {
 
     private final RoutineService service;
     private final TrainerService trainers;
     private final ExerciseService exercises;
+    private final MemberService members;
+    private final SuggestionService suggestions;
     private final TableView<Routine> table = new TableView<>();
     private final Label countLabel = new Label();
 
     /**
-     * @param service   the service that manages the routines
-     * @param trainers  the service used to show and choose the trainers
-     * @param exercises the service that lists the exercises to choose from
+     * @param service     the service that manages the routines
+     * @param trainers    the service used to show and choose the trainers
+     * @param exercises   the service that lists the exercises to choose from
+     * @param members     the service that lists the members for a suggestion
+     * @param suggestions the service that builds suggested routines
      */
-    RoutinesPane(RoutineService service, TrainerService trainers, ExerciseService exercises) {
+    RoutinesPane(RoutineService service, TrainerService trainers, ExerciseService exercises,
+                 MemberService members, SuggestionService suggestions) {
         super(16);
         this.service = service;
         this.trainers = trainers;
         this.exercises = exercises;
+        this.members = members;
+        this.suggestions = suggestions;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
         refresh();
@@ -54,6 +63,9 @@ final class RoutinesPane extends VBox {
         VBox titles = new VBox(2, title, countLabel);
         HBox.setHgrow(titles, Priority.ALWAYS);
 
+        Button suggest = new Button("Sugerir rutina");
+        suggest.getStyleClass().add("nf-secondary");
+        suggest.setOnAction(e -> suggest());
         Button edit = new Button("Editar");
         edit.getStyleClass().add("nf-secondary");
         edit.setOnAction(e -> editSelected());
@@ -61,7 +73,7 @@ final class RoutinesPane extends VBox {
         create.getStyleClass().add("nf-primary-small");
         create.setOnAction(e -> openForm(null));
 
-        HBox header = new HBox(10, titles, edit, create);
+        HBox header = new HBox(10, titles, suggest, edit, create);
         header.setAlignment(Pos.CENTER_LEFT);
         return header;
     }
@@ -118,5 +130,15 @@ final class RoutinesPane extends VBox {
     // Abre el formulario para crear (routine null) o editar una rutina.
     private void openForm(Routine routine) {
         RoutineForm.open(this, service, trainers, exercises, routine, this::refresh);
+    }
+
+    // Pregunta qué sugerir y abre el borrador en el formulario para que el entrenador lo ajuste.
+    private void suggest() {
+        try {
+            SuggestRoutineDialog.ask(this, members, suggestions).ifPresent(suggestion ->
+                    RoutineForm.openDraft(this, service, trainers, exercises, suggestion, this::refresh));
+        } catch (NextFitException e) {
+            FxDialogs.error(this, e);
+        }
     }
 }

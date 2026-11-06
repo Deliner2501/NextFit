@@ -8,6 +8,7 @@ import com.nextfit.model.Trainer;
 import com.nextfit.service.ExerciseService;
 import com.nextfit.service.RoutineService;
 import com.nextfit.service.TrainerService;
+import com.nextfit.service.suggest.SuggestedRoutine;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -29,11 +30,14 @@ import java.util.List;
  * Form to create or edit a routine: name, objective, trainer and one or more days,
  * each with its exercise lines. It builds a {@link Routine} and hands it to
  * {@link RoutineService}, which validates it; any error is shown inside the form.
+ * It can also open pre-filled with a suggested draft, which is saved as a new routine.
  */
 final class RoutineForm {
 
     private final RoutineService service;
-    private final Routine existing;   // null cuando se crea una rutina nueva
+    private final Routine existing;   // null cuando se crea una rutina nueva (o se parte de un borrador)
+    private final Routine prefill;    // rutina que llena la pantalla: la existente, un borrador o null
+    private final List<String> notes; // avisos de la sugerencia; vacío si no hay
     private final List<Exercise> exercises;
     private final List<Trainer> trainers;
 
@@ -43,16 +47,18 @@ final class RoutineForm {
     private final TabPane daysTabs = new TabPane();
     private final List<RoutineDayPane> dayPanes = new ArrayList<>();
 
-    private RoutineForm(RoutineService service, TrainerService trainerService,
-                        ExerciseService catalog, Routine existing) {
+    private RoutineForm(RoutineService service, TrainerService trainerService, ExerciseService catalog,
+                        Routine existing, Routine prefill, List<String> notes) {
         this.service = service;
         this.existing = existing;
+        this.prefill = prefill;
+        this.notes = notes;
         this.exercises = catalog.findAll();
         this.trainers = trainerService.findAll().stream().filter(Trainer::isActive).toList();
     }
 
     /**
-     * Opens the form in a dialog.
+     * Opens the form to create a routine or to edit an existing one.
      *
      * @param owner          a node of the window the dialog belongs to
      * @param service        the routine service used to save
@@ -63,13 +69,33 @@ final class RoutineForm {
      */
     static void open(Node owner, RoutineService service, TrainerService trainerService,
                      ExerciseService catalog, Routine existing, Runnable onSaved) {
-        RoutineForm form = new RoutineForm(service, trainerService, catalog, existing);
-        form.fillFromExisting();
-        FxDialogs.form(owner, existing == null ? "Nueva rutina" : "Editar rutina", "Guardar rutina",
-                form.buildFields(), () -> {
-                    form.save();
-                    onSaved.run();
-                });
+        RoutineForm form = new RoutineForm(service, trainerService, catalog, existing, existing, List.of());
+        form.show(owner, existing == null ? "Nueva rutina" : "Editar rutina", onSaved);
+    }
+
+    /**
+     * Opens the form pre-filled with a suggested draft. Saving creates a new routine.
+     *
+     * @param owner          a node of the window the dialog belongs to
+     * @param service        the routine service used to save
+     * @param trainerService the service that lists the active trainers
+     * @param catalog        the service that lists the exercises to choose from
+     * @param suggestion     the draft and the notes that explain it
+     * @param onSaved        action to run after a successful save
+     */
+    static void openDraft(Node owner, RoutineService service, TrainerService trainerService,
+                          ExerciseService catalog, SuggestedRoutine suggestion, Runnable onSaved) {
+        RoutineForm form = new RoutineForm(service, trainerService, catalog,
+                null, suggestion.routine(), suggestion.notes());
+        form.show(owner, "Rutina sugerida", onSaved);
+    }
+
+    private void show(Node owner, String title, Runnable onSaved) {
+        fillFromPrefill();
+        FxDialogs.form(owner, title, "Guardar rutina", buildFields(), () -> {
+            save();
+            onSaved.run();
+        });
     }
 
     private Node buildFields() {
@@ -109,7 +135,11 @@ final class RoutineForm {
         daysTabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         daysTabs.getStyleClass().add("nf-tabs");
 
-        VBox fields = new VBox(14,
+        VBox fields = new VBox(14);
+        if (!notes.isEmpty()) {
+            fields.getChildren().add(buildNotes());
+        }
+        fields.getChildren().addAll(
                 FxDialogs.labeled("Nombre", nameField),
                 FxDialogs.labeled("Objetivo", objectiveField),
                 FxDialogs.labeled("Entrenador", trainerBox),
@@ -119,21 +149,32 @@ final class RoutineForm {
         return fields;
     }
 
-    // Al editar se cargan los datos actuales; al crear se empieza con un día vacío.
-    private void fillFromExisting() {
-        if (existing == null) {
+    // Avisos de la sugerencia (por ejemplo, por una condición médica del socio).
+    private Node buildNotes() {
+        StringBuilder text = new StringBuilder("Notas de la sugerencia:");
+        for (String note : notes) {
+            text.append("\n• ").append(note);
+        }
+        Label label = new Label(text.toString());
+        label.getStyleClass().add("nf-muted");
+        label.setWrapText(true);
+        return label;
+    }
+
+    // Al editar o partir de un borrador se cargan sus datos; al crear se empieza con un día vacío.
+    private void fillFromPrefill() {
+        if (prefill == null) {
             addDay(null);
             return;
         }
-        // Estos campos se llenan antes de armar la pantalla; buildFields no los borra.
-        nameField.setText(existing.getName());
-        objectiveField.setText(existing.getObjective());
+        nameField.setText(prefill.getName());
+        objectiveField.setText(prefill.getObjective());
         for (Trainer trainer : trainers) {
-            if (trainer.getId() == existing.getTrainerId()) {
+            if (trainer.getId() == prefill.getTrainerId()) {
                 trainerBox.setValue(trainer);
             }
         }
-        for (RoutineDay day : existing.getDays()) {
+        for (RoutineDay day : prefill.getDays()) {
             addDay(day);
         }
         daysTabs.getSelectionModel().selectFirst();
