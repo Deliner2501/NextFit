@@ -27,7 +27,7 @@ public final class TrainingFxModule implements FxModule {
      */
     public TrainingFxModule(TrainingModule training, Path imagesFolder) {
         this.exercises = new ExercisesPane(training.exercises(), imagesFolder);
-        this.routines = new RoutinesPane(training.routines(), training.trainers());
+        this.routines = new RoutinesPane(training.routines(), training.trainers(), training.exercises());
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().addAll(tab("Ejercicios", exercises), tab("Rutinas", routines));

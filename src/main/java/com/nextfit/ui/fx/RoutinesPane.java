@@ -4,6 +4,7 @@ import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.Routine;
 import com.nextfit.service.RoutineService;
 import com.nextfit.service.TrainerService;
+import com.nextfit.service.ExerciseService;
 import com.nextfit.ui.Formats;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -27,17 +28,20 @@ final class RoutinesPane extends VBox {
 
     private final RoutineService service;
     private final TrainerService trainers;
+    private final ExerciseService exercises;
     private final TableView<Routine> table = new TableView<>();
     private final Label countLabel = new Label();
 
     /**
-     * @param service  the service that manages the routines
-     * @param trainers the service used to show the name of each trainer
+     * @param service   the service that manages the routines
+     * @param trainers  the service used to show and choose the trainers
+     * @param exercises the service that lists the exercises to choose from
      */
-    RoutinesPane(RoutineService service, TrainerService trainers) {
+    RoutinesPane(RoutineService service, TrainerService trainers, ExerciseService exercises) {
         super(16);
         this.service = service;
         this.trainers = trainers;
+        this.exercises = exercises;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
         refresh();
@@ -113,6 +117,6 @@ final class RoutinesPane extends VBox {
 
     // Abre el formulario para crear (routine null) o editar una rutina.
     private void openForm(Routine routine) {
-        FxDialogs.message(this, "Próximamente", "El formulario de rutinas se agrega en el siguiente paso.");
+        RoutineForm.open(this, service, trainers, exercises, routine, this::refresh);
     }
 }
