@@ -1,61 +1,217 @@
 /*
- * NextFit, segunda capa de diseño: contraste verde + violeta (#757992) y jerarquía visual.
- * Se carga después de nextfit.css y solo sobrescribe lo necesario, así que las pantallas de los demás
- * módulos siguen funcionando igual. Todos los colores nuevos viven aquí como variables.
+ * NextFit, segunda capa de diseño: violeta vivo + verde lima, tarjetas con degradado y jerarquía visual.
+ * Se carga después de nextfit.css y solo sobrescribe lo necesario, así que todos los módulos (también los
+ * de los demás integrantes) heredan la paleta sin cambiar su código. Los colores viven aquí como variables.
  */
 
+/* ======================= Variables de color ======================= */
 .root.dark {
-    -nf-bg: #0F1015;
-    -nf-surface: #181A22;
-    -nf-surface-alt: #21242F;
-    -nf-border: #2B2E3C;
-    -nf-shade-start: rgba(18, 19, 30, 0.15);
-    -nf-shade-end: rgba(18, 19, 30, 0.92);
-    /* Violeta de apoyo: lo secundario, las series de las gráficas y las tarjetas protagonistas. */
-    -nf-violet: #757992;
-    -nf-violet-text: #B4B8D0;
-    -nf-violet-soft: rgba(117, 121, 146, 0.24);
-    -nf-violet-deep: #2A2D42;
+    -nf-bg: #090810;
+    -nf-surface: #13121C;
+    -nf-surface-alt: #1D1830;
+    -nf-border: #312A48;
+    -nf-text: #F1EEF8;
+    -nf-muted: #9D97B8;
+    -nf-accent: #A7F626;
+    -nf-accent-text: #A7F626;
+    -nf-accent-soft: rgba(167, 246, 38, 0.14);
+    -nf-shade-start: rgba(14, 10, 30, 0.15);
+    -nf-shade-end: rgba(14, 10, 30, 0.92);
+    -nf-violet: #7A35E8;
+    -nf-violet-bright: #8F55FF;
+    -nf-violet-text: #C3A8FF;
+    -nf-violet-soft: rgba(122, 53, 232, 0.24);
+    -nf-violet-deep: #241743;
+    -nf-card-start: #1B1530;
+    -nf-card-end: #13121C;
+    -nf-side-top: #100E1A;
+    -nf-side-bottom: #1D1238;
+    -nf-glow: rgba(109, 43, 208, 0.22);
+    -nf-lime-glow: rgba(167, 246, 38, 0.35);
+    -nf-page-glow: rgba(109, 43, 208, 0.40);
 }
 
 .root.light {
-    -nf-bg: #F2F3F8;
+    -nf-bg: #F3F0FB;
     -nf-surface: #FFFFFF;
-    -nf-surface-alt: #E9EAF1;
-    -nf-border: #DCDEE8;
-    -nf-shade-start: rgba(18, 19, 30, 0.25);
-    -nf-shade-end: rgba(18, 19, 30, 0.88);
-    -nf-violet: #757992;
-    -nf-violet-text: #565A75;
-    -nf-violet-soft: rgba(117, 121, 146, 0.18);
-    -nf-violet-deep: #E4E5EF;
+    -nf-surface-alt: #ECE7F8;
+    -nf-border: #DDD5F0;
+    -nf-text: #1A1330;
+    -nf-muted: #6A6485;
+    -nf-accent: #A7F626;
+    -nf-accent-text: #3F6A12;
+    -nf-accent-soft: rgba(120, 190, 30, 0.18);
+    -nf-shade-start: rgba(14, 10, 30, 0.25);
+    -nf-shade-end: rgba(14, 10, 30, 0.88);
+    -nf-violet: #7A35E8;
+    -nf-violet-bright: #8F55FF;
+    -nf-violet-text: #5B25C0;
+    -nf-violet-soft: rgba(122, 53, 232, 0.14);
+    -nf-violet-deep: #E6DCFB;
+    -nf-card-start: #FFFFFF;
+    -nf-card-end: #F7F3FF;
+    -nf-side-top: #FFFFFF;
+    -nf-side-bottom: #EFE8FF;
+    -nf-glow: rgba(109, 43, 208, 0.10);
+    -nf-lime-glow: rgba(120, 190, 30, 0.30);
+    -nf-page-glow: rgba(122, 53, 232, 0.16);
 }
 
-/* ---------- Jerarquía: tarjeta protagonista y datos de distinto tamaño ---------- */
+/* Los controles de AtlantaFX (listas desplegables, calendario, diálogos) usan la misma paleta. */
+.root.dark, .root.light {
+    -color-bg-default: -nf-surface;
+    -color-bg-subtle: -nf-surface-alt;
+    -color-bg-inset: -nf-bg;
+    -color-border-default: -nf-border;
+    -color-border-muted: -nf-border;
+    -color-fg-default: -nf-text;
+    -color-fg-muted: -nf-muted;
+}
+
+/* ======================= Fondo y barra lateral ======================= */
+.nf-bg {
+    -fx-background-color:
+        radial-gradient(center 82% 0%, radius 38%, -nf-page-glow, rgba(109, 43, 208, 0)),
+        -nf-bg;
+}
+.nf-sidebar {
+    -fx-background-color: linear-gradient(to bottom, -nf-side-top, -nf-side-bottom);
+    -fx-border-color: -nf-border;
+    -fx-border-width: 0 1 0 0;
+}
+.nf-nav { -fx-background-radius: 14; }
+.nf-nav:hover { -fx-background-color: -nf-violet-soft; }
+.nf-nav.selected {
+    -fx-background-color: linear-gradient(to right, #A7F626, #6DB21A);
+    -fx-text-fill: #0B0A12;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 16, 0, 0, 3);
+}
+.nf-nav.selected .nf-icon { -fx-background-color: #0B0A12; }
+
+/* Bloque promocional del pie de la barra lateral */
+.nf-promo { -fx-background-radius: 18; -fx-background-color: linear-gradient(to bottom, rgba(122,53,232,0.10), rgba(122,53,232,0.55)); }
+.nf-promo-line1 { -fx-text-fill: white; -fx-font-size: 21px; -fx-font-weight: bold; }
+.nf-promo-line2 { -fx-text-fill: #A7F626; -fx-font-size: 21px; -fx-font-weight: bold; }
+
+/* ======================= Tarjetas, tablas y listas ======================= */
+.nf-card, .nf-table, .nf-list, .nf-exercise-card {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end);
+    -fx-background-radius: 18;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 18;
+}
+.nf-card { -fx-effect: dropshadow(gaussian, -nf-glow, 20, 0, 0, 6); }
+
+/* Tarjeta protagonista: más grande, con fondo violeta y el dato principal en verde. */
 .nf-card-feature {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-surface);
-    -fx-background-radius: 20;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-card-end);
+    -fx-background-radius: 22;
     -fx-border-color: -nf-violet;
-    -fx-border-radius: 20;
+    -fx-border-radius: 22;
     -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -nf-glow, 26, 0, 0, 8);
 }
 .nf-card-feature .nf-muted { -fx-text-fill: -nf-violet-text; }
 .nf-kpi-xl { -fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: -nf-accent-text; }
-.nf-kpi-value-small { -fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
-.nf-badge-violet { -fx-background-color: -nf-violet-soft; -fx-background-radius: 12; }
-.nf-badge-violet .nf-icon { -fx-background-color: -nf-violet-text; }
+.nf-kpi-value-small { -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
 
-/* ---------- Portada del panel con tinte violeta ---------- */
-.nf-hero-shade { -fx-background-color: linear-gradient(to right, rgba(30,32,52,0.90), rgba(30,32,52,0.10)); }
+/* Tarjeta de indicador: insignia violeta, número grande y un ícono grande de fondo */
+.nf-kpi-card {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end);
+    -fx-background-radius: 18;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 18;
+    -fx-effect: dropshadow(gaussian, -nf-glow, 20, 0, 0, 6);
+}
+.nf-kpi-card-lime {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start 40%, rgba(167,246,38,0.20));
+}
+.nf-kpi-deco .nf-icon { -fx-background-color: -nf-accent-text; }
+.nf-kpi-deco-violet .nf-icon { -fx-background-color: -nf-violet-bright; }
 
-/* ---------- Gráficas: violeta como serie base y verde para lo que importa ---------- */
-.default-color0.chart-bar { -fx-bar-fill: -nf-violet; }
-.chart-bar.nf-bar-today { -fx-bar-fill: -nf-accent; }
-.default-color2.chart-pie { -fx-pie-color: -nf-violet; -fx-border-color: -nf-surface; }
-.default-color2.chart-legend-item-symbol { -fx-background-color: -nf-violet; }
-.default-color0.chart-series-area-fill { -fx-fill: -nf-violet-soft; }
-.default-color0.chart-series-area-line { -fx-stroke: -nf-accent-text; -fx-stroke-width: 3px; }
-.default-color0.chart-area-symbol { -fx-background-color: -nf-accent-text, -nf-surface; }
+.nf-badge { -fx-background-color: -nf-accent-soft; -fx-background-radius: 999; }
+.nf-badge-violet { -fx-background-color: -nf-violet-soft; -fx-background-radius: 999; }
+.nf-badge-violet .nf-icon { -fx-background-color: -nf-violet-bright; }
+.nf-badge-solid { -fx-background-color: -nf-violet; -fx-background-radius: 999; }
+.nf-badge-solid .nf-icon { -fx-background-color: white; }
 
-/* ---------- Mapa de calor: poca afluencia en violeta, mucha en verde ---------- */
+/* Variaciones (por ejemplo "+12,5 %") */
+.nf-chip-up, .nf-chip-down {
+    -fx-background-radius: 999;
+    -fx-padding: 4 10;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+.nf-chip-up { -fx-background-color: rgba(167,246,38,0.16); -fx-text-fill: -nf-accent-text; }
+.nf-chip-down { -fx-background-color: rgba(255,77,79,0.16); -fx-text-fill: -nf-danger; }
+
+/* ======================= Portada del panel ======================= */
+.nf-hero-shade {
+    -fx-background-color: linear-gradient(to right, rgba(12,8,28,0.94) 0%, rgba(60,24,130,0.72) 55%, rgba(122,53,232,0.40) 100%);
+}
+.nf-hero-title { -fx-text-fill: white; -fx-font-size: 34px; -fx-font-weight: bold; }
+.nf-hero-name { -fx-text-fill: #A7F626; -fx-font-size: 34px; -fx-font-weight: bold; }
+.nf-hero-text { -fx-text-fill: #E4DDF5; -fx-font-size: 16px; }
+.nf-hero-bar { -fx-background-color: linear-gradient(to bottom, #C4FF5A, #6DB21A); }
+.nf-hero-stripe { -fx-fill: linear-gradient(to bottom right, #C4FF5A, #6DB21A); }
+
+/* ======================= Botones ======================= */
+.nf-primary, .nf-primary-small {
+    -fx-background-color: linear-gradient(to right, #A7F626, #7CC81F);
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 14, 0, 0, 2);
+}
+.nf-primary:hover, .nf-primary-small:hover { -fx-background-color: linear-gradient(to right, #B8FF4A, #8AD82A); }
+.nf-secondary:hover, .nf-icon-button:hover { -fx-background-color: -nf-violet-soft; }
+.nf-icon-button { -fx-border-color: -nf-border; }
+
+/* ======================= Tablas y listas ======================= */
+.nf-table .column-header .label { -fx-text-fill: -nf-violet-text; }
+.nf-table .table-row-cell:hover, .nf-list .list-cell:filled:hover { -fx-background-color: -nf-violet-soft; }
+.nf-table .table-row-cell:filled:odd:hover, .nf-table .table-row-cell:filled:even:hover { -fx-background-color: -nf-violet-soft; }
+.nf-exercise-card:hover { -fx-border-color: -nf-violet-bright; }
+.nf-summary { -fx-background-color: -nf-violet-soft; }
+
+/* ======================= Gráficas ======================= */
+.chart-horizontal-grid-lines { -fx-stroke: -nf-border; -fx-stroke-dash-array: 2 6; }
+.default-color0.chart-bar { -fx-bar-fill: linear-gradient(to bottom, #8F55FF, #5A22B8); }
+.chart-bar { -fx-background-radius: 8 8 0 0; }
+.chart-bar.nf-bar-today { -fx-bar-fill: linear-gradient(to bottom, #C4FF5A, #6DB21A); }
+.default-color0.chart-series-area-line { -fx-stroke: linear-gradient(to right, #8F55FF, #A7F626); -fx-stroke-width: 3.5px; }
+.default-color0.chart-series-area-fill { -fx-fill: linear-gradient(to bottom, rgba(167,246,38,0.30), rgba(122,53,232,0.04)); }
+.default-color0.chart-area-symbol {
+    -fx-background-color: #A7F626, -nf-card-end;
+    -fx-background-insets: 0, 3;
+    -fx-background-radius: 6;
+    -fx-padding: 5;
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 10, 0.4, 0, 0);
+}
+.default-color0.chart-pie { -fx-pie-color: #A7F626; -fx-border-color: -nf-card-end; }
+.default-color1.chart-pie { -fx-pie-color: #FFB020; -fx-border-color: -nf-card-end; }
+.default-color2.chart-pie { -fx-pie-color: #7A35E8; -fx-border-color: -nf-card-end; }
+.default-color3.chart-pie { -fx-pie-color: #FF4D4F; -fx-border-color: -nf-card-end; }
+.default-color4.chart-pie { -fx-pie-color: #8A86A0; -fx-border-color: -nf-card-end; }
+.nf-dot-0, .nf-dot-1, .nf-dot-2, .nf-dot-3, .nf-dot-4 { -fx-background-radius: 999; }
+.nf-dot-0 { -fx-background-color: #A7F626; }
+.nf-dot-1 { -fx-background-color: #FFB020; }
+.nf-dot-2 { -fx-background-color: #7A35E8; }
+.nf-dot-3 { -fx-background-color: #FF4D4F; }
+.nf-dot-4 { -fx-background-color: #8A86A0; }
+.nf-donut-hole { -fx-fill: -nf-card-end; }
+.nf-donut-total { -fx-text-fill: -nf-text; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-legend-name { -fx-text-fill: -nf-text; -fx-font-size: 14px; }
+.nf-legend-value { -fx-text-fill: -nf-muted; -fx-font-size: 14px; -fx-font-weight: bold; }
+.nf-bar-value { -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-bar-bubble {
+    -fx-background-color: #A7F626;
+    -fx-background-radius: 10;
+    -fx-text-fill: #0B0A12;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 9;
+}
+
+/* ======================= Mapa de calor ======================= */
+.nf-heat-empty { -fx-background-color: -nf-surface-alt; -fx-background-radius: 6; }
 .nf-heat-low { -fx-background-color: -nf-violet; -fx-background-radius: 6; }
+.nf-heat-cell { -fx-background-color: #A7F626; -fx-background-radius: 6; }
