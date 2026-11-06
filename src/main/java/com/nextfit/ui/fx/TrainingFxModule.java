@@ -7,6 +7,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
+import com.nextfit.service.suggest.SuggestionService;
 
 import java.nio.file.Path;
 
@@ -24,10 +25,12 @@ public final class TrainingFxModule implements FxModule {
     /**
      * @param training     the object that builds and holds the training services
      * @param imagesFolder folder where the exercise pictures are stored
+     * @param suggestions  the service that builds suggested routines
      */
-    public TrainingFxModule(TrainingModule training, Path imagesFolder) {
+    public TrainingFxModule(TrainingModule training, SuggestionService suggestions, Path imagesFolder) {
         this.exercises = new ExercisesPane(training.exercises(), imagesFolder);
-        this.routines = new RoutinesPane(training.routines(), training.trainers(), training.exercises());
+        this.routines = new RoutinesPane(training.routines(), training.trainers(), training.exercises(),
+                training.members(), suggestions);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().addAll(tab("Ejercicios", exercises), tab("Rutinas", routines));
