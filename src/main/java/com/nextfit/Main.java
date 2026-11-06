@@ -1,6 +1,7 @@
 package com.nextfit;
 
 
+import com.nextfit.persistence.AccessKeyStore;
 import com.nextfit.persistence.CsvAttendanceRepository;
 import com.nextfit.persistence.CsvHealthProfileRepository;
 import com.nextfit.persistence.CsvMeasurementRepository;
@@ -8,10 +9,12 @@ import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
 import com.nextfit.persistence.CsvPaymentRepository;
 import com.nextfit.service.AccessService;
+import com.nextfit.service.AccessTokens;
 import com.nextfit.service.AnalyticsService;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
 import com.nextfit.service.MembershipPlanService;
+import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.PaymentService;
 import com.nextfit.service.DashboardService;
@@ -60,6 +63,10 @@ import javax.swing.SwingUtilities;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import com.nextfit.web.AccessServer;
+import com.nextfit.web.LanAddress;
+import java.io.IOException;
+import java.util.function.Supplier;
 
 /**
  * Application entry point. Repositories, services and screens are wired here
@@ -69,6 +76,8 @@ import java.util.Set;
 public final class Main {
 
     private static final Path DATA_DIR = Path.of("data");
+    /** First port of the web server that answers the carnet scans of a phone. */
+    private static final int ACCESS_PORT = 8765;
 
     private Main() {
     }
@@ -123,6 +132,9 @@ public final class Main {
         AccessService accessService = new AccessService(memberService, attendanceService,
                 memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
                 Clock.systemDefaultZone());
+        PhoneAccess phoneAccess = new PhoneAccess(memberService, accessService,
+                new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))),
+                Clock.systemDefaultZone());
         AnalyticsService analyticsService = new AnalyticsService(attendanceService, subscriptionService,
                 Clock.systemDefaultZone());
         DashboardService dashboardService = new DashboardService(
@@ -136,6 +148,14 @@ public final class Main {
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
         // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
         if (fx) {
+            // Phones that scan a carnet QR talk to this small server of the reception computer.
+            AccessServer accessServer = new AccessServer(phoneAccess, ACCESS_PORT);
+            try {
+                accessServer.start();
+            } catch (IOException e) {
+                System.err.println("No se pudo abrir el servidor del QR: " + e.getMessage());
+            }
+            Supplier<String> phoneUrl = () -> "http://" + LanAddress.find() + ":" + accessServer.port();
             // The modules are built by a supplier because JavaFX controls can only be created after the toolkit starts.
             FxApp.run(auth, session, () -> List.of(
                     new DashboardModule(dashboardService, session),
@@ -143,9 +163,12 @@ public final class Main {
                             Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                     new TrainingFxModule(training, suggestionService,
-                            DATA_DIR.resolve("images").resolve("exercises")),                    new AccessModule(accessService, attendanceService, memberService, subscriptionService),
+                            DATA_DIR.resolve("images").resolve("exercises")),
+                    new AccessModule(accessService, attendanceService, memberService, subscriptionService,
+                            phoneAccess, phoneUrl),
                     new AnalyticsModule(analyticsService, memberService),
                     new UsersModule(userService, session)));
+            accessServer.stop();
             return;
         }
 

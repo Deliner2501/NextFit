@@ -31,3 +31,4 @@ nbproject/private/
 .vscode/
 data/*.csv
 data/*.tmp
+data/access.key

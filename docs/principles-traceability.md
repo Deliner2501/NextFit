@@ -97,6 +97,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Low coupling | `AccessResult` | The kiosk shows a record with the outcome and the message; it never catches rule exceptions itself |
 | GRASP Pure Fabrication | `QrImage`, `MemberAvatar` | Small helpers that draw the QR and the photo, shared by the kiosk and the carnet screen |
 | Testability | `AccessServiceTest` | Entry, exit, denial, unknown code and the last day of the membership are tested with a fixed clock |
+| SRP | `AccessTokens`, `AccessKeyStore` | One class signs and checks the access code; the other only keeps the secret key in a file |
+| GRASP Protected Variations | `AccessTokens` | The code is derived from the document with a secret key, so the Member model and the CSV files do not change and a leaked carnet is revoked by changing the key |
+| GRASP Controller (use case) | `PhoneAccess.scan` | One operation turns a phone scan into an entry or exit, and returns the previous answer when the same code arrives twice in 10 seconds |
+| OCP and Observer | `AccessService.addListener` | The kiosk screen subscribes to results, so a new way to scan (phone, reader, typed) needs no change in the screen |
+| SRP and Pure Fabrication | `AccessPage` | A pure function from a result to the phone page, tested without a server and with the member text escaped |
+| DIP | `AccessServer` | The web server depends on `PhoneAccess`, not on members, attendance or files; the port and the clock are injected |
+| Testability | `PhoneAccessTest`, `AccessServerTest`, `AccessPageTest`, `AccessTokensTest`, `AccessKeyStoreTest` | The server is tested for real on a free port with an HTTP client, like a phone would call it |
 | SRP | `OccupancyHeatmap`, `AnalyticsService` | One class only counts entries by weekday and hour; the other only joins attendance and memberships into a report; neither draws anything |
 | GRASP Information Expert | `OccupancyHeatmap` | The heatmap owns its counts, so it is the one that knows the maximum, the total and the peak slot |
 | GRASP Low coupling | `AnalyticsService.Report` | The screen receives one immutable report and never reads attendance or memberships itself |

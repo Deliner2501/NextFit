@@ -23,6 +23,7 @@ import javafx.util.Duration;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 /**
  * Kiosk screen of the reception. The text box always keeps the focus, so a USB
@@ -39,28 +40,36 @@ final class AccessPane extends HBox {
     private final AccessService access;
     private final AttendanceService attendance;
     private final MemberService members;
+    private final Supplier<String> phoneUrl;
 
+    private final Label phoneInfo = new Label();
     private final TextField scan = new TextField();
     private final VBox result = new VBox(14);
     private final ListView<AttendanceRecord> inside = new ListView<>();
     private final Label insideTitle = new Label();
     private final PauseTransition reset = new PauseTransition(Duration.seconds(7));
 
-    AccessPane(AccessService access, AttendanceService attendance, MemberService members) {
+    AccessPane(AccessService access, AttendanceService attendance, MemberService members,
+               Supplier<String> phoneUrl) {
         super(24);
         this.access = access;
         this.attendance = attendance;
         this.members = members;
+        this.phoneUrl = phoneUrl;
 
         VBox left = new VBox(18, buildScanBox(), buildResultHolder());
         HBox.setHgrow(left, Priority.ALWAYS);
         getChildren().addAll(left, buildInsideColumn());
         showIdle();
         reset.setOnFinished(e -> showIdle());
+        // Scans that do not come from the text box (a phone) also reach the screen.
+        access.addListener(result -> Platform.runLater(() -> display(result)));
     }
 
     /** Reloads the list of members inside and gives the focus back to the scan box. */
     void refresh() {
+        phoneInfo.setText("Con el celular: escanea el QR del carnet con la cámara (misma red Wi-Fi). Prueba la conexión en "
+                + phoneUrl.get() + "/ping");
         reloadInside();
         Platform.runLater(scan::requestFocus);
     }
@@ -87,7 +96,9 @@ final class AccessPane extends HBox {
                 });
             }
         });
-        return new VBox(8, title, hint, scan);
+        phoneInfo.getStyleClass().add("nf-muted-small");
+        phoneInfo.setWrapText(true);
+        return new VBox(8, title, hint, phoneInfo, scan);
     }
 
     private StackPane buildResultHolder() {
@@ -134,11 +145,15 @@ final class AccessPane extends HBox {
     private void submit() {
         String code = scan.getText();
         scan.clear();
-        AccessResult outcome = access.process(code);
+        // The result reaches display() through the listener, like the scans of a phone.
+        access.process(code);
+        scan.requestFocus();
+    }
+
+    private void display(AccessResult outcome) {
         showResult(outcome);
         reloadInside();
         reset.playFromStart();
-        scan.requestFocus();
     }
 
     private void showResult(AccessResult outcome) {

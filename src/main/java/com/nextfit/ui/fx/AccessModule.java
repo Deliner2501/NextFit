@@ -4,12 +4,15 @@ import com.nextfit.model.Role;
 import com.nextfit.service.AccessService;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.MemberService;
+import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.SubscriptionService;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
+
+import java.util.function.Supplier;
 
 /**
  * Access control module in JavaFX: the kiosk that reads the QR of the carnet
@@ -27,11 +30,14 @@ public final class AccessModule implements FxModule {
      * @param attendanceService lists who is inside
      * @param memberService     finds members
      * @param subscriptions     tells the membership of each member
+     * @param phone             registers the scans made with a phone and gives the carnet codes
+     * @param phoneUrl          gives the address of the reception computer, e.g. http://192.168.1.20:8765
      */
     public AccessModule(AccessService accessService, AttendanceService attendanceService,
-                        MemberService memberService, SubscriptionService subscriptions) {
-        this.kiosk = new AccessPane(accessService, attendanceService, memberService);
-        this.carnets = new CarnetPane(memberService, subscriptions);
+                        MemberService memberService, SubscriptionService subscriptions,
+                        PhoneAccess phone, Supplier<String> phoneUrl) {
+        this.kiosk = new AccessPane(accessService, attendanceService, memberService, phoneUrl);
+        this.carnets = new CarnetPane(memberService, subscriptions, phone, phoneUrl);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().addAll(tab("Control de acceso", kiosk), tab("Carnets", carnets));
