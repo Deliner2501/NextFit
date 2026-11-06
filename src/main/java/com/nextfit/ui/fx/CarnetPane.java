@@ -2,8 +2,8 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.exceptions.PersistenceException;
 import com.nextfit.model.Member;
-import com.nextfit.service.CarnetCode;
 import com.nextfit.service.MemberService;
+import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.SubscriptionService;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 /**
  * Carnet screen: pick a member, see the carnet (photo, name, document and QR)
@@ -36,20 +37,25 @@ final class CarnetPane extends HBox {
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("d/MM/yyyy", Locale.forLanguageTag("es-CO"));
 
     private final SubscriptionService subscriptions;
+    private final PhoneAccess phone;
+    private final Supplier<String> phoneUrl;
     private final MemberPicker picker;
     private final StackPane previewHolder = new StackPane();
     private final Button save = new Button("Guardar carnet como imagen");
     private VBox carnet;
     private Member current;
 
-    CarnetPane(MemberService members, SubscriptionService subscriptions) {
+    CarnetPane(MemberService members, SubscriptionService subscriptions, PhoneAccess phone,
+               Supplier<String> phoneUrl) {
         super(24);
         this.subscriptions = subscriptions;
+        this.phone = phone;
+        this.phoneUrl = phoneUrl;
         this.picker = new MemberPicker("Socios", members, this::select);
 
         Label title = new Label("Carnet del socio");
         title.getStyleClass().add("nf-section-title");
-        Label hint = new Label("Elige un socio para ver su carnet. El QR contiene solo su número de documento.");
+        Label hint = new Label("Elige un socio para ver su carnet. Al escanear el QR con la cámara del celular se registra su entrada o salida; el código solo existe dentro del QR.");
         hint.getStyleClass().add("nf-muted-small");
         hint.setWrapText(true);
         save.getStyleClass().add("nf-primary");
@@ -66,6 +72,10 @@ final class CarnetPane extends HBox {
 
     void refresh() {
         picker.reload();
+        // The address of this computer may have changed, so the QR is drawn again.
+        if (current != null) {
+            select(current);
+        }
     }
 
     private void select(Member member) {
@@ -93,24 +103,22 @@ final class CarnetPane extends HBox {
         Label name = new Label(member.getFullName());
         name.getStyleClass().add("nf-carnet-name");
         name.setWrapText(true);
-        Label document = new Label("Documento " + member.getDocumentNumber());
-        document.getStyleClass().add("nf-carnet-text");
         String validity = subscriptions.findCurrentFor(member.getId())
                 .map(s -> "Membresía hasta " + s.getEndDate().format(DAY))
                 .orElse("Sin membresía vigente");
         Label until = new Label(validity);
         until.getStyleClass().add("nf-carnet-text");
-        VBox data = new VBox(6, name, document, until);
+        VBox data = new VBox(6, name, until);
 
         VBox identity = new VBox(14, MemberAvatar.of(member, 120), data);
         identity.setAlignment(Pos.TOP_LEFT);
 
-        ImageView qr = new ImageView(QrImage.of(CarnetCode.encode(member.getDocumentNumber()), 8));
+        ImageView qr = new ImageView(QrImage.of(phoneUrl.get() + "/a/" + phone.tokenOf(member), 6));
         qr.setFitWidth(170);
         qr.setFitHeight(170);
         qr.setSmooth(false);
         qr.setPreserveRatio(true);
-        Label scanHint = new Label("Presenta este código en la entrada");
+        Label scanHint = new Label("Escanea con la cámara del celular");
         scanHint.getStyleClass().add("nf-carnet-text");
         VBox qrBox = new VBox(8, qr, scanHint);
         qrBox.setAlignment(Pos.CENTER);

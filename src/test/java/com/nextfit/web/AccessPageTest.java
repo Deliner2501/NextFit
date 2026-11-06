@@ -1,0 +1,69 @@
+package com.nextfit.web;
+
+import com.nextfit.model.Member;
+import com.nextfit.service.AccessResult;
+import com.nextfit.service.AccessResult.Outcome;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class AccessPageTest {
+
+    private static Member member(String name, String photo) {
+        return new Member(1, name, "1065123456", "3001112233", "a@b.co", LocalDate.of(1998, 5, 1),
+                LocalDate.of(2026, 1, 1), photo, "Mamá 3001", true);
+    }
+
+    @Test
+    void entryPageIsGreenAndShowsTheMemberAndTheMembership() {
+        AccessResult result = new AccessResult(Outcome.ENTRY, member("Juan Pablo Cuello", ""),
+                "Bienvenido, Juan", LocalDate.of(2026, 11, 20), 15);
+
+        String html = AccessPage.render(result, "ABCDEFGHJK");
+
+        assertTrue(html.contains("ENTRADA REGISTRADA"));
+        assertTrue(html.contains("#1FAE74"));
+        assertTrue(html.contains("Juan Pablo Cuello"));
+        assertTrue(html.contains("20 de noviembre 2026"));
+        assertFalse(html.contains("/photo/"));
+    }
+
+    @Test
+    void exitPageIsBlueAndWarnsWhenTheMembershipEndsSoon() {
+        AccessResult result = new AccessResult(Outcome.EXIT, member("Ana Gómez", "data/photos/x.jpg"),
+                "Hasta pronto, Ana", LocalDate.of(2026, 11, 8), 3);
+
+        String html = AccessPage.render(result, "ABCDEFGHJK");
+
+        assertTrue(html.contains("SALIDA REGISTRADA"));
+        assertTrue(html.contains("#2F7DE1"));
+        assertTrue(html.contains("quedan 3 días"));
+        assertTrue(html.contains("/photo/ABCDEFGHJK"));
+    }
+
+    @Test
+    void deniedPageIsRedAndShowsTheReason() {
+        AccessResult result = new AccessResult(Outcome.DENIED, null, "Código no válido.", null, -1);
+
+        String html = AccessPage.render(result, "x");
+
+        assertTrue(html.contains("ACCESO DENEGADO"));
+        assertTrue(html.contains("#E5484D"));
+        assertTrue(html.contains("Código no válido."));
+    }
+
+    @Test
+    void textFromTheMemberIsEscaped() {
+        AccessResult result = new AccessResult(Outcome.DENIED, member("<script>alert(1)</script>", ""),
+                "\"quoted\" & <b>", null, -1);
+
+        String html = AccessPage.render(result, "x");
+
+        assertFalse(html.contains("<script>alert"));
+        assertTrue(html.contains("&lt;script&gt;"));
+        assertTrue(html.contains("&quot;quoted&quot; &amp; &lt;b&gt;"));
+    }
+}
