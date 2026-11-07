@@ -209,3 +209,8 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `TrainersPane`, `TrainerForm` | The pane lists trainers and reports clicks; the form only collects the data of one trainer. Neither one decides what is valid. |
 | Information Expert | `TrainerService` | The rules to register, update, deactivate and reactivate a trainer stay in the service that owns the trainer data; the screens only show its messages. |
 | DIP | `TrainersPane`, `TrainerForm` | They depend on `TrainerService`, not on the CSV files, so the storage can change to the database without touching the screens. |
+| SRP | `OccupancyService` | It only calculates the picture of the gym (people inside, level, entries by hour, best hour to come); it does not draw it and never changes the attendance data. |
+| Information Expert | `OccupancyLevel` | Each level knows the percentage where it starts, so nobody else repeats those limits. |
+| Pure Fabrication | `OccupancySnapshot` | An immutable picture of the gym with no drawing logic, created so the TV screen only reads data. |
+| DIP | `OccupancyService` | It depends on `AttendanceService` and `MemberService`, and receives the capacity and the `Clock` by constructor, so tests can fix the time. |
+| Low Coupling | `OccupancyService` | It reuses `OccupancyHeatmap` from the analytics instead of counting entries by weekday and hour again. |
