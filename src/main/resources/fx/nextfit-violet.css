@@ -298,3 +298,15 @@
 .nf-brand-credit { -fx-text-fill: #C2BCDB; -fx-font-size: 12px; }
 .nf-brand-bar { -fx-background-color: linear-gradient(to right, #C4FF5A, #6DB21A); -fx-background-radius: 999; }
 .nf-login-card { -fx-padding: 40; }
+
+/* ======================= Reportes y cierre de caja ======================= */
+.nf-result-ok { -fx-text-fill: #7BD21B; -fx-font-weight: bold; }
+.nf-result-warn { -fx-text-fill: #FFB020; -fx-font-weight: bold; }
+.nf-result-bad { -fx-text-fill: #FF6B6D; -fx-font-weight: bold; }
+.root.light .nf-result-ok { -fx-text-fill: #2C5608; }
+.root.light .nf-result-warn { -fx-text-fill: #9A5B00; }
+.root.light .nf-result-bad { -fx-text-fill: #C62828; }
+.nf-bar-track { -fx-background-color: -nf-surface-alt; -fx-background-radius: 999; }
+.nf-bar-fill { -fx-background-radius: 999; }
+.date-picker { -fx-background-radius: 12; -fx-border-radius: 12; -fx-pref-height: 44; -fx-min-height: 44; }
+
