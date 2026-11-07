@@ -3,15 +3,19 @@ package com.nextfit.ui.fx;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
+import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
+import javafx.animation.Transition;
 import javafx.animation.TranslateTransition;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ButtonBase;
+import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.util.Duration;
 
 import java.util.List;
+import java.util.function.LongFunction;
 
 /**
  * The small animations of the interface, in one place so every screen moves the same way: cards that rise
@@ -64,6 +68,59 @@ final class FxMotion {
             new ParallelTransition(fade, rise).play();
             index++;
         }
+    }
+
+    /**
+     * Makes a number climb from zero to its value in a moment.
+     *
+     * @param label  the label that shows the number
+     * @param target the final value
+     * @param format how to write a value as text
+     */
+    static void countUp(Label label, long target, LongFunction<String> format) {
+        if (target == 0) {
+            label.setText(format.apply(0));
+            return;
+        }
+        Transition animation = new Transition() {
+            {
+                setCycleDuration(Duration.millis(750));
+            }
+
+            @Override
+            protected void interpolate(double fraction) {
+                double eased = 1 - Math.pow(1 - fraction, 3);
+                label.setText(format.apply(Math.round(target * eased)));
+            }
+        };
+        animation.play();
+    }
+
+    /**
+     * Makes a round chart appear spinning and growing from a bit smaller.
+     *
+     * @param node        the chart
+     * @param delayMillis wait before it starts
+     */
+    static void spinIn(Node node, double delayMillis) {
+        Duration length = Duration.millis(900);
+        node.setOpacity(0);
+        FadeTransition fade = new FadeTransition(length, node);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+        RotateTransition spin = new RotateTransition(length, node);
+        spin.setFromAngle(-100);
+        spin.setToAngle(0);
+        spin.setInterpolator(Interpolator.EASE_OUT);
+        ScaleTransition grow = new ScaleTransition(length, node);
+        grow.setFromX(0.85);
+        grow.setFromY(0.85);
+        grow.setToX(1);
+        grow.setToY(1);
+        grow.setInterpolator(Interpolator.EASE_OUT);
+        ParallelTransition all = new ParallelTransition(fade, spin, grow);
+        all.setDelay(Duration.millis(delayMillis));
+        all.play();
     }
 
     /**
