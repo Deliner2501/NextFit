@@ -2,11 +2,13 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.TrainingModule;
 import com.nextfit.model.Role;
+import com.nextfit.service.suggest.SuggestionService;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
+
 import java.nio.file.Path;
 
 /**
@@ -18,16 +20,25 @@ public final class TrainingFxModule implements FxModule {
 
     private final TabPane tabs = new TabPane();
     private final ExercisesPane exercises;
+    private final RoutinesPane routines;
+    private final AssignmentPane assignments;
 
     /**
-     * @param training the object that builds and holds the training services
+     * @param training     the object that builds and holds the training services
+     * @param suggestions  the service that builds suggested routines
      * @param imagesFolder folder where the exercise pictures are stored
      */
-        public TrainingFxModule(TrainingModule training, Path imagesFolder) {
+    public TrainingFxModule(TrainingModule training, SuggestionService suggestions, Path imagesFolder) {
         this.exercises = new ExercisesPane(training.exercises(), imagesFolder);
+        this.routines = new RoutinesPane(training.routines(), training.trainers(), training.exercises(),
+                training.members(), suggestions);
+        this.assignments = new AssignmentPane(training.assignments(), training.routines(), training.members());
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
-        tabs.getTabs().add(tab("Ejercicios", exercises));
+        tabs.getTabs().addAll(tab("Ejercicios", exercises), tab("Rutinas", routines),
+                tab("Asignación", assignments));
+        // Lo creado o editado en una pestaña debe verse en las otras.
+        tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> refreshTabs());
     }
 
     @Override
@@ -52,13 +63,19 @@ public final class TrainingFxModule implements FxModule {
 
     @Override
     public void onShow() {
-        exercises.refresh();
+        refreshTabs();
     }
 
     /** Only the administrator and the trainer can open this module. */
     @Override
     public boolean allowedFor(Role role) {
         return role == Role.ADMIN || role == Role.TRAINER;
+    }
+
+    private void refreshTabs() {
+        exercises.refresh();
+        routines.refresh();
+        assignments.refresh();
     }
 
     private static Tab tab(String title, Node content) {

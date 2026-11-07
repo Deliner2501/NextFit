@@ -19,6 +19,10 @@ import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.PaymentService;
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.UserService;
+import com.nextfit.service.suggest.BmiRule;
+import com.nextfit.service.suggest.MedicalConditionRule;
+import com.nextfit.service.suggest.SuggestionRule;
+import com.nextfit.service.suggest.SuggestionService;
 import com.nextfit.validation.HealthValidator;
 import com.nextfit.validation.MembershipPlanValidator;
 import com.nextfit.validation.PaymentValidator;
@@ -118,6 +122,9 @@ public final class Main {
         
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
+        // The suggestion service and its rules are wired here (composition root).
+        SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
+                List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
         AccessServer accessServer = new AccessServer(phoneAccess, ACCESS_PORT);
@@ -135,7 +142,8 @@ public final class Main {
                 new PendingModule("members", "Socios", FxIcons.MEMBERS,
                         Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
-                new TrainingFxModule(training, DATA_DIR.resolve("images").resolve("exercises")),
+                new TrainingFxModule(training, suggestionService,
+                        DATA_DIR.resolve("images").resolve("exercises")),
                 new AccessModule(accessService, attendanceService, memberService, subscriptionService,
                         phoneAccess, phoneUrl),
                 new AnalyticsModule(analyticsService, memberService),
