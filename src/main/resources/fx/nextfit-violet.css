@@ -9,9 +9,9 @@
     -nf-bg: #090810;
     -nf-surface: #13121C;
     -nf-surface-alt: #1D1830;
-    -nf-border: #312A48;
-    -nf-text: #F1EEF8;
-    -nf-muted: #9D97B8;
+    -nf-border: #40376A;
+    -nf-text: #F4F1FB;
+    -nf-muted: #C2BCDB;
     -nf-accent: #A7F626;
     -nf-accent-text: #A7F626;
     -nf-accent-soft: rgba(167, 246, 38, 0.14);
@@ -32,29 +32,29 @@
 }
 
 .root.light {
-    -nf-bg: #F3F0FB;
+    -nf-bg: #E9E4F7;
     -nf-surface: #FFFFFF;
-    -nf-surface-alt: #ECE7F8;
-    -nf-border: #DDD5F0;
-    -nf-text: #1A1330;
-    -nf-muted: #6A6485;
+    -nf-surface-alt: #E2DAF4;
+    -nf-border: #C6BAE6;
+    -nf-text: #160E2E;
+    -nf-muted: #483F68;
     -nf-accent: #A7F626;
-    -nf-accent-text: #3F6A12;
+    -nf-accent-text: #2C5608;
     -nf-accent-soft: rgba(120, 190, 30, 0.18);
     -nf-shade-start: rgba(14, 10, 30, 0.25);
     -nf-shade-end: rgba(14, 10, 30, 0.88);
     -nf-violet: #7A35E8;
     -nf-violet-bright: #8F55FF;
-    -nf-violet-text: #5B25C0;
+    -nf-violet-text: #4519A6;
     -nf-violet-soft: rgba(122, 53, 232, 0.14);
-    -nf-violet-deep: #E6DCFB;
+    -nf-violet-deep: #DDD0FA;
     -nf-card-start: #FFFFFF;
-    -nf-card-end: #F7F3FF;
+    -nf-card-end: #FBF9FF;
     -nf-side-top: #FFFFFF;
-    -nf-side-bottom: #EFE8FF;
-    -nf-glow: rgba(109, 43, 208, 0.10);
+    -nf-side-bottom: #EEE8FC;
+    -nf-glow: rgba(40, 20, 100, 0.16);
     -nf-lime-glow: rgba(120, 190, 30, 0.30);
-    -nf-page-glow: rgba(122, 53, 232, 0.16);
+    -nf-page-glow: rgba(122, 53, 232, 0.10);
 }
 
 /* Los controles de AtlantaFX (listas desplegables, calendario, diálogos) usan la misma paleta. */
@@ -79,7 +79,7 @@
     -fx-border-color: -nf-border;
     -fx-border-width: 0 1 0 0;
 }
-.nf-nav { -fx-background-radius: 14; }
+.nf-nav { -fx-background-radius: 12; }
 .nf-nav:hover { -fx-background-color: -nf-violet-soft; }
 .nf-nav.selected {
     -fx-background-color: linear-gradient(to right, #A7F626, #6DB21A);
@@ -90,25 +90,25 @@
 .nf-nav.selected .nf-icon { -fx-background-color: #0B0A12; }
 
 /* Bloque promocional del pie de la barra lateral */
-.nf-promo { -fx-background-radius: 18; -fx-background-color: linear-gradient(to bottom, rgba(122,53,232,0.10), rgba(122,53,232,0.55)); }
+.nf-promo { -fx-background-radius: 20; -fx-background-color: linear-gradient(to bottom, rgba(122,53,232,0.10), rgba(122,53,232,0.55)); }
 .nf-promo-line1 { -fx-text-fill: white; -fx-font-size: 21px; -fx-font-weight: bold; }
 .nf-promo-line2 { -fx-text-fill: #A7F626; -fx-font-size: 21px; -fx-font-weight: bold; }
 
 /* ======================= Tarjetas, tablas y listas ======================= */
 .nf-card, .nf-table, .nf-list, .nf-exercise-card {
     -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end);
-    -fx-background-radius: 18;
+    -fx-background-radius: 20;
     -fx-border-color: -nf-border;
-    -fx-border-radius: 18;
+    -fx-border-radius: 20;
 }
 .nf-card { -fx-effect: dropshadow(gaussian, -nf-glow, 20, 0, 0, 6); }
 
 /* Tarjeta protagonista: más grande, con fondo violeta y el dato principal en verde. */
 .nf-card-feature {
     -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-card-end);
-    -fx-background-radius: 22;
+    -fx-background-radius: 20;
     -fx-border-color: -nf-violet;
-    -fx-border-radius: 22;
+    -fx-border-radius: 20;
     -fx-border-width: 1;
     -fx-effect: dropshadow(gaussian, -nf-glow, 26, 0, 0, 8);
 }
@@ -119,9 +119,9 @@
 /* Tarjeta de indicador: insignia violeta, número grande y un ícono grande de fondo */
 .nf-kpi-card {
     -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end);
-    -fx-background-radius: 18;
+    -fx-background-radius: 20;
     -fx-border-color: -nf-border;
-    -fx-border-radius: 18;
+    -fx-border-radius: 20;
     -fx-effect: dropshadow(gaussian, -nf-glow, 20, 0, 0, 6);
 }
 .nf-kpi-card-lime {
@@ -215,3 +215,86 @@
 .nf-heat-empty { -fx-background-color: -nf-surface-alt; -fx-background-radius: 6; }
 .nf-heat-low { -fx-background-color: -nf-violet; -fx-background-radius: 6; }
 .nf-heat-cell { -fx-background-color: #A7F626; -fx-background-radius: 6; }
+
+/* ======================= Una sola escala de radios =======================
+ * Tarjetas y bloques grandes: 20.  Controles (campos, botones, listas desplegables): 12.
+ * Chips e insignias: totalmente redondos.  Celdas internas: 6 a 10. */
+.nf-card, .nf-card-feature, .nf-kpi-card, .nf-table, .nf-list, .nf-exercise-card, .nf-access-card, .nf-carnet, .nf-promo {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+.nf-input, .nf-textarea, .nf-primary, .nf-primary-small, .nf-secondary, .nf-icon-button, .nf-nav, .nf-summary {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+.nf-receipt .content { -fx-background-radius: 12; }
+
+/* ======================= Controles con un mismo peso visual =======================
+ * Campos, filtros y botones secundarios comparten altura (44), borde y radio. El verde lima queda
+ * reservado para la acción principal, y el foco de los campos es violeta. */
+.nf-input, .nf-textarea {
+    -fx-background-color: -nf-surface-alt;
+    -fx-border-color: -nf-border;
+    -fx-border-width: 1;
+}
+.nf-input:focused, .nf-textarea:focused { -fx-border-color: -nf-violet-bright; -fx-border-width: 2; }
+.root.dark .nf-input, .root.dark .nf-textarea { -fx-background-color: rgba(255,255,255,0.05); }
+.root.light .nf-input, .root.light .nf-textarea { -fx-background-color: #FFFFFF; }
+.combo-box-base {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-pref-height: 44;
+    -fx-min-height: 44;
+}
+.nf-primary-small {
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-padding: 0 20;
+    -fx-effect: null;
+    -fx-text-fill: #0B0A12;
+}
+.nf-secondary { -fx-min-height: 44; -fx-pref-height: 44; -fx-padding: 0 18; }
+.nf-icon-button { -fx-border-color: -nf-border; }
+.nf-field-label { -fx-text-fill: -nf-text; -fx-font-size: 13px; }
+.nf-muted-small { -fx-font-size: 13px; }
+.nf-nav { -fx-text-fill: -nf-muted; }
+.nf-nav:hover { -fx-text-fill: -nf-text; }
+
+/* ======================= Modo claro: lienzo firme y tarjetas bien separadas ======================= */
+.root.light .nf-card,
+.root.light .nf-kpi-card,
+.root.light .nf-table,
+.root.light .nf-list,
+.root.light .nf-exercise-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: -nf-border;
+    -fx-effect: dropshadow(gaussian, rgba(40, 20, 100, 0.16), 16, 0, 0, 4);
+}
+.root.light .nf-card-feature {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #E6DAFF, #FFFFFF);
+    -fx-border-color: #7A35E8;
+    -fx-effect: dropshadow(gaussian, rgba(90, 34, 184, 0.24), 20, 0, 0, 6);
+}
+.root.light .nf-kpi-card-lime {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #FFFFFF 35%, #DDF7A4);
+}
+.root.light .nf-sidebar { -fx-border-color: -nf-border; }
+.root.light .nf-nav:hover { -fx-background-color: #E0D5F8; }
+.root.light .nf-heat-empty { -fx-background-color: #DCD3F1; }
+.root.light .nf-table .column-header .label { -fx-text-fill: -nf-violet-text; }
+.root.light .chart-horizontal-grid-lines { -fx-stroke: #CFC5EA; }
+.root.light .axis { -fx-tick-label-fill: -nf-muted; }
+.root.light .nf-badge-violet { -fx-background-color: rgba(122, 53, 232, 0.18); }
+.root.light .nf-chip-up { -fx-background-color: rgba(90, 150, 10, 0.20); }
+.root.light .nf-bar-value, .root.light .nf-legend-value { -fx-text-fill: -nf-muted; }
+
+/* ======================= Pantalla de ingreso ======================= */
+.nf-brand-shade {
+    -fx-background-color: linear-gradient(to bottom, rgba(18, 8, 44, 0.30) 0%, rgba(40, 16, 96, 0.55) 45%, rgba(10, 6, 24, 0.96) 100%);
+}
+.nf-brand-name { -fx-text-fill: white; -fx-font-size: 48px; -fx-font-weight: bold; }
+.nf-brand-slogan { -fx-text-fill: #A7F626; -fx-font-size: 22px; -fx-font-weight: bold; }
+.nf-brand-text { -fx-text-fill: #E4DDF5; -fx-font-size: 16px; }
+.nf-brand-credit { -fx-text-fill: #C2BCDB; -fx-font-size: 12px; }
+.nf-brand-bar { -fx-background-color: linear-gradient(to right, #C4FF5A, #6DB21A); -fx-background-radius: 999; }
+.nf-login-card { -fx-padding: 40; }

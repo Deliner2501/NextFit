@@ -37,7 +37,7 @@ final class ExercisesPane extends VBox {
     private static final double CARD_WIDTH = 220;
     private static final double PICTURE_HEIGHT = 140;
     private static final double CARD_HEIGHT = 220;
-    private static final double CARD_ARC = 32;
+    private static final double CARD_ARC = 40;
 
     private final ExerciseService service;
     private final Path imagesFolder;

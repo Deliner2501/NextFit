@@ -134,8 +134,8 @@ final class ShellView extends BorderPane {
             StackPane.setAlignment(lines, Pos.BOTTOM_LEFT);
         }
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
-        clip.setArcWidth(36);
-        clip.setArcHeight(36);
+        clip.setArcWidth(40);
+        clip.setArcHeight(40);
         clip.widthProperty().bind(promo.widthProperty());
         clip.heightProperty().bind(promo.heightProperty());
         promo.setClip(clip);

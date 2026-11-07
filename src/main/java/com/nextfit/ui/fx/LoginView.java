@@ -46,12 +46,13 @@ final class LoginView extends HBox {
         brand.prefWidthProperty().bind(widthProperty().multiply(0.40));
         brand.setMinWidth(380);
         StackPane form = new StackPane(buildForm());
+        form.setPadding(new Insets(32));
         HBox.setHgrow(form, Priority.ALWAYS);
         getChildren().addAll(brand, form);
     }
 
     private Region buildBrand() {
-        Region photo = FxImages.cover("/images/login/background.jpg", 0.5, 0.35);
+        Region photo = FxImages.cover("/images/login/background-violet.jpg", 0.5, 0.35);
         Region shade = new Region();
         shade.getStyleClass().add("nf-brand-shade");
 
@@ -68,6 +69,11 @@ final class LoginView extends HBox {
         }
         Label name = new Label("NextFit");
         name.getStyleClass().add("nf-brand-name");
+        Region bar = new Region();
+        bar.getStyleClass().add("nf-brand-bar");
+        bar.setMinSize(64, 6);
+        bar.setPrefSize(64, 6);
+        bar.setMaxSize(64, 6);
         Label slogan = new Label("Entrena. Mide. Mejora.");
         slogan.getStyleClass().add("nf-brand-slogan");
         Label description = new Label("Gestión de socios, membresías, salud\ny rutinas en un solo lugar.");
@@ -75,7 +81,7 @@ final class LoginView extends HBox {
         Label credit = new Label("Programación III · Universidad Popular del Cesar");
         credit.getStyleClass().add("nf-brand-credit");
         VBox.setMargin(credit, new Insets(40, 0, 0, 0));
-        text.getChildren().addAll(name, slogan, description, credit);
+        text.getChildren().addAll(name, bar, slogan, description, credit);
 
         StackPane brand = new StackPane(photo, shade, text);
         brand.setAlignment(Pos.BOTTOM_LEFT);
@@ -110,7 +116,9 @@ final class LoginView extends HBox {
 
         VBox form = new VBox(8, title, subtitle, spacer(18), userLabel, usernameField,
                 spacer(6), passwordLabel, passwordField, errorLabel, loginButton);
-        form.setMaxWidth(420);
+        form.getStyleClass().addAll("nf-card", "nf-login-card");
+        form.setMaxWidth(460);
+        form.setMaxHeight(Region.USE_PREF_SIZE);
         form.setAlignment(Pos.CENTER_LEFT);
         return form;
     }
