@@ -195,3 +195,8 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Protected Variations | `ExercisesPane.pictureOf` | A missing or unreadable photo falls back to the picture of the muscle group, so the screen never breaks |
 | Reuse | `FxDialogs.form` and `FxDialogs.labeled` in `ExerciseForm` | The form reuses the shared dialog, which shows the business errors inside the window without repeating that code |
 | GRASP Protected Variations | `nf-exercise-card`, `nf-textarea` in `nextfit.css` | The colors live in the style sheet, so the screens only add style classes and work in light and dark mode |
+| SRP | `RoutineLineRow`, `RoutineDayPane`, `RoutineForm` | Each class handles one level of the routine form: one exercise line, one day, the whole routine. |
+| Information Expert | `RoutineDayPane` | Each day pane builds its own `RoutineDay` from the data it holds, so the form does not need to know its details. |
+| DIP | `RoutinesPane`, `RoutineForm` | They depend on the service classes, not on repositories or files; all rules stay in `RoutineService`. |
+| Low Coupling | `SuggestRoutineDialog` | It only asks `SuggestionService` for a draft and returns it; the form decides what to do with it. |
+| OCP | `Main` | The suggestion service is built here with its list of rules, so a new rule is added without changing the service. |

@@ -54,6 +54,10 @@ import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.ui.training.TrainingPanel;
 import com.nextfit.validation.MemberValidator;
+import com.nextfit.service.suggest.BmiRule;
+import com.nextfit.service.suggest.MedicalConditionRule;
+import com.nextfit.service.suggest.SuggestionRule;
+import com.nextfit.service.suggest.SuggestionService;
 
 import javax.swing.SwingUtilities;
 import java.nio.file.Path;
@@ -139,7 +143,9 @@ public final class Main {
         // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
-
+        // EXPLICACIÓN: aquí se arma el servicio de sugerencias con sus reglas (raíz de composición).
+        SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
+                List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
         // Pilot of the JavaFX interface: it reuses the same services and skips the Swing screens.
         if (fx) {
             // Phones that scan a carnet QR talk to this small server of the reception computer.
@@ -156,7 +162,8 @@ public final class Main {
                     new PendingModule("members", "Socios", FxIcons.MEMBERS,
                             Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session),
-                    new TrainingFxModule(training, DATA_DIR.resolve("images").resolve("exercises")),
+                    new TrainingFxModule(training, suggestionService,
+                            DATA_DIR.resolve("images").resolve("exercises")),
                     new AccessModule(accessService, attendanceService, memberService, subscriptionService,
                             phoneAccess, phoneUrl),
                     new AnalyticsModule(analyticsService, memberService),
