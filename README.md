@@ -6,7 +6,7 @@
 
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9+-C71A36?logo=apachemaven&logoColor=white)
-![Swing](https://img.shields.io/badge/UI-Swing%20%2B%20FlatLaf-blue)
+![JavaFX](https://img.shields.io/badge/UI-JavaFX%20%2B%20AtlantaFX-blue)
 ![Storage](https://img.shields.io/badge/Storage-CSV-green)
 ![Tests](https://img.shields.io/badge/Tests-JUnit%205-25A162?logo=junit5&logoColor=white)
 ![Version](https://img.shields.io/badge/version-0.7.0-lightgrey)
@@ -42,7 +42,7 @@ Programación III · Universidad Popular del Cesar
 
 **NextFit** is a desktop application for managing a gym: members and their health data, membership plans and payments, attendance control, exercise catalog, routines and training sessions, all with a dashboard that summarizes the state of the gym.
 
-It is built with **Java 21** and **Swing** (with the FlatLaf look and feel), following a **layered architecture** and object-oriented design principles. Information is stored in **CSV files**; there is no database yet, so the application runs anywhere with nothing but a JDK.
+It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its own violet and lime design), following a **layered architecture** and object-oriented design principles. Information is stored in **CSV files**; there is no database yet, so the application runs anywhere with nothing but a JDK.
 
 > This repository is the course project of *Programación III*. The current delivery corresponds to the **70 % milestone**.
 
@@ -134,8 +134,8 @@ The sidebar only shows the modules that the logged-in role can use.
 |---|---|
 | **Java 21** | Language (records, `java.time`) |
 | **Maven** | Build, dependencies and tests |
-| **Swing** | Desktop user interface |
-| **FlatLaf** | Modern look and feel |
+| **JavaFX** | Desktop user interface |
+| **AtlantaFX** | Base theme of the JavaFX controls |
 | **MigLayout** | Layout manager for forms |
 | **CSV files** | Persistence (no database yet) |
 | **JUnit 5** | Unit testing |
@@ -149,7 +149,7 @@ NextFit is organized in layers. Each layer only depends on the ones below it, an
 
 ```text
 ┌──────────────────────────────────────────────┐
-│  UI  (ui, ui.members, ui.billing, ...)       │  Swing screens
+│  UI  (ui, ui.members, ui.billing, ...)       │  JavaFX screens
 └───────────────────────┬──────────────────────┘
                         ▼
 ┌──────────────────────────────────────────────┐

@@ -10,7 +10,7 @@ graph TD
         R["<b>nextfit</b><br/>DemoData<br/>Main<br/>TrainingModule"]
     end
 
-    subgraph PRES["Presentation layer (Swing + FlatLaf)"]
+    subgraph PRES["Presentation layer (JavaFX + AtlantaFX)"]
         UI["<b>ui</b><br/>BannerModule<br/>Formats<br/>LoginFrame<br/>MainWindow<br/>ModulePanel<br/>PlaceholderPanel<br/>Sidebar<br/>Theme<br/>TopBar<br/>UserChip"]
         UIC["<b>ui.components</b><br/>Avatar<br/>BarChart<br/>BmiGauge<br/>BrandPanel<br/>Branding<br/>CoverPhoto<br/>DonutChart<br/>GymArt<br/>HeroBanner<br/>Icons<br/>ImageCard<br/>Images<br/>LineChart<br/>MemberAvatar<br/>MuscleArt<br/>PictureSource<br/>StatCard"]
         UIM["<b>ui.members</b><br/>AttendanceTab<br/>Forms<br/>HealthTab<br/>MeasurementsTab<br/>MemberDetailPanel<br/>MemberFormDialog<br/>MembersPanel"]
