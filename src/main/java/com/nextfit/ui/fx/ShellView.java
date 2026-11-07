@@ -4,7 +4,6 @@ import com.nextfit.model.Role;
 import com.nextfit.model.User;
 import com.nextfit.service.Session;
 import com.nextfit.ui.Formats;
-import javafx.animation.FadeTransition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -19,7 +18,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -95,6 +93,7 @@ final class ShellView extends BorderPane {
             button.getStyleClass().add("nf-nav");
             button.setMaxWidth(Double.MAX_VALUE);
             button.setOnAction(e -> show(item));
+            FxMotion.nudge(button, 4);
             buttons.add(button);
             sidebar.getChildren().add(button);
         }
@@ -210,9 +209,6 @@ final class ShellView extends BorderPane {
         item.onShow();
         Node screen = item.view();
         host.getChildren().setAll(screen);
-        FadeTransition fade = new FadeTransition(Duration.millis(220), screen);
-        fade.setFromValue(0);
-        fade.setToValue(1);
-        fade.play();
+        FxMotion.enter(List.of(screen), 0, 0, 10);
     }
 }

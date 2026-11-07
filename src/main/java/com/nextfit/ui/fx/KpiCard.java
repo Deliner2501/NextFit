@@ -72,6 +72,7 @@ final class KpiCard extends StackPane {
             StackPane.setMargin(deco, new Insets(0, 14, 10, 0));
             getChildren().add(0, deco);
         }
+        FxMotion.hoverLift(this, 1.02);
     }
 
     /**

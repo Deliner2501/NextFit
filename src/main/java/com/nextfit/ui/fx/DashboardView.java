@@ -76,6 +76,9 @@ final class DashboardView extends VBox {
                 split(card("Estado de las membresías", DashboardCharts.statusDonut(vigentes, summary)),
                         card("Asistencia por día de la semana", DashboardCharts.weekdayBars(summary.checkInsByWeekday())),
                         40));
+        // The blocks rise one after another and the three small numbers follow a moment later.
+        FxMotion.enter(getChildren(), 0, 90);
+        FxMotion.enter(side.getChildren(), 240, 110);
     }
 
     private Region hero() {
