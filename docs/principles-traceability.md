@@ -200,3 +200,6 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP | `RoutinesPane`, `RoutineForm` | They depend on the service classes, not on repositories or files; all rules stay in `RoutineService`. |
 | Low Coupling | `SuggestRoutineDialog` | It only asks `SuggestionService` for a draft and returns it; the form decides what to do with it. |
 | OCP | `Main` | The suggestion service is built here with its list of rules, so a new rule is added without changing the service. |
+| SRP | `AssignmentPane` | It only shows the member, the current routine and the history, and reports the clicks; it does not decide anything. |
+| Information Expert | `RoutineAssignmentService` | The rules (active member, valid membership, one active routine) stay in the service that owns the assignment data; the screen only shows its error messages. |
+| Low Coupling | `AssignmentPane`, `MemberPicker` | The pane reuses the shared member picker and only learns which member was chosen, so it does not know how the search works. |
