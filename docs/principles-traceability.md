@@ -77,9 +77,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Protected Variations | `CoverPhoto.paint`, `ImageCard.paintPicture` | The photo is prepared at the real pixel size of the screen, so Windows scaling (125 %, 150 %) changes nothing for the callers, who keep drawing in logical pixels |
 | SRP | `Images.scale` | One class owns the quality of resizing (progressive halving plus bicubic), so every screen gets the same sharpness |
 | GRASP Protected Variations | `FxTheme` and `nextfit.css` | Dark and light modes change only the values of the style sheet; no screen writes a color in code, so a new mode does not touch any screen |
-| DIP | `FxApp.run` | The JavaFX interface receives `AuthService`, `Session` and `DashboardService` from `Main` and never creates a repository; the Swing and JavaFX interfaces share the same services |
+| DIP | `FxApp.run` | The JavaFX interface receives `AuthService`, `Session` and `DashboardService` from `Main` and never creates a repository; the interface never creates a repository, so the CSV files can be replaced by a database in `Main` only |
 | SRP and GRASP Information Expert | `DashboardView` | It only draws the `Summary` that `DashboardService` calculates; no business rule is repeated in the view |
-| OCP | `Main` (flag `--fx`) | The new interface is added next to the Swing one without changing services, model or persistence |
+| OCP | `Main` (JavaFX only) | The interface was replaced without changing services, model or persistence |
 | SRP | `LoginView`, `ShellView`, `FxIcons`, `FxImages` | One class per concern: sign-in screen, main window, vector icons, photo areas |
 | OCP and polymorphism | `FxModule`, `DashboardModule`, `PendingModule`, `UsersModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
 | GRASP Pure Fabrication and DRY | `FxDialogs` | Forms and messages shared by every module, so no module builds its own window; the form stays open and shows the business error |
@@ -89,7 +89,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `BillingModule` | The four tabs are added to one module; the subscriptions and payments tabs replace their placeholders without changing the module contract |
 | DRY and GRASP Pure Fabrication | `FxTables` | Text columns and colored state columns are built in one place; `UsersModule`, `PlansPane`, `SubscriptionsPane` and `PaymentsPane` no longer repeat the cell code |
 | SRP and DIP | `SubscriptionsPane`, `PaymentsPane` | They filter, search and show rows; the state of a membership (`statusOf`, `daysLeftOf`) and the receipt (`findSale`) come from the services |
-| DRY | `ReceiptText` reused by `FxDialogs.document` | The receipt text is built once and shown by both the Swing and the JavaFX interface |
+| DRY | `ReceiptText` reused by `FxDialogs.document` | The receipt text is built once and shown by the JavaFX dialogs and by the tests |
 | SRP | `CarnetCode`, `AccessService`, `AccessResult` | One class defines what the QR carries, one decides entry, exit or denial, and one carries the answer; none draws anything |
 | DIP and ISP | `MembershipExpiry` | The access service asks a one-method interface when the membership ends, so it does not know the membership module and is tested with a lambda |
 | GRASP Controller (use case) | `AccessService.process` | One operation turns a scan into an entry or an exit and reuses `AttendanceService` for the rules instead of repeating them |

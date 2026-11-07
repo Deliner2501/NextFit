@@ -7,7 +7,7 @@ kiosk screen of NextFit reacts at the same time.
 
 ## How it works
 
-1. `Main --fx` starts `AccessServer` (JDK `com.sun.net.httpserver`) on port 8765, or the next free one.
+1. `Main` starts `AccessServer` (JDK `com.sun.net.httpserver`) on port 8765, or the next free one.
 2. The carnet QR contains `http://<ip of the computer>:8765/a/<CODE>`.
 3. `CODE` is `HMAC-SHA256(secret key, document)` cut to 10 letters and digits (`AccessTokens`). It is not the document number and it is not stored anywhere.
 4. `PhoneAccess.scan` finds the member that owns the code and calls `AccessService.processMember`, which applies the same rules as the USB reader and the typed document.
