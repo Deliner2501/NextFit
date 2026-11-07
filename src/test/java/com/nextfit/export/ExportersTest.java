@@ -149,6 +149,9 @@ class ExportersTest {
             String xml = new String(zip.getInputStream(sheet).readAllBytes(), StandardCharsets.UTF_8);
             assertTrue(xml.contains("Ñandú &amp; &lt;Cía&gt; 0"));
             assertTrue(xml.contains("<v>50000</v>"));
+            assertTrue(xml.contains("NEXTFIT"));
+            assertTrue(xml.contains("Generado el "));
+            assertTrue(xml.contains("<mergeCell ref=\"A1:"));
             assertTrue(zip.getEntry("xl/styles.xml") != null);
             assertTrue(zip.getEntry("[Content_Types].xml") != null);
         } finally {
