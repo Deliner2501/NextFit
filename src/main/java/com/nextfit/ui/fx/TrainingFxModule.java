@@ -23,6 +23,7 @@ public final class TrainingFxModule implements FxModule {
     private final RoutinesPane routines;
     private final AssignmentPane assignments;
     private final SessionsPane sessions;
+    private final TrainersPane trainers;
 
     /**
      * @param training     the object that builds and holds the training services
@@ -36,10 +37,11 @@ public final class TrainingFxModule implements FxModule {
         this.assignments = new AssignmentPane(training.assignments(), training.routines(), training.members());
         this.sessions = new SessionsPane(training.sessions(), training.assignments(), training.routines(),
                 training.members());
+        this.trainers = new TrainersPane(training.trainers());
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().addAll(tab("Ejercicios", exercises), tab("Rutinas", routines),
-                tab("Asignación", assignments), tab("Sesiones", sessions));
+                tab("Asignación", assignments), tab("Sesiones", sessions), tab("Entrenadores", trainers));
         // Lo creado o editado en una pestaña debe verse en las otras.
         tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> refreshTabs());
     }
@@ -80,6 +82,7 @@ public final class TrainingFxModule implements FxModule {
         routines.refresh();
         assignments.refresh();
         sessions.refresh();
+        trainers.refresh();
     }
 
     private static Tab tab(String title, Node content) {
