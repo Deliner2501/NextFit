@@ -27,6 +27,7 @@ final class KpiCard extends StackPane {
     }
 
     private final Label value = new Label();
+    private final Label hintLabel = new Label();
 
     /**
      * Creates the card.
@@ -43,7 +44,7 @@ final class KpiCard extends StackPane {
         captionLabel.getStyleClass().add("nf-muted");
         value.setText(initialValue);
         value.getStyleClass().add(feature ? "nf-kpi-xl" : "nf-kpi-value-small");
-        Label hintLabel = new Label(hint);
+        hintLabel.setText(hint);
         hintLabel.getStyleClass().add("nf-muted-small");
         hintLabel.setWrapText(true);
         VBox texts = new VBox(4, captionLabel, value, hintLabel);
@@ -80,5 +81,14 @@ final class KpiCard extends StackPane {
      */
     Label value() {
         return value;
+    }
+
+    /**
+     * Gives access to the note under the number, so a screen can change it.
+     *
+     * @return the label of the hint
+     */
+    Label hint() {
+        return hintLabel;
     }
 }
