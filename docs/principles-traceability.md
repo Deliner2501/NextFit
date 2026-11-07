@@ -206,3 +206,6 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `SessionsPane` | It only collects the day, date, minutes and notes and shows the history; it does not decide what is a valid session. |
 | Information Expert | `TrainingSessionService` | The rules for a session (active routine, valid data) stay in the service that owns the session data; the screen only shows its messages. |
 | Low Coupling | `SessionsPane`, `MemberPicker` | The pane reuses the shared member picker and only learns which member was chosen, so it does not know how the search works. |
+| SRP | `TrainersPane`, `TrainerForm` | The pane lists trainers and reports clicks; the form only collects the data of one trainer. Neither one decides what is valid. |
+| Information Expert | `TrainerService` | The rules to register, update, deactivate and reactivate a trainer stay in the service that owns the trainer data; the screens only show its messages. |
+| DIP | `TrainersPane`, `TrainerForm` | They depend on `TrainerService`, not on the CSV files, so the storage can change to the database without touching the screens. |
