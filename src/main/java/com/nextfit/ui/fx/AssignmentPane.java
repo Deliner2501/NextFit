@@ -24,6 +24,7 @@ import javafx.util.StringConverter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javafx.geometry.Insets;
 
 /**
  * Screen to assign routines to members. On the left the user finds a member; on the
@@ -88,6 +89,7 @@ final class AssignmentPane extends HBox {
         title.getStyleClass().add("nf-card-title");
         VBox card = new VBox(10, title);
         card.getStyleClass().add("nf-card");
+        card.setPadding(new Insets(20));
 
         Optional<RoutineAssignment> current = assignments.findCurrentFor(selected.getId());
         HBox buttons = new HBox(10);
