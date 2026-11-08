@@ -32,3 +32,4 @@ nbproject/private/
 data/*.csv
 data/*.tmp
 data/access.key
+backups/
