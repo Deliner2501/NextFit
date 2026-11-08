@@ -153,6 +153,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low coupling and reuse | `WhatsAppLink` | It receives a plain phone and a plain text and knows neither members nor alerts, so any screen can reuse it |
 | Protected Variations | `AlertMessages`, `WhatsAppLink` | The wording and the way of contacting the member are isolated; changing to SMS or email would replace these classes only |
 | Testability | `AlertServiceTest`, `AlertMessagesTest`, `WhatsAppLinkTest` | The rules are tested with a fixed clock and real CSV files in a temporary folder, including the edge cases of the dates |
+| GRASP Controller | `MembersPane`, `MemberForm` | They collect clicks and typed data and delegate to `MemberService`; no business rule lives on the screen |
+| OCP and polymorphism | `MembersModule` implements `FxModule` | The screen entered the menu by replacing one line in `Main`; `ShellView` did not change |
+| Low coupling | `MembersPane` receives a `BooleanSupplier` | The pane does not know the session or the roles; the module tells it whether the user may edit |
+| High cohesion | `MembersPane`, `MemberForm`, `MembersModule` | The list, the form and the module are separate classes with one job each |
+| Reuse | `MembersPane` uses `FxTables`, `FxDialogs` and `MemberAvatar` | The table cells, the dialogs and the photo come from the shared components, so no code is repeated |
+| GRASP Pure Fabrication | `MemberForm` and `PhotoStorage` | Copying the photo is delegated to `PhotoStorage`; the form only chooses the file |
 
 ## Santiago: training
 
