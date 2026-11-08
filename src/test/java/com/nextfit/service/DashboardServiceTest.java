@@ -27,6 +27,7 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DashboardServiceTest {
 
@@ -108,6 +109,30 @@ class DashboardServiceTest {
         assertEquals(50_000L, summary.incomeByMonth().get(YearMonth.of(2026, 9)));
         assertEquals(105_000L, summary.incomeByMonth().get(YearMonth.of(2026, 10)));
         assertEquals(0L, summary.incomeByMonth().get(YearMonth.of(2026, 5)));
+    }
+
+    @Test
+    void summaryComparesTheMonthWithTheSameDaysOfThePreviousOne() {
+        DashboardService.Summary summary = service.summary();
+
+        // 1 to 27 of September had the payment of 5 September; this month 105,000 so far.
+        assertEquals(50_000, summary.incomeLastMonthToDate());
+        assertEquals(110.0, summary.incomeChangePercent().getAsDouble(), 0.0001);
+    }
+
+    @Test
+    void changePercentIsEmptyWithoutAReferenceAndNegativeWhenItDrops() {
+        assertTrue(DashboardService.changePercent(100, 0).isEmpty());
+        assertEquals(-20.0, DashboardService.changePercent(80, 100).getAsDouble(), 0.0001);
+        assertEquals(0.0, DashboardService.changePercent(50, 50).getAsDouble(), 0.0001);
+    }
+
+    @Test
+    void summaryComparesTheEntriesOfTodayWithYesterday() {
+        DashboardService.Summary summary = service.summary();
+
+        assertEquals(1, summary.checkInsYesterday());
+        assertEquals(1, summary.checkInsChange());
     }
 
     @Test

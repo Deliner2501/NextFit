@@ -48,6 +48,16 @@ class FormatsTest {
     }
 
     @Test
+    void signedPercentShowsTheSignAndOnlyUsefulDecimals() {
+        assertEquals("+12,5 %", Formats.signedPercent(12.5));
+        assertEquals("+110 %", Formats.signedPercent(110.0));
+        assertEquals("-8 %", Formats.signedPercent(-8.0));
+        assertEquals("-3,3 %", Formats.signedPercent(-3.33));
+        assertEquals("0 %", Formats.signedPercent(0.0));
+        assertEquals("0 %", Formats.signedPercent(0.01));
+    }
+
+    @Test
     void parseMoneyRejectsEmptyOrNonNumericText() {
         assertThrows(InvalidDataException.class, () -> Formats.parseMoney("precio", ""));
         assertThrows(InvalidDataException.class, () -> Formats.parseMoney("precio", "   "));
