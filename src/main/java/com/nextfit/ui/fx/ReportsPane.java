@@ -184,7 +184,7 @@ final class ReportsPane extends VBox {
         double width = Math.max(header.equals("Fecha") ? 170 : 110, header.length() * 10 + 60);
         TableColumn<List<Object>, String> column = FxTables.column(header, width, row -> format(row.get(index), type));
         // Without a minimum, the table may squeeze the columns to nothing and hide their title and values.
-        column.setMinWidth(Math.min(width, 120));
+        column.setMinWidth(header.equals("Fecha") ? width : Math.min(width, 120));
         if (type != ColumnType.TEXT) {
             column.setStyle("-fx-alignment: CENTER-RIGHT;");
         }
