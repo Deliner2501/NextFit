@@ -52,6 +52,7 @@ import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
 import com.nextfit.service.occupancy.OccupancyService;
 import com.nextfit.ui.fx.OccupancyModule;
+import com.nextfit.service.security.InMemoryAttemptLimiter;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -88,7 +89,7 @@ public final class Main {
         UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
 
         // Services
-        AuthService auth = new AuthService(users);
+        AuthService auth = new AuthService(users, new InMemoryAttemptLimiter());
         auth.ensureDefaultAdmin();
         Session session = new Session();
         UserService userService = new UserService(users, new UserValidator());
