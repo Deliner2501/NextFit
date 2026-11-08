@@ -70,11 +70,12 @@ class MemberServiceTest {
     }
 
     @Test
-    void searchFindsByNameOrDocument() {
+    void searchFindsByNameDocumentOrPhone() {
         service.register(FakeRepositories.newMember("1065123456"));
 
         assertEquals(1L, service.search("ana").size());
         assertEquals(1L, service.search("1065").size());
+        assertEquals(1L, service.search("300123").size());
         assertEquals(0L, service.search("zzz").size());
     }
 }
