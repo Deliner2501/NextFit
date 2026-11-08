@@ -18,6 +18,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.transform.Scale;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -69,6 +71,16 @@ final class DashboardCharts {
             // The points start at zero and rise to their value.
             XYChart.Data<String, Number> point = new XYChart.Data<>(Formats.monthShort(entry.getKey()), 0.0);
             series.getData().add(point);
+            // The mark of each month says the full amount when the mouse rests on it.
+            Tooltip tip = new Tooltip(Formats.money(entry.getValue()));
+            point.nodeProperty().addListener((obs, old, node) -> {
+                if (node != null) {
+                    Tooltip.install(node, tip);
+                }
+            });
+            if (point.getNode() != null) {
+                Tooltip.install(point.getNode(), tip);
+            }
             points.add(point);
             targets.add(entry.getValue() / 1_000_000.0);
         }
@@ -160,19 +172,25 @@ final class DashboardCharts {
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         DayOfWeek[] days = DayOfWeek.values();
         int today = LocalDate.now().getDayOfWeek().getValue() - 1;
-        List<XYChart.Data<String, Number>> bars = new ArrayList<>();
-        List<Double> targets = new ArrayList<>();
+        List<Scale> grows = new ArrayList<>();
         for (int i = 0; i < days.length; i++) {
             long entries = byDay.getOrDefault(days[i], 0L);
-            // The bars start at zero and rise one after another; the number on top is already the final one.
-            XYChart.Data<String, Number> data = new XYChart.Data<>(DAY_NAMES[i], 0.0);
-            decorate(data, i == today, entries);
+            // The data already holds its final value, so the chart always lays the bars out right; the rise
+            // is only a scale of each bar (see decorate).
+            XYChart.Data<String, Number> data = new XYChart.Data<>(DAY_NAMES[i], (double) entries);
+            decorate(data, i == today, entries, grows);
             series.getData().add(data);
-            bars.add(data);
-            targets.add((double) entries);
         }
         chart.getData().add(series);
-        rise(bars, targets, 500, 80);
+        Platform.runLater(() -> {
+            Timeline timeline = new Timeline();
+            for (int i = 0; i < grows.size(); i++) {
+                double start = 500 + i * 80;
+                timeline.getKeyFrames().add(new KeyFrame(Duration.millis(start + 650),
+                        new KeyValue(grows.get(i).yProperty(), 1.0, Interpolator.EASE_OUT)));
+            }
+            timeline.play();
+        });
         chart.setLegendVisible(false);
         chart.setBarGap(6);
         chart.setCategoryGap(22);
@@ -180,9 +198,18 @@ final class DashboardCharts {
         return chart;
     }
 
-    private static void decorate(XYChart.Data<String, Number> data, boolean today, long entries) {
+    private static void decorate(XYChart.Data<String, Number> data, boolean today, long entries, List<Scale> grows) {
         java.util.function.Consumer<Node> apply = node -> {
             if (node instanceof StackPane bar) {
+                // The color goes on the bar itself, so it does not depend on which style rule wins.
+                bar.setStyle("-fx-background-color: " + (today
+                        ? "linear-gradient(to bottom, #C4FF5A, #6DB21A)"
+                        : "linear-gradient(to bottom, #8F55FF, #5A22B8)")
+                        + "; -fx-background-radius: 8 8 0 0;");
+                Scale grow = new Scale(1, 0);
+                grow.pivotYProperty().bind(bar.heightProperty());
+                bar.getTransforms().add(grow);
+                grows.add(grow);
                 Label label = new Label(Long.toString(entries));
                 label.getStyleClass().add(today ? "nf-bar-bubble" : "nf-bar-value");
                 label.setMinWidth(Region.USE_PREF_SIZE);
@@ -240,6 +267,20 @@ final class DashboardCharts {
         }
         NumberAxis axis = new NumberAxis(0, top, step);
         axis.setMinorTickVisible(false);
+        // The values are in millions of pesos, so each mark says it: "$ 0,5 M".
+        java.text.DecimalFormat shown = new java.text.DecimalFormat("0.##",
+                java.text.DecimalFormatSymbols.getInstance(java.util.Locale.forLanguageTag("es-CO")));
+        axis.setTickLabelFormatter(new StringConverter<>() {
+            @Override
+            public String toString(Number value) {
+                return value.doubleValue() == 0 ? "0" : "$ " + shown.format(value.doubleValue()) + " M";
+            }
+
+            @Override
+            public Number fromString(String text) {
+                return 0;
+            }
+        });
         return axis;
     }
 

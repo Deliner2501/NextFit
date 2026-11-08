@@ -67,7 +67,7 @@ final class KpiCard extends StackPane {
             getStyleClass().addAll("nf-kpi-card", kind == Kind.LIME ? "nf-kpi-card-lime" : "nf-kpi-card-violet");
             Region deco = FxIcons.of(icon, 84);
             deco.getStyleClass().add(kind == Kind.LIME ? "nf-kpi-deco" : "nf-kpi-deco-violet");
-            deco.setOpacity(0.16);
+            deco.setOpacity(0.10);
             deco.setMouseTransparent(true);
             StackPane.setAlignment(deco, Pos.BOTTOM_RIGHT);
             StackPane.setMargin(deco, new Insets(0, 14, 10, 0));
