@@ -224,4 +224,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low Coupling | `CashClosePane`, `ReportsPane`, `FileExport` | The panes only show data and call `FileExport`, which owns the "save as" dialog and the messages, so no pane repeats that code. |
 | Protected Variations | `PdfDocument`, `PdfFonts` | The file formats are written with the JDK only. If a library such as POI or OpenPDF is used later, only the export package changes. |
 | OCP | `Main`, `ReportsModule` | The module is added to the list of `FxModule`; the main window does not change. |
+| SRP | `InMemoryAttemptLimiter`, `InactivityMonitor` | Each one only keeps the data of one rule (wrong attempts, last activity) and compares it with the clock; neither one knows screens, files or passwords. |
+| OCP | `AttemptLimiter` | `AuthService` asks the interface, so a new way of limiting (for example saved in the database) is a new class and the sign-in rules do not change. |
+| Polymorphism | `AttemptLimiter.NONE` | A limiter that never blocks lets `AuthService` work without a limit and keeps the older code unchanged, with no `if` to ask whether there is a limiter. |
+| DIP | `AuthService`, `IdleWatcher` | `AuthService` depends on the `AttemptLimiter` interface and `IdleWatcher` on `InactivityMonitor`; both receive them by constructor and the clock is injected, so tests can move the time. |
+| Controller | `FxApp` | It receives the "inactive for too long" event and decides to end the session and show the sign-in, so no screen has to know about the timer. |
 
