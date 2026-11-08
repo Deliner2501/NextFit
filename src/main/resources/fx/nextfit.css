@@ -344,3 +344,14 @@
 }
 .nf-textarea .content { -fx-background-color: transparent; -fx-padding: 10 14; }
 .nf-textarea:focused { -fx-border-color: -nf-accent; -fx-border-width: 2; }
+
+
+
+/* ---------- Pantalla de TV: ocupación en vivo ---------- */
+.nf-tv-percent { -fx-text-fill: -nf-text; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-occupancy-bar > .track { -fx-background-color: -nf-surface-alt; -fx-background-radius: 11; -fx-background-insets: 0; }
+.nf-occupancy-bar > .bar { -fx-background-radius: 11; -fx-background-insets: 0; }
+.nf-level-quiet > .bar { -fx-background-color: -nf-success; }
+.nf-level-moderate > .bar { -fx-background-color: -nf-accent; }
+.nf-level-busy > .bar { -fx-background-color: -nf-warning; }
+.nf-level-full > .bar { -fx-background-color: -nf-danger; }
