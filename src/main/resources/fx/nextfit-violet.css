@@ -444,3 +444,16 @@
     -fx-effect: dropshadow(gaussian, rgba(143, 85, 255, 0.55), 16, 0.05, 0, 0);
 }
 .nf-avatar { -fx-effect: dropshadow(gaussian, -nf-lime-glow, 14, 0.05, 0, 0); }
+
+/* Imagen del atleta: sus bordes están difuminados (transparentes), así que en oscuro se funde con la barra lateral
+   sin tarjeta propia. En claro la barra es blanca, por eso allí conserva una tarjeta oscura donde fundirse. */
+.root.dark .nf-promo {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-effect: null;
+}
+.root.light .nf-promo {
+    -fx-background-color: linear-gradient(to bottom, #1B1036, #2C1566);
+    -fx-background-radius: 20;
+    -fx-border-color: transparent;
+}
