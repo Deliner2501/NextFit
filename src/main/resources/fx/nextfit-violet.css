@@ -188,7 +188,7 @@
 
 /* ======================= Tablas y listas ======================= */
 .nf-table .column-header .label { -fx-text-fill: -nf-violet-text; }
-.nf-table .table-row-cell:hover, .nf-list .list-cell:filled:hover { -fx-background-color: -nf-violet-soft; }
+.nf-table .table-row-cell:filled:hover, .nf-list .list-cell:filled:hover { -fx-background-color: -nf-violet-soft; }
 .nf-table .table-row-cell:filled:odd:hover, .nf-table .table-row-cell:filled:even:hover { -fx-background-color: -nf-violet-soft; }
 .nf-exercise-card:hover { -fx-border-color: -nf-violet-bright; }
 .nf-summary { -fx-background-color: -nf-violet-soft; }

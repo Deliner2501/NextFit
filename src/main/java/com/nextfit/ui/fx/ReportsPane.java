@@ -181,7 +181,7 @@ final class ReportsPane extends VBox {
     private static TableColumn<List<Object>, String> column(ReportTable data, int index) {
         ColumnType type = data.types().get(index);
         String header = data.headers().get(index);
-        double width = Math.max(110, header.length() * 10 + 60);
+        double width = Math.max(header.equals("Fecha") ? 170 : 110, header.length() * 10 + 60);
         TableColumn<List<Object>, String> column = FxTables.column(header, width, row -> format(row.get(index), type));
         // Without a minimum, the table may squeeze the columns to nothing and hide their title and values.
         column.setMinWidth(Math.min(width, 120));
