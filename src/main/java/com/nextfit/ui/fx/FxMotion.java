@@ -97,6 +97,38 @@ final class FxMotion {
     }
 
     /**
+     * Makes a node pop in: it grows from small with a little overshoot while it fades in.
+     *
+     * @param node        the node
+     * @param delayMillis wait before it starts
+     */
+    static void popIn(Node node, double delayMillis) {
+        Duration length = Duration.millis(450);
+        node.setOpacity(0);
+        FadeTransition fade = new FadeTransition(length, node);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+        ScaleTransition grow = new ScaleTransition(length, node);
+        grow.setFromX(0.5);
+        grow.setFromY(0.5);
+        grow.setToX(1);
+        grow.setToY(1);
+        // A curve that goes a bit past the end and comes back: the "bounce" of a badge that lands.
+        grow.setInterpolator(new Interpolator() {
+            @Override
+            protected double curve(double t) {
+                // "Back" easing: it passes the end a little and settles. (SPLINE cannot do it: it only takes points from 0 to 1.)
+                double c = 1.70158;
+                double u = t - 1;
+                return 1 + (c + 1) * u * u * u + c * u * u;
+            }
+        });
+        ParallelTransition all = new ParallelTransition(fade, grow);
+        all.setDelay(Duration.millis(delayMillis));
+        all.play();
+    }
+
+    /**
      * Makes a round chart appear spinning and growing from a bit smaller.
      *
      * @param node        the chart

@@ -3,6 +3,7 @@ package com.nextfit.ui.fx;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -73,6 +74,36 @@ final class KpiCard extends StackPane {
             getChildren().add(0, deco);
         }
         FxMotion.hoverLift(this, 1.02);
+    }
+
+    /**
+     * A small rounded label with an arrow that says a number went up (green) or down (red).
+     *
+     * @param text    the change, for example "+12,5 %"
+     * @param up      {@code true} for an increase, {@code false} for a decrease
+     * @param tooltip what the change is compared with, shown when the mouse rests on it
+     * @return the chip
+     */
+    static Label chip(String text, boolean up, String tooltip) {
+        Label chip = new Label((up ? "↑ " : "↓ ") + text);
+        chip.getStyleClass().add(up ? "nf-chip-up" : "nf-chip-down");
+        Tooltip.install(chip, new Tooltip(tooltip));
+        return chip;
+    }
+
+    /**
+     * Puts a change chip in the top-right corner of the card.
+     *
+     * @param text    the change, for example "+2"
+     * @param up      {@code true} for an increase, {@code false} for a decrease
+     * @param tooltip what the change is compared with
+     */
+    void trend(String text, boolean up, String tooltip) {
+        Label chip = chip(text, up, tooltip);
+        StackPane.setAlignment(chip, Pos.TOP_RIGHT);
+        StackPane.setMargin(chip, new Insets(14, 16, 0, 0));
+        getChildren().add(chip);
+        FxMotion.popIn(chip, 900);
     }
 
     /**

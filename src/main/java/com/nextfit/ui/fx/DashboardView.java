@@ -61,6 +61,10 @@ final class DashboardView extends VBox {
         FxMotion.countUp(active.value(), summary.activeSubscriptions(), n -> Long.toString(n));
         FxMotion.countUp(expiring.value(), summary.expiringSoon(), n -> Long.toString(n));
         FxMotion.countUp(today.value(), summary.checkInsToday(), n -> Long.toString(n));
+        long change = summary.checkInsChange();
+        if (change != 0) {
+            today.trend((change > 0 ? "+" : "") + change, change > 0, "Frente a ayer (" + summary.checkInsYesterday() + ")");
+        }
         VBox side = new VBox(16, active, expiring, today);
         for (var child : side.getChildren()) {
             VBox.setVgrow(child, Priority.ALWAYS);
@@ -160,7 +164,16 @@ final class DashboardView extends VBox {
         badge.getStyleClass().add("nf-badge-solid");
         badge.setMinSize(56, 56);
         badge.setMaxSize(56, 56);
-        VBox texts = new VBox(4, caption, value, hint);
+        // The number with its change next to it: how the month goes against the same days of the last one.
+        HBox valueRow = new HBox(14, value);
+        valueRow.setAlignment(Pos.CENTER_LEFT);
+        summary.incomeChangePercent().ifPresent(percent -> {
+            Label chip = KpiCard.chip(Formats.signedPercent(percent), percent >= 0,
+                    "Frente a los mismos días del mes anterior (" + Formats.money(summary.incomeLastMonthToDate()) + ")");
+            valueRow.getChildren().add(chip);
+            FxMotion.popIn(chip, 1000);
+        });
+        VBox texts = new VBox(4, caption, valueRow, hint);
         HBox.setHgrow(texts, Priority.ALWAYS);
 
         ComboBox<String> range = new ComboBox<>();
