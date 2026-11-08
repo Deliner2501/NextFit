@@ -57,6 +57,7 @@ public final class FxApp extends Application {
         modules = moduleFactory.get();
         scene = new Scene(new Region(), 1360, 840);
         theme.attach(scene);
+        FxMotion.installPressEffect(scene);
         FxDialogs.useTheme(theme);
         idle = new IdleWatcher(scene, inactivity, this::logoutForInactivity);
         stage.setScene(scene);

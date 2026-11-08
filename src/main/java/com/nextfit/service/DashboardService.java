@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.OptionalDouble;
 
 /**
  * Gathers the numbers shown in the dashboard from the membership, payment and
@@ -37,10 +38,44 @@ public class DashboardService {
      * @param checkInsToday       entries registered today
      * @param incomeByMonth       pesos collected in each of the last months, oldest first
      * @param checkInsByWeekday   entries in the last four weeks, grouped by day of the week
+     * @param incomeLastMonthToDate pesos collected in the same days of the previous month (from its first day
+     *                            up to the day that matches today), to compare like with like
+     * @param checkInsYesterday   entries registered yesterday
      */
     public record Summary(LocalDate today, long activeSubscriptions, long expiringSoon, long upcoming,
                           long expired, long cancelled, long incomeThisMonth, long checkInsToday,
-                          Map<YearMonth, Long> incomeByMonth, Map<DayOfWeek, Long> checkInsByWeekday) {
+                          Map<YearMonth, Long> incomeByMonth, Map<DayOfWeek, Long> checkInsByWeekday,
+                          long incomeLastMonthToDate, long checkInsYesterday) {
+
+        /**
+         * How much the income of this month differs, in percent, from the same days of the previous month.
+         *
+         * @return the change, or empty when the previous month had no income to compare with
+         */
+        public OptionalDouble incomeChangePercent() {
+            return changePercent(incomeThisMonth, incomeLastMonthToDate);
+        }
+
+        /**
+         * How many more (or fewer) entries there were today than yesterday.
+         *
+         * @return today minus yesterday
+         */
+        public long checkInsChange() {
+            return checkInsToday - checkInsYesterday;
+        }
+    }
+
+    /**
+     * Change from one value to another, in percent of the first.
+     *
+     * @param now    the current value
+     * @param before the value to compare with
+     * @return the change, or empty when {@code before} is zero or negative, because a percentage of nothing
+     *         says nothing
+     */
+    public static OptionalDouble changePercent(long now, long before) {
+        return before <= 0 ? OptionalDouble.empty() : OptionalDouble.of((now - before) * 100.0 / before);
     }
 
     private final SubscriptionService subscriptions;
@@ -81,7 +116,15 @@ public class DashboardService {
                 payments.revenueBetween(today.withDayOfMonth(1), today),
                 attendance.countCheckInsOn(today),
                 payments.revenueByMonth(INCOME_MONTHS),
-                checkInsByWeekday(today));
+                checkInsByWeekday(today),
+                lastMonthToDate(today),
+                attendance.countCheckInsOn(today.minusDays(1)));
+    }
+
+    // The same stretch of the previous month: its first day up to the day with today's number (or its last day).
+    private long lastMonthToDate(LocalDate today) {
+        LocalDate sameDay = today.minusMonths(1);
+        return payments.revenueBetween(sameDay.withDayOfMonth(1), sameDay);
     }
 
     private Map<SubscriptionStatus, Long> countByStatus() {

@@ -1,28 +1,89 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#9A63FF"/>
-      <stop offset="1" stop-color="#5A22B8"/>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8A4DFF"/>
+      <stop offset="0.55" stop-color="#4A1BA8"/>
+      <stop offset="1" stop-color="#1D0B4A"/>
     </linearGradient>
-    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0"/>
+    <radialGradient id="glowTL" cx="0.2" cy="0.1" r="0.75">
+      <stop offset="0" stop-color="#C9A6FF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#C9A6FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowBR" cx="0.85" cy="0.95" r="0.6">
+      <stop offset="0" stop-color="#A7F626" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#A7F626" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#D6FF7A"/>
+      <stop offset="0.45" stop-color="#8F55FF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#A7F626"/>
     </linearGradient>
-    <linearGradient id="lime" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#C9FF5A"/>
-      <stop offset="1" stop-color="#8FE01F"/>
+    <linearGradient id="lime" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4FF8A"/>
+      <stop offset="0.5" stop-color="#B6FA2C"/>
+      <stop offset="1" stop-color="#7FD015"/>
     </linearGradient>
+    <linearGradient id="streak" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="11"/></filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+    <clipPath id="clip"><rect x="16" y="16" width="480" height="480" rx="120"/></clipPath>
   </defs>
-  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#bg)"/>
-  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#shine)"/>
-  <!-- dumbbell plates -->
-  <g fill="url(#lime)">
-    <rect x="64"  y="196" width="34" height="120" rx="14"/>
-    <rect x="104" y="150" width="42" height="212" rx="16"/>
-    <rect x="366" y="150" width="42" height="212" rx="16"/>
-    <rect x="414" y="196" width="34" height="120" rx="14"/>
+
+  <!-- tile -->
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#tile)"/>
+  <g clip-path="url(#clip)">
+    <rect x="16" y="16" width="480" height="480" fill="url(#glowTL)"/>
+    <rect x="16" y="16" width="480" height="480" fill="url(#glowBR)"/>
+    <!-- light streaks like the interface background -->
+    <polygon points="300,0 372,0 150,512 78,512" fill="url(#streak)"/>
+    <polygon points="400,0 428,0 206,512 178,512" fill="url(#streak)"/>
+    <!-- faint grid at the bottom -->
+    <g stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="2">
+      <path d="M16 400 H496 M16 440 H496 M16 480 H496"/>
+      <path d="M96 380 V496 M176 380 V496 M256 380 V496 M336 380 V496 M416 380 V496"/>
+    </g>
   </g>
-  <!-- bar that is also a heartbeat -->
-  <path d="M146 256 H206 L232 196 L274 328 L304 244 L320 256 H366"
-        fill="none" stroke="url(#lime)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- neon ring -->
+  <rect x="19" y="19" width="474" height="474" rx="117" fill="none" stroke="url(#ring)" stroke-width="5"/>
+
+  <!-- glow behind the mark -->
+  <g filter="url(#blur)" opacity="0.75">
+    <g fill="#A7F626" transform="translate(256 256) skewX(-9) translate(-256 -256)">
+      <rect x="64" y="196" width="34" height="120" rx="14"/>
+      <rect x="104" y="150" width="42" height="212" rx="16"/>
+      <rect x="366" y="150" width="42" height="212" rx="16"/>
+      <rect x="414" y="196" width="34" height="120" rx="14"/>
+    </g>
+    <path d="M146 256 H206 L232 196 L274 328 L304 244 L320 256 H366" fill="none" stroke="#A7F626" stroke-width="22"
+          stroke-linecap="round" stroke-linejoin="round" transform="translate(256 256) skewX(-9) translate(-256 -256)"/>
+  </g>
+
+  <!-- dumbbell, leaning forward to give it speed -->
+  <g transform="translate(256 256) skewX(-9) translate(-256 -256)">
+    <g fill="url(#lime)">
+      <rect x="64" y="196" width="34" height="120" rx="14"/>
+      <rect x="104" y="150" width="42" height="212" rx="16"/>
+      <rect x="366" y="150" width="42" height="212" rx="16"/>
+      <rect x="414" y="196" width="34" height="120" rx="14"/>
+    </g>
+    <!-- plate highlights -->
+    <g fill="#FFFFFF" fill-opacity="0.45">
+      <rect x="112" y="160" width="9" height="150" rx="4.5"/>
+      <rect x="374" y="160" width="9" height="150" rx="4.5"/>
+    </g>
+    <!-- bar that is also a heartbeat -->
+    <path d="M146 256 H206 L232 196 L274 328 L304 244 L320 256 H366" fill="none" stroke="url(#lime)" stroke-width="22"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M146 256 H206 L232 196 L274 328 L304 244 L320 256 H366" fill="none" stroke="#FFFFFF" stroke-opacity="0.85"
+          stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- spark -->
+  <g filter="url(#soft)" opacity="0.9">
+    <path d="M404 92 L411 112 L431 119 L411 126 L404 146 L397 126 L377 119 L397 112 Z" fill="#FFFFFF"/>
+  </g>
+  <path d="M404 92 L411 112 L431 119 L411 126 L404 146 L397 126 L377 119 L397 112 Z" fill="#FFFFFF"/>
 </svg>

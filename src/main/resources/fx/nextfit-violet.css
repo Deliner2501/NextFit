@@ -29,6 +29,17 @@
     -nf-glow: rgba(109, 43, 208, 0.22);
     -nf-lime-glow: rgba(167, 246, 38, 0.35);
     -nf-page-glow: rgba(109, 43, 208, 0.40);
+    /* Profundidad de las tarjetas: borde de luz, brillos en las esquinas y luz superior */
+    -nf-ring-a: rgba(167, 246, 38, 0.60);
+    -nf-ring-b: rgba(143, 85, 255, 0.50);
+    -nf-ring-c: rgba(64, 55, 106, 0.55);
+    -nf-shine-a: rgba(143, 85, 255, 0.30);
+    -nf-shine-b: rgba(167, 246, 38, 0.17);
+    -nf-top-light: rgba(255, 255, 255, 0.06);
+    -nf-lift: rgba(0, 0, 0, 0.45);
+    -nf-shine-a-0: rgba(143, 85, 255, 0);
+    -nf-shine-b-0: rgba(167, 246, 38, 0);
+    -nf-top-light-0: rgba(255, 255, 255, 0);
 }
 
 .root.light {
@@ -55,6 +66,16 @@
     -nf-glow: rgba(40, 20, 100, 0.16);
     -nf-lime-glow: rgba(120, 190, 30, 0.30);
     -nf-page-glow: rgba(122, 53, 232, 0.10);
+    -nf-ring-a: rgba(122, 53, 232, 0.60);
+    -nf-ring-b: rgba(143, 85, 255, 0.38);
+    -nf-ring-c: rgba(198, 186, 230, 0.95);
+    -nf-shine-a: rgba(143, 85, 255, 0.16);
+    -nf-shine-b: rgba(167, 246, 38, 0.24);
+    -nf-top-light: rgba(255, 255, 255, 0.55);
+    -nf-lift: rgba(40, 20, 100, 0.22);
+    -nf-shine-a-0: rgba(143, 85, 255, 0);
+    -nf-shine-b-0: rgba(167, 246, 38, 0);
+    -nf-top-light-0: rgba(255, 255, 255, 0);
 }
 
 /* Los controles de AtlantaFX (listas desplegables, calendario, diálogos) usan la misma paleta. */
@@ -167,7 +188,7 @@
 
 /* ======================= Tablas y listas ======================= */
 .nf-table .column-header .label { -fx-text-fill: -nf-violet-text; }
-.nf-table .table-row-cell:hover, .nf-list .list-cell:filled:hover { -fx-background-color: -nf-violet-soft; }
+.nf-table .table-row-cell:filled:hover, .nf-list .list-cell:filled:hover { -fx-background-color: -nf-violet-soft; }
 .nf-table .table-row-cell:filled:odd:hover, .nf-table .table-row-cell:filled:even:hover { -fx-background-color: -nf-violet-soft; }
 .nf-exercise-card:hover { -fx-border-color: -nf-violet-bright; }
 .nf-summary { -fx-background-color: -nf-violet-soft; }
@@ -310,3 +331,129 @@
 .nf-bar-fill { -fx-background-radius: 999; }
 .date-picker { -fx-background-radius: 12; -fx-border-radius: 12; -fx-pref-height: 44; -fx-min-height: 44; }
 
+/* ======================= Fase 1: profundidad, brillos y fondos ======================= */
+/* Fondo de la ventana (la ventana principal es la raíz, por eso dos selectores): imagen con rayas de luz y resplandores (images/bg), sobre el color base. */
+.root.dark.nf-bg, .root.dark .nf-bg {
+    -fx-background-image: url("../images/bg/bg-dark.jpg");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
+.root.light.nf-bg, .root.light .nf-bg {
+    -fx-background-image: url("../images/bg/bg-light.jpg");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
+
+/* Tarjetas: capa 1 = borde de luz degradado (lima arriba a la izquierda), 2 = relleno, 3 = luz de arriba,
+   4 y 5 = brillos en las esquinas. Todas se apilan con inserciones para que el borde mida 1.5 px. */
+.root.dark .nf-card, .root.light .nf-card,
+.root.dark .nf-kpi-card, .root.light .nf-kpi-card,
+.root.dark .nf-exercise-card, .root.light .nf-exercise-card {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-ring-a, -nf-ring-b 38%, -nf-ring-c 68%, -nf-ring-b),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 60%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 50%, -nf-shine-b, -nf-shine-b-0);
+    -fx-background-insets: 0, 1.5, 1.5, 1.5, 1.5;
+    -fx-background-radius: 20, 18.5, 18.5, 18.5, 18.5;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, -nf-lift, 26, 0.04, 0, 10);
+}
+
+/* Tablas y listas: mismo borde de luz y relieve, sin brillos en las esquinas para no estorbar la lectura. */
+.root.dark .nf-table, .root.light .nf-table,
+.root.dark .nf-list, .root.light .nf-list {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-ring-a, -nf-ring-b 38%, -nf-ring-c 68%, -nf-ring-b),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 20%);
+    -fx-background-insets: 0, 1.5, 1.5;
+    -fx-background-radius: 20, 18.5, 18.5;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, -nf-lift, 22, 0.04, 0, 8);
+}
+
+/* Tarjeta protagonista: borde violeta vivo, fondo violeta profundo y brillo lima abajo a la derecha. */
+.root.dark .nf-card-feature, .root.light .nf-card-feature {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-violet-bright, -nf-ring-b 45%, -nf-violet-bright),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 65%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 55%, -nf-shine-b, -nf-shine-b-0);
+    -fx-background-insets: 0, 1.5, 1.5, 1.5, 1.5;
+    -fx-background-radius: 20, 18.5, 18.5, 18.5, 18.5;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, -nf-glow, 34, 0.08, 0, 12);
+}
+.root.light .nf-card-feature {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-violet, -nf-ring-b 45%, -nf-violet),
+        linear-gradient(from 0% 0% to 100% 100%, #E6DAFF, #FFFFFF),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 65%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 55%, -nf-shine-b, -nf-shine-b-0);
+}
+
+/* Indicador verde: el brillo lima de la esquina inferior es más fuerte. */
+.root.dark .nf-kpi-card-lime, .root.light .nf-kpi-card-lime {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-ring-a, -nf-ring-b 38%, -nf-ring-c 68%, -nf-ring-a),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 60%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 70%, rgba(167, 246, 38, 0.30), -nf-shine-b-0);
+}
+
+/* Elevación al pasar el mouse: las tarjetas con acción reaccionan (las animaciones llegan en la fase 2). */
+.nf-kpi-card:hover, .nf-exercise-card:hover {
+    -fx-effect: dropshadow(gaussian, -nf-glow, 32, 0.10, 0, 14);
+}
+
+/* Barra lateral: luz violeta desde abajo y borde fino con degradado. */
+.root.dark .nf-sidebar {
+    -fx-background-color:
+        radial-gradient(center 50% 100%, radius 70%, rgba(122, 53, 232, 0.38), rgba(122, 53, 232, 0)),
+        linear-gradient(to bottom, -nf-side-top, -nf-side-bottom);
+    -fx-border-color: linear-gradient(to bottom, rgba(167, 246, 38, 0.45), rgba(143, 85, 255, 0.30) 45%, rgba(64, 55, 106, 0.30));
+    -fx-border-width: 0 1.5 0 0;
+}
+
+/* Botones principales: lima con volumen y resplandor. */
+.nf-primary, .nf-primary-small {
+    -fx-background-color: linear-gradient(to bottom, #C4FF5A, #86D41A);
+    -fx-text-fill: #0B0A12;
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 16, 0.05, 0, 4);
+}
+.nf-primary:hover, .nf-primary-small:hover {
+    -fx-background-color: linear-gradient(to bottom, #D2FF7A, #9BE52B);
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 24, 0.12, 0, 5);
+}
+.nf-primary:pressed, .nf-primary-small:pressed {
+    -fx-background-color: linear-gradient(to bottom, #86D41A, #A7F626);
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 10, 0, 0, 2);
+}
+.nf-primary:disabled, .nf-primary-small:disabled { -fx-effect: null; }
+
+/* Botones de icono (tema, salir): se iluminan en violeta. */
+.nf-icon-button:hover {
+    -fx-border-color: -nf-violet-bright;
+    -fx-effect: dropshadow(gaussian, rgba(143, 85, 255, 0.55), 16, 0.05, 0, 0);
+}
+.nf-avatar { -fx-effect: dropshadow(gaussian, -nf-lime-glow, 14, 0.05, 0, 0); }
+
+/* Imagen del atleta: sus bordes están difuminados (transparentes), así que en oscuro se funde con la barra lateral
+   sin tarjeta propia. En claro la barra es blanca, por eso allí conserva una tarjeta oscura donde fundirse. */
+.root.dark .nf-promo {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-effect: null;
+}
+.root.light .nf-promo {
+    -fx-background-color: linear-gradient(to bottom, #1B1036, #2C1566);
+    -fx-background-radius: 20;
+    -fx-border-color: transparent;
+}
