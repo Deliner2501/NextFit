@@ -5,11 +5,14 @@ import com.nextfit.exceptions.InvalidDataException;
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
 import com.nextfit.persistence.UserRepository;
+import com.nextfit.service.security.AttemptLimiter;
 import com.nextfit.util.PasswordHasher;
+
+import java.util.Optional;
 
 /**
  * Sign-in rules. It knows nothing about screens or files: it only uses a
- * {@link UserRepository}.
+ * {@link UserRepository} and an {@link AttemptLimiter}, which blocks a name that fails too often.
  */
 public class AuthService {
 
@@ -20,14 +23,26 @@ public class AuthService {
     public static final String DEFAULT_ADMIN_PASSWORD = "admin123";
 
     private final UserRepository users;
+    private final AttemptLimiter limiter;
 
     /**
-     * Creates the service.
+     * Creates the service without a limit of attempts.
      *
      * @param users the user storage
      */
     public AuthService(UserRepository users) {
+        this(users, AttemptLimiter.NONE);
+    }
+
+    /**
+     * Creates the service with a limit of attempts.
+     *
+     * @param users   the user storage
+     * @param limiter blocks a name after too many wrong attempts
+     */
+    public AuthService(UserRepository users, AttemptLimiter limiter) {
         this.users = users;
+        this.limiter = limiter;
     }
 
     /**
@@ -48,7 +63,8 @@ public class AuthService {
      * @param password the clear text password
      * @return the user who signed in
      * @throws InvalidDataException  when the username or the password is empty
-     * @throws BusinessRuleException when the credentials are wrong or the user is disabled
+     * @throws BusinessRuleException when the credentials are wrong, the name is blocked for too
+     *                               many wrong attempts, or the user is disabled
      */
     public User login(String username, String password) {
         if (username == null || username.isBlank()) {
@@ -57,9 +73,16 @@ public class AuthService {
         if (password == null || password.isEmpty()) {
             throw new InvalidDataException("contraseña", "no puede estar vacía");
         }
-        User user = users.findByUsername(username.trim())
-                .filter(u -> PasswordHasher.verify(password, u.getPasswordHash()))
-                .orElseThrow(() -> new BusinessRuleException("Usuario o contraseña incorrectos"));
+        String name = username.trim();
+        limiter.beforeAttempt(name);
+        Optional<User> found = users.findByUsername(name)
+                .filter(u -> PasswordHasher.verify(password, u.getPasswordHash()));
+        if (found.isEmpty()) {
+            limiter.failed(name);
+            throw new BusinessRuleException("Usuario o contraseña incorrectos");
+        }
+        limiter.succeeded(name);
+        User user = found.get();
         if (!user.isActive()) {
             throw new BusinessRuleException("Este usuario está desactivado, consulta con el administrador");
         }

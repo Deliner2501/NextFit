@@ -50,6 +50,9 @@ import com.nextfit.ui.fx.UsersModule;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
+import com.nextfit.service.occupancy.OccupancyService;
+import com.nextfit.ui.fx.OccupancyModule;
+import com.nextfit.service.security.InMemoryAttemptLimiter;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -86,7 +89,7 @@ public final class Main {
         UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
 
         // Services
-        AuthService auth = new AuthService(users);
+        AuthService auth = new AuthService(users, new InMemoryAttemptLimiter());
         auth.ensureDefaultAdmin();
         Session session = new Session();
         UserService userService = new UserService(users, new UserValidator());
@@ -131,6 +134,9 @@ public final class Main {
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
+        
+                OccupancyService occupancyService = new OccupancyService(attendanceService, memberService,
+                Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
         AccessServer accessServer = new AccessServer(phoneAccess, ACCESS_PORT);
@@ -153,6 +159,7 @@ public final class Main {
                 new AccessModule(accessService, attendanceService, memberService, subscriptionService,
                         phoneAccess, phoneUrl),
                 new AnalyticsModule(analyticsService, memberService),
+                new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),
                 new UsersModule(userService, session)));
         accessServer.stop();

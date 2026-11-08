@@ -203,6 +203,20 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `AssignmentPane` | It only shows the member, the current routine and the history, and reports the clicks; it does not decide anything. |
 | Information Expert | `RoutineAssignmentService` | The rules (active member, valid membership, one active routine) stay in the service that owns the assignment data; the screen only shows its error messages. |
 | Low Coupling | `AssignmentPane`, `MemberPicker` | The pane reuses the shared member picker and only learns which member was chosen, so it does not know how the search works. |
+| SRP | `SessionsPane` | It only collects the day, date, minutes and notes and shows the history; it does not decide what is a valid session. |
+| Information Expert | `TrainingSessionService` | The rules for a session (active routine, valid data) stay in the service that owns the session data; the screen only shows its messages. |
+| Low Coupling | `SessionsPane`, `MemberPicker` | The pane reuses the shared member picker and only learns which member was chosen, so it does not know how the search works. |
+| SRP | `TrainersPane`, `TrainerForm` | The pane lists trainers and reports clicks; the form only collects the data of one trainer. Neither one decides what is valid. |
+| Information Expert | `TrainerService` | The rules to register, update, deactivate and reactivate a trainer stay in the service that owns the trainer data; the screens only show its messages. |
+| DIP | `TrainersPane`, `TrainerForm` | They depend on `TrainerService`, not on the CSV files, so the storage can change to the database without touching the screens. |
+| SRP | `OccupancyService` | It only calculates the picture of the gym (people inside, level, entries by hour, best hour to come); it does not draw it and never changes the attendance data. |
+| Information Expert | `OccupancyLevel` | Each level knows the percentage where it starts, so nobody else repeats those limits. |
+| Pure Fabrication | `OccupancySnapshot` | An immutable picture of the gym with no drawing logic, created so the TV screen only reads data. |
+| DIP | `OccupancyService` | It depends on `AttendanceService` and `MemberService`, and receives the capacity and the `Clock` by constructor, so tests can fix the time. |
+| Low Coupling | `OccupancyService` | It reuses `OccupancyHeatmap` from the analytics instead of counting entries by weekday and hour again. |
+| SRP | `OccupancyView`, `OccupancyModule` | The view only draws the picture it receives and refreshes itself; the module only hosts it and opens the full-screen window. The numbers come from `OccupancyService`. |
+| DIP | `OccupancyView` | It depends on `OccupancyService`, not on the attendance files, so the data source can change without touching the screen. |
+| Protected Variations | `nextfit.css` (`nf-level-*`) | The color of the occupancy bar changes with the level by a style class, so no color is written in code and the light and dark modes work without changes. |
 | SRP | `CashCloseService`, `ReportService` | The first one only gathers the payments of a day into a close; the second only builds report tables. Neither one draws or writes files. |
 | Information Expert | `CashClose` | The record that holds the lines and the totals also computes the expected cash and the difference with the cash counted, so no screen repeats that arithmetic. |
 | OCP | `ReportTable`, `PdfExporter`, `XlsxWriter` | A new report is only a new table; the exporters draw any table, so adding a report does not touch them. |
@@ -210,3 +224,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low Coupling | `CashClosePane`, `ReportsPane`, `FileExport` | The panes only show data and call `FileExport`, which owns the "save as" dialog and the messages, so no pane repeats that code. |
 | Protected Variations | `PdfDocument`, `PdfFonts` | The file formats are written with the JDK only. If a library such as POI or OpenPDF is used later, only the export package changes. |
 | OCP | `Main`, `ReportsModule` | The module is added to the list of `FxModule`; the main window does not change. |
+| SRP | `InMemoryAttemptLimiter`, `InactivityMonitor` | Each one only keeps the data of one rule (wrong attempts, last activity) and compares it with the clock; neither one knows screens, files or passwords. |
+| OCP | `AttemptLimiter` | `AuthService` asks the interface, so a new way of limiting (for example saved in the database) is a new class and the sign-in rules do not change. |
+| Polymorphism | `AttemptLimiter.NONE` | A limiter that never blocks lets `AuthService` work without a limit and keeps the older code unchanged, with no `if` to ask whether there is a limiter. |
+| DIP | `AuthService`, `IdleWatcher` | `AuthService` depends on the `AttemptLimiter` interface and `IdleWatcher` on `InactivityMonitor`; both receive them by constructor and the clock is injected, so tests can move the time. |
+| Controller | `FxApp` | It receives the "inactive for too long" event and decides to end the session and show the sign-in, so no screen has to know about the timer. |
+
