@@ -2,9 +2,11 @@ package com.nextfit.service;
 
 import com.nextfit.exceptions.BusinessRuleException;
 import com.nextfit.exceptions.InvalidDataException;
+import com.nextfit.model.AuditAction;
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
 import com.nextfit.persistence.UserRepository;
+import com.nextfit.service.audit.AuditLog;
 import com.nextfit.service.security.AttemptLimiter;
 import com.nextfit.util.PasswordHasher;
 
@@ -12,7 +14,8 @@ import java.util.Optional;
 
 /**
  * Sign-in rules. It knows nothing about screens or files: it only uses a
- * {@link UserRepository} and an {@link AttemptLimiter}, which blocks a name that fails too often.
+ * {@link UserRepository}, an {@link AttemptLimiter}, which blocks a name that
+ * fails too often, and an {@link AuditLog}, where it writes what happened.
  */
 public class AuthService {
 
@@ -24,9 +27,10 @@ public class AuthService {
 
     private final UserRepository users;
     private final AttemptLimiter limiter;
+    private final AuditLog audit;
 
     /**
-     * Creates the service without a limit of attempts.
+     * Creates the service without a limit of attempts and without audit.
      *
      * @param users the user storage
      */
@@ -35,14 +39,26 @@ public class AuthService {
     }
 
     /**
-     * Creates the service with a limit of attempts.
+     * Creates the service with a limit of attempts and without audit.
      *
      * @param users   the user storage
      * @param limiter blocks a name after too many wrong attempts
      */
     public AuthService(UserRepository users, AttemptLimiter limiter) {
+        this(users, limiter, AuditLog.NONE);
+    }
+
+    /**
+     * Creates the service with a limit of attempts and an audit log.
+     *
+     * @param users   the user storage
+     * @param limiter blocks a name after too many wrong attempts
+     * @param audit   where the sign-in events are written
+     */
+    public AuthService(UserRepository users, AttemptLimiter limiter, AuditLog audit) {
         this.users = users;
         this.limiter = limiter;
+        this.audit = audit;
     }
 
     /**
@@ -74,18 +90,26 @@ public class AuthService {
             throw new InvalidDataException("contraseña", "no puede estar vacía");
         }
         String name = username.trim();
-        limiter.beforeAttempt(name);
+        try {
+            limiter.beforeAttempt(name);
+        } catch (BusinessRuleException blocked) {
+            audit.record(name, AuditAction.LOCKOUT, "Intento de entrar mientras el usuario estaba bloqueado");
+            throw blocked;
+        }
         Optional<User> found = users.findByUsername(name)
                 .filter(u -> PasswordHasher.verify(password, u.getPasswordHash()));
         if (found.isEmpty()) {
             limiter.failed(name);
+            audit.record(name, AuditAction.LOGIN_FAILED, "Usuario o contraseña incorrectos");
             throw new BusinessRuleException("Usuario o contraseña incorrectos");
         }
         limiter.succeeded(name);
         User user = found.get();
         if (!user.isActive()) {
+            audit.record(user.getUsername(), AuditAction.LOGIN_FAILED, "El usuario está desactivado");
             throw new BusinessRuleException("Este usuario está desactivado, consulta con el administrador");
         }
+        audit.record(user.getUsername(), AuditAction.LOGIN, "Rol: " + user.getRole().getLabel());
         return user;
     }
 }
