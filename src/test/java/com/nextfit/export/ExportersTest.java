@@ -172,6 +172,19 @@ class ExportersTest {
     }
 
     @Test
+    void xlsxCarriesTheLogoInEverySheet() throws IOException {
+        Path file = Files.createTempFile("logo", ".xlsx");
+        XlsxWriter.write(file, List.of(table(3), table(2)), NOW);
+        try (ZipFile zip = new ZipFile(file.toFile())) {
+            assertTrue(zip.getEntry("xl/media/logo.png") != null);
+            assertTrue(zip.getEntry("xl/drawings/drawing1.xml") != null);
+            assertTrue(zip.getEntry("xl/drawings/drawing2.xml") != null);
+            assertTrue(zip.getEntry("xl/worksheets/_rels/sheet2.xml.rels") != null);
+        }
+        Files.delete(file);
+    }
+
+    @Test
     void xlsxNeedsAtLeastOneTable() {
         assertThrows(IllegalArgumentException.class, () -> XlsxWriter.write(Path.of("x.xlsx"), List.of()));
     }

@@ -5,6 +5,7 @@ import com.nextfit.service.ColumnType;
 import com.nextfit.service.ReportTable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -70,19 +71,67 @@ public final class XlsxWriter {
             throw new IllegalArgumentException("Se necesita al menos una tabla");
         }
         List<String> names = sheetNames(tables);
+        byte[] logo = logo();
         try (OutputStream out = Files.newOutputStream(file); ZipOutputStream zip = new ZipOutputStream(out)) {
-            entry(zip, "[Content_Types].xml", contentTypes(tables.size()));
+            entry(zip, "[Content_Types].xml", contentTypes(tables.size(), logo != null));
             entry(zip, "_rels/.rels", rootRels());
             entry(zip, "docProps/core.xml", core(tables.get(0).title(), generatedAt));
             entry(zip, "xl/workbook.xml", workbook(names));
             entry(zip, "xl/_rels/workbook.xml.rels", workbookRels(tables.size()));
             entry(zip, "xl/styles.xml", styles());
+            if (logo != null) {
+                zip.putNextEntry(new ZipEntry("xl/media/logo.png"));
+                zip.write(logo);
+                zip.closeEntry();
+            }
             for (int i = 0; i < tables.size(); i++) {
-                entry(zip, "xl/worksheets/sheet" + (i + 1) + ".xml", sheet(tables.get(i), generatedAt));
+                entry(zip, "xl/worksheets/sheet" + (i + 1) + ".xml", sheet(tables.get(i), generatedAt, logo != null));
+                if (logo != null) {
+                    int n = i + 1;
+                    entry(zip, "xl/worksheets/_rels/sheet" + n + ".xml.rels", relationships("rId1",
+                            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing",
+                            "../drawings/drawing" + n + ".xml"));
+                    entry(zip, "xl/drawings/drawing" + n + ".xml", drawing(tables.get(i)));
+                    entry(zip, "xl/drawings/_rels/drawing" + n + ".xml.rels", relationships("rId1",
+                            "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image",
+                            "../media/logo.png"));
+                }
             }
         } catch (IOException e) {
             throw new PersistenceException("No se pudo guardar el archivo de Excel", e);
         }
+    }
+
+    /** The NextFit logo for the banner, or {@code null} when the picture is not available (the sheet is then plain). */
+    private static byte[] logo() {
+        try (InputStream in = XlsxWriter.class.getResourceAsStream("/images/logo/nextfit-logo-128.png")) {
+            return in == null ? null : in.readAllBytes();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static String relationships(String id, String type, String target) {
+        return header() + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+                + "<Relationship Id=\"" + id + "\" Type=\"" + type + "\" Target=\"" + target + "\"/></Relationships>";
+    }
+
+    /** Places the logo at the right end of the banner, so it never covers the brand name or the title. */
+    private static String drawing(ReportTable table) {
+        int last = table.headers().size() - 1;
+        long size = 54L * 9525;
+        long columnPixels = Math.round(width(table, last) * 7);
+        long offset = Math.max(0, columnPixels - 54 - 12) * 9525;
+        return header() + "<xdr:wsDr xmlns:xdr=\"http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing\" "
+                + "xmlns:a=\"http://schemas.openxmlformats.org/drawingml/2006/main\">"
+                + "<xdr:oneCellAnchor><xdr:from><xdr:col>" + last + "</xdr:col><xdr:colOff>" + offset + "</xdr:colOff>"
+                + "<xdr:row>0</xdr:row><xdr:rowOff>142875</xdr:rowOff></xdr:from><xdr:ext cx=\"" + size + "\" cy=\"" + size + "\"/>"
+                + "<xdr:pic><xdr:nvPicPr><xdr:cNvPr id=\"2\" name=\"NextFit\" descr=\"Logo de NextFit\"/>"
+                + "<xdr:cNvPicPr><a:picLocks noChangeAspect=\"1\"/></xdr:cNvPicPr></xdr:nvPicPr>"
+                + "<xdr:blipFill><a:blip xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" r:embed=\"rId1\"/>"
+                + "<a:stretch><a:fillRect/></a:stretch></xdr:blipFill>"
+                + "<xdr:spPr><a:xfrm><a:off x=\"0\" y=\"0\"/><a:ext cx=\"" + size + "\" cy=\"" + size + "\"/></a:xfrm>"
+                + "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor></xdr:wsDr>";
     }
 
     private static void entry(ZipOutputStream zip, String name, String content) throws IOException {
@@ -95,9 +144,12 @@ public final class XlsxWriter {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n";
     }
 
-    private static String contentTypes(int sheets) {
+    private static String contentTypes(int sheets, boolean logo) {
         StringBuilder sb = new StringBuilder(header());
         sb.append("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">");
+        if (logo) {
+            sb.append("<Default Extension=\"png\" ContentType=\"image/png\"/>");
+        }
         sb.append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>");
         sb.append("<Default Extension=\"xml\" ContentType=\"application/xml\"/>");
         sb.append("<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>");
@@ -106,6 +158,10 @@ public final class XlsxWriter {
         for (int i = 1; i <= sheets; i++) {
             sb.append("<Override PartName=\"/xl/worksheets/sheet").append(i)
                     .append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
+            if (logo) {
+                sb.append("<Override PartName=\"/xl/drawings/drawing").append(i)
+                        .append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawing+xml\"/>");
+            }
         }
         return sb.append("</Types>").toString();
     }
@@ -184,12 +240,12 @@ public final class XlsxWriter {
         sb.append("<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"5\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>");
         sb.append("<cellXfs count=\"13\">")
                 .append("<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/>")
-                .append(xf(0, 1, 2, 2, "left", true)).append(xf(0, 1, 2, 2, "right", true))
-                .append(xf(0, 0, 0, 1, "left", false)).append(xf(0, 0, 4, 1, "left", false))
-                .append(xf(164, 0, 0, 1, "right", false)).append(xf(164, 0, 4, 1, "right", false))
-                .append(xf(3, 0, 0, 1, "right", false)).append(xf(3, 0, 4, 1, "right", false))
-                .append(xf(0, 2, 2, 0, "left", true)).append(xf(0, 3, 2, 0, "left", true))
-                .append(xf(0, 5, 3, 0, "left", false)).append(xf(0, 4, 0, 0, "left", true))
+                .append(xf(0, 1, 2, 2, "left", 1)).append(xf(0, 1, 2, 2, "right", 2))
+                .append(xf(0, 0, 0, 1, "left", 0)).append(xf(0, 0, 4, 1, "left", 0))
+                .append(xf(164, 0, 0, 1, "right", 0)).append(xf(164, 0, 4, 1, "right", 0))
+                .append(xf(3, 0, 0, 1, "right", 0)).append(xf(3, 0, 4, 1, "right", 0))
+                .append(xf(0, 2, 2, 0, "left", 1)).append(xf(0, 3, 2, 0, "left", 1))
+                .append(xf(0, 5, 3, 0, "left", 0)).append(xf(0, 4, 0, 0, "left", 1))
                 .append("</cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>");
         return sb.toString();
     }
@@ -198,19 +254,20 @@ public final class XlsxWriter {
         return "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"" + rgb + "\"/><bgColor indexed=\"64\"/></patternFill></fill>";
     }
 
-    private static String xf(int numFmt, int font, int fill, int border, String align, boolean indent) {
+    private static String xf(int numFmt, int font, int fill, int border, String align, int indent) {
         return "<xf numFmtId=\"" + numFmt + "\" fontId=\"" + font + "\" fillId=\"" + fill + "\" borderId=\"" + border
                 + "\" xfId=\"0\" applyNumberFormat=\"1\" applyFont=\"1\" applyFill=\"1\" applyBorder=\"1\" applyAlignment=\"1\">"
-                + "<alignment horizontal=\"" + align + "\" vertical=\"center\"" + (indent ? " indent=\"1\"" : "") + "/></xf>";
+                + "<alignment horizontal=\"" + align + "\" vertical=\"center\"" + (indent > 0 ? " indent=\"" + indent + "\"" : "") + "/></xf>";
     }
 
-    private static String sheet(ReportTable table, LocalDateTime generatedAt) {
+    private static String sheet(ReportTable table, LocalDateTime generatedAt, boolean logo) {
         int columns = table.headers().size();
         int firstData = HEADER_ROWS + 1;
         int lastRow = Math.max(HEADER_ROWS, table.rows().size() + HEADER_ROWS);
         String last = ref(columns - 1, 1).replaceAll("\\d", "");
         StringBuilder sb = new StringBuilder(header());
-        sb.append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">");
+        sb.append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" "
+                + "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">");
         sb.append("<sheetPr><tabColor rgb=\"FF5A22B8\"/><pageSetUpPr fitToPage=\"1\"/></sheetPr>");
         sb.append("<sheetViews><sheetView showGridLines=\"0\" workbookViewId=\"0\"><pane ySplit=\"").append(HEADER_ROWS)
                 .append("\" topLeftCell=\"A").append(firstData).append("\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>");
@@ -257,6 +314,9 @@ public final class XlsxWriter {
         sb.append("<pageMargins left=\"0.4\" right=\"0.4\" top=\"0.5\" bottom=\"0.6\" header=\"0.3\" footer=\"0.3\"/>");
         sb.append("<pageSetup orientation=\"landscape\" fitToWidth=\"1\" fitToHeight=\"0\"/>");
         sb.append("<headerFooter><oddFooter>&amp;L&amp;8NextFit&amp;R&amp;8Página &amp;P de &amp;N</oddFooter></headerFooter>");
+        if (logo) {
+            sb.append("<drawing r:id=\"rId1\"/>");
+        }
         return sb.append("</worksheet>").toString();
     }
 
@@ -285,7 +345,8 @@ public final class XlsxWriter {
     }
 
     private static int width(ReportTable table, int column) {
-        int longest = table.headers().get(column).length();
+        // The header also holds the filter button, so it needs room for it.
+        int longest = table.headers().get(column).length() + 4;
         for (List<Object> row : table.rows()) {
             Object value = row.get(column);
             int length = value instanceof Number n ? ("$" + String.format("%,d", n.longValue())).length()
