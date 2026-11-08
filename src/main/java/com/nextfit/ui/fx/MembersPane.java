@@ -17,6 +17,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.List;
@@ -61,11 +62,13 @@ final class MembersPane extends VBox {
         title.getStyleClass().add("nf-section-title");
         countLabel.getStyleClass().add("nf-muted");
         VBox titles = new VBox(2, title, countLabel);
+        titles.setMinWidth(Region.USE_PREF_SIZE);
         HBox.setHgrow(titles, Priority.ALWAYS);
 
-        searchField.setPromptText("Buscar por nombre o documento");
+        searchField.setPromptText("Buscar por nombre, documento o teléfono");
         searchField.getStyleClass().add("nf-input");
         searchField.setPrefSize(280, 44);
+        searchField.setMinWidth(120);
         searchField.textProperty().addListener((obs, old, now) -> refresh());
         editButton.getStyleClass().add("nf-secondary");
         editButton.setOnAction(e -> editSelected());
@@ -73,6 +76,10 @@ final class MembersPane extends VBox {
         toggleButton.setOnAction(e -> toggleSelected());
         createButton.getStyleClass().add("nf-primary-small");
         createButton.setOnAction(e -> openForm(null));
+
+        for (Button button : List.of(editButton, toggleButton, createButton)) {
+            button.setMinWidth(Region.USE_PREF_SIZE);
+        }
 
         HBox header = new HBox(10, titles, searchField, editButton, toggleButton, createButton);
         header.setAlignment(Pos.CENTER_LEFT);
