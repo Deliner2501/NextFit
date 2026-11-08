@@ -17,6 +17,7 @@ import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.PaymentService;
+import com.nextfit.service.ReportService;
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.UserService;
 import com.nextfit.service.suggest.BmiRule;
@@ -32,6 +33,7 @@ import com.nextfit.persistence.MemberRepository;
 import com.nextfit.persistence.CsvUserRepository;
 import com.nextfit.persistence.UserRepository;
 import com.nextfit.service.AuthService;
+import com.nextfit.service.CashCloseService;
 import com.nextfit.service.Session;
 import com.nextfit.model.Role;
 import com.nextfit.model.Subscription;
@@ -42,6 +44,7 @@ import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
 import com.nextfit.ui.fx.FxIcons;
 import com.nextfit.ui.fx.PendingModule;
+import com.nextfit.ui.fx.ReportsModule;
 import com.nextfit.ui.fx.TrainingFxModule;
 import com.nextfit.ui.fx.UsersModule;
 import com.nextfit.persistence.CsvMemberRepository;
@@ -117,6 +120,9 @@ public final class Main {
         PhoneAccess phoneAccess = new PhoneAccess(memberService, accessService,
                 new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))),
                 Clock.systemDefaultZone());
+        CashCloseService cashCloseService = new CashCloseService(paymentService, memberService);
+        ReportService reportService = new ReportService(cashCloseService, memberService, subscriptionService,
+                attendanceService);
         AnalyticsService analyticsService = new AnalyticsService(attendanceService, subscriptionService,
                 Clock.systemDefaultZone());
         DashboardService dashboardService = new DashboardService(
@@ -153,6 +159,7 @@ public final class Main {
                         phoneAccess, phoneUrl),
                 new AnalyticsModule(analyticsService, memberService),
                 new OccupancyModule(occupancyService),
+                new ReportsModule(cashCloseService, reportService),
                 new UsersModule(userService, session)));
         accessServer.stop();
     }

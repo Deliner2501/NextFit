@@ -217,3 +217,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `OccupancyView`, `OccupancyModule` | The view only draws the picture it receives and refreshes itself; the module only hosts it and opens the full-screen window. The numbers come from `OccupancyService`. |
 | DIP | `OccupancyView` | It depends on `OccupancyService`, not on the attendance files, so the data source can change without touching the screen. |
 | Protected Variations | `nextfit.css` (`nf-level-*`) | The color of the occupancy bar changes with the level by a style class, so no color is written in code and the light and dark modes work without changes. |
+| SRP | `CashCloseService`, `ReportService` | The first one only gathers the payments of a day into a close; the second only builds report tables. Neither one draws or writes files. |
+| Information Expert | `CashClose` | The record that holds the lines and the totals also computes the expected cash and the difference with the cash counted, so no screen repeats that arithmetic. |
+| OCP | `ReportTable`, `PdfExporter`, `XlsxWriter` | A new report is only a new table; the exporters draw any table, so adding a report does not touch them. |
+| DIP | `PdfExporter`, `XlsxWriter` | The exporters depend on the plain `ReportTable` and `CashClose` values, not on services or repositories. |
+| Low Coupling | `CashClosePane`, `ReportsPane`, `FileExport` | The panes only show data and call `FileExport`, which owns the "save as" dialog and the messages, so no pane repeats that code. |
+| Protected Variations | `PdfDocument`, `PdfFonts` | The file formats are written with the JDK only. If a library such as POI or OpenPDF is used later, only the export package changes. |
+| OCP | `Main`, `ReportsModule` | The module is added to the list of `FxModule`; the main window does not change. |
+
