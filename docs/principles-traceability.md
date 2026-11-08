@@ -214,3 +214,6 @@ Each row links a principle or pattern to the class or method where it is applied
 | Pure Fabrication | `OccupancySnapshot` | An immutable picture of the gym with no drawing logic, created so the TV screen only reads data. |
 | DIP | `OccupancyService` | It depends on `AttendanceService` and `MemberService`, and receives the capacity and the `Clock` by constructor, so tests can fix the time. |
 | Low Coupling | `OccupancyService` | It reuses `OccupancyHeatmap` from the analytics instead of counting entries by weekday and hour again. |
+| SRP | `OccupancyView`, `OccupancyModule` | The view only draws the picture it receives and refreshes itself; the module only hosts it and opens the full-screen window. The numbers come from `OccupancyService`. |
+| DIP | `OccupancyView` | It depends on `OccupancyService`, not on the attendance files, so the data source can change without touching the screen. |
+| Protected Variations | `nextfit.css` (`nf-level-*`) | The color of the occupancy bar changes with the level by a style class, so no color is written in code and the light and dark modes work without changes. |
