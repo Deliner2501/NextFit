@@ -337,11 +337,15 @@ public final class PdfExporter {
         private final String running;
         private PdfDocument.Page page;
         private double y;
+        /** The number of the logo in the document, or -1 when the picture is not available. */
+        private final int logo;
 
         Flow(PdfDocument doc, boolean landscape, String running) {
             this.doc = doc;
             this.landscape = landscape;
             this.running = running;
+            PdfImage mark = PdfImage.load("/images/logo/nextfit-logo-256.png");
+            this.logo = mark == null ? -1 : doc.addImage(mark);
             this.page = doc.addPage(landscape);
         }
 
@@ -366,16 +370,28 @@ public final class PdfExporter {
         void newPage() {
             page = doc.addPage(landscape);
             page.fillRect(0, 0, page.width(), 30, VIOLET);
-            page.fillRect(MARGIN, 9, 4, 12, LIME);
-            page.text(MARGIN + 11, 19.5, "NextFit  ·  " + running, 9, true, WHITE);
+            double textX = MARGIN + 11;
+            if (logo >= 0) {
+                page.image(logo, MARGIN, 5, 20, 20);
+                textX = MARGIN + 28;
+            } else {
+                page.fillRect(MARGIN, 9, 4, 12, LIME);
+            }
+            page.text(textX, 19.5, "NextFit  ·  " + running, 9, true, WHITE);
             y = 30 + 22;
         }
 
         void firstHeader(String title, String subtitle) {
             page.fillRect(0, 0, page.width(), 82, VIOLET);
-            page.fillRect(MARGIN, 20, 5, 44, LIME);
-            page.text(MARGIN + 14, 32, "NEXTFIT", 9.5, true, LIME);
-            page.text(MARGIN + 14, 58, PdfFonts.fit(title, 24, true, contentWidth() * 0.62), 24, true, WHITE);
+            double textX = MARGIN + 14;
+            if (logo >= 0) {
+                page.image(logo, MARGIN, 17, 50, 50);
+                textX = MARGIN + 64;
+            } else {
+                page.fillRect(MARGIN, 20, 5, 44, LIME);
+            }
+            page.text(textX, 32, "NEXTFIT", 9.5, true, LIME);
+            page.text(textX, 58, PdfFonts.fit(title, 24, true, contentWidth() * 0.62 - (textX - MARGIN - 14)), 24, true, WHITE);
             if (!subtitle.isEmpty()) {
                 page.textRight(page.width() - MARGIN, 58, PdfFonts.fit(subtitle, 10.5, false, contentWidth() * 0.4),
                         10.5, false, 0xE4DDF5);

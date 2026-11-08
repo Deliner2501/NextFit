@@ -75,6 +75,18 @@ class ExportersTest {
     }
 
     @Test
+    void pdfCarriesTheLogoWithItsTransparency() throws IOException {
+        Path file = Files.createTempFile("logo", ".pdf");
+        PdfExporter.table(file, table(5), "", NOW);
+        String text = new String(Files.readAllBytes(file), StandardCharsets.ISO_8859_1);
+        Files.delete(file);
+
+        assertTrue(text.contains("/Subtype /Image"));
+        assertTrue(text.contains("/SMask"));
+        assertTrue(text.contains("/XObject"));
+    }
+
+    @Test
     void aLongTableFlowsToMorePagesAndKeepsAllRows() throws IOException {
         Path small = Files.createTempFile("small", ".pdf");
         Path big = Files.createTempFile("big", ".pdf");

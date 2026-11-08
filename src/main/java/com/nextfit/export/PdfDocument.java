@@ -28,6 +28,7 @@ final class PdfDocument {
 
     private final String title;
     private final List<Page> pages = new ArrayList<>();
+    private final List<PdfImage> images = new ArrayList<>();
 
     PdfDocument(String title) {
         this.title = title;
@@ -42,6 +43,16 @@ final class PdfDocument {
 
     List<Page> pages() {
         return pages;
+    }
+
+    /**
+     * Registers a picture so the pages can draw it.
+     *
+     * @return the number to pass to {@link Page#image}
+     */
+    int addImage(PdfImage image) {
+        images.add(image);
+        return images.size() - 1;
     }
 
     /** Writes the document to a file. */
@@ -66,7 +77,13 @@ final class PdfDocument {
         List<Integer> offsets = new ArrayList<>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         write(out, "%PDF-1.4\n%âãÏÓ\n");
-        int objects = 5 + pages.size() * 2;
+        int imageBase = 6 + pages.size() * 2;
+        int objects = 5 + pages.size() * 2 + images.size() * 2;
+        StringBuilder xobjects = new StringBuilder();
+        for (int i = 0; i < images.size(); i++) {
+            xobjects.append("/Im").append(i).append(' ').append(imageBase + 2 * i + 1).append(" 0 R ");
+        }
+        String pictures = images.isEmpty() ? "" : " /XObject << " + xobjects + ">>";
 
         StringBuilder kids = new StringBuilder();
         for (int i = 0; i < pages.size(); i++) {
@@ -81,13 +98,22 @@ final class PdfDocument {
             Page page = pages.get(i);
             int contentId = 7 + i * 2;
             object(out, offsets, String.format(Locale.ROOT,
-                    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2f %.2f] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> "
-                            + "/Contents %d 0 R >>", page.width, page.height, contentId));
+                    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2f %.2f] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>%s >> "
+                            + "/Contents %d 0 R >>", page.width, page.height, pictures, contentId));
             byte[] packed = deflate(page.ops.toString().getBytes(StandardCharsets.ISO_8859_1));
             offsets.add(out.size());
             write(out, (offsets.size()) + " 0 obj\n<< /Length " + packed.length + " /Filter /FlateDecode >>\nstream\n");
             out.write(packed);
             write(out, "\nendstream\nendobj\n");
+        }
+        for (int i = 0; i < images.size(); i++) {
+            PdfImage image = images.get(i);
+            // The transparency goes first (it is a gray picture the color picture points to as its soft mask).
+            stream(out, offsets, "/Type /XObject /Subtype /Image /Width " + image.width + " /Height " + image.height
+                    + " /ColorSpace /DeviceGray /BitsPerComponent 8", image.alpha);
+            stream(out, offsets, "/Type /XObject /Subtype /Image /Width " + image.width + " /Height " + image.height
+                    + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Interpolate true /SMask " + (offsets.size()) + " 0 R",
+                    image.rgb);
         }
         int xref = out.size();
         write(out, "xref\n0 " + (objects + 1) + "\n0000000000 65535 f \n");
@@ -103,11 +129,20 @@ final class PdfDocument {
         write(out, offsets.size() + " 0 obj\n" + body + "\nendobj\n");
     }
 
+    private static void stream(ByteArrayOutputStream out, List<Integer> offsets, String entries, byte[] packed)
+            throws IOException {
+        offsets.add(out.size());
+        write(out, offsets.size() + " 0 obj\n<< " + entries + " /Length " + packed.length
+                + " /Filter /FlateDecode >>\nstream\n");
+        out.write(packed);
+        write(out, "\nendstream\nendobj\n");
+    }
+
     private static void write(ByteArrayOutputStream out, String text) throws IOException {
         out.write(text.getBytes(StandardCharsets.ISO_8859_1));
     }
 
-    private static byte[] deflate(byte[] data) throws IOException {
+    static byte[] deflate(byte[] data) throws IOException {
         ByteArrayOutputStream packed = new ByteArrayOutputStream();
         try (DeflaterOutputStream deflater = new DeflaterOutputStream(packed)) {
             deflater.write(data);
@@ -188,6 +223,12 @@ final class PdfDocument {
         private void curve(double x1, double y1, double x2, double y2, double x3, double y3) {
             ops.append(n(x1)).append(' ').append(n(y1)).append(' ').append(n(x2)).append(' ').append(n(y2)).append(' ')
                     .append(n(x3)).append(' ').append(n(y3)).append(" c\n");
+        }
+
+        /** Draws a picture registered with {@link PdfDocument#addImage}; (x, y) is its top-left corner. */
+        void image(int index, double x, double y, double w, double h) {
+            ops.append("q ").append(n(w)).append(" 0 0 ").append(n(h)).append(' ').append(n(x)).append(' ')
+                    .append(n(height - y - h)).append(" cm /Im").append(index).append(" Do Q\n");
         }
 
         /** Draws a horizontal line. */
