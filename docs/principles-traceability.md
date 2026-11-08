@@ -144,6 +144,15 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `MembershipPlanServiceTest.endDateCountsTheStartingDayAsTheFirstDay` | The plan owns the duration, so the test checks the end date on the plan itself |
 | OCP and polymorphism | `PaymentServiceTest` with `PercentageDiscount`, `FixedDiscount` | The same sale code works with every kind of discount without changes |
 | GRASP Controller (use case) | `PaymentServiceTest.ifThePaymentCannotBeStoredTheSubscriptionIsCancelled` | The test proves that selling is one operation: no subscription is left without its payment |
+| OCP and polymorphism | `AlertRule`, `ExpiringMembershipRule`, `InactiveMemberRule`, `BirthdayRule` | Each kind of alert is one class that implements the same interface; a new kind of alert is a new class and `AlertService` does not change |
+| SRP | `AlertService`, `AlertMessages`, `WhatsAppLink` | The service only gathers the alerts, `AlertMessages` only writes the text and `WhatsAppLink` only formats a phone and a text; none of them draws a screen or sends anything |
+| GRASP Information Expert | `Alert`, `AlertType` | The alert is a plain value that carries what the screens need (type, member, days, date) and the type knows its own label and its order of importance |
+| High cohesion | `ExpiringMembershipRule`, `InactiveMemberRule`, `BirthdayRule` | Each rule contains only the logic of its own alert, including its edge cases (renewed membership, new membership, 29 February) |
+| DIP and dependency injection | `AlertService` constructor, `AlertRule`, `Clock` | The service receives its rules and the clock from outside, so tests choose the day and the alerts that run |
+| GRASP Creator | `AlertService.withStandardRules` | The service knows which rules it uses by default and builds them, so `Main` and the screens do not repeat that list |
+| Low coupling and reuse | `WhatsAppLink` | It receives a plain phone and a plain text and knows neither members nor alerts, so any screen can reuse it |
+| Protected Variations | `AlertMessages`, `WhatsAppLink` | The wording and the way of contacting the member are isolated; changing to SMS or email would replace these classes only |
+| Testability | `AlertServiceTest`, `AlertMessagesTest`, `WhatsAppLinkTest` | The rules are tested with a fixed clock and real CSV files in a temporary folder, including the edge cases of the dates |
 
 ## Santiago: training
 
