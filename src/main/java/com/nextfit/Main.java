@@ -38,6 +38,7 @@ import com.nextfit.service.CashCloseService;
 import com.nextfit.service.Session;
 import com.nextfit.model.Role;
 import com.nextfit.model.Subscription;
+import com.nextfit.model.User;
 import com.nextfit.ui.fx.AccessModule;
 import com.nextfit.ui.fx.AnalyticsModule;
 import com.nextfit.ui.fx.BillingModule;
@@ -104,7 +105,8 @@ public final class Main {
         AuthService auth = new AuthService(users, new InMemoryAttemptLimiter(), auditService);
         auth.ensureDefaultAdmin();
         Session session = new Session();
-        UserService userService = new UserService(users, new UserValidator());
+        UserService userService = new UserService(users, new UserValidator(), auditService,
+                () -> session.getCurrentUser().map(User::getUsername).orElse(""));
         
         // Members module
         MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
