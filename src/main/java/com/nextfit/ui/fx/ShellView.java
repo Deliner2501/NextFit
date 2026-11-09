@@ -4,13 +4,18 @@ import com.nextfit.model.Role;
 import com.nextfit.model.User;
 import com.nextfit.service.Session;
 import com.nextfit.ui.Formats;
-import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
@@ -27,6 +32,7 @@ import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.prefs.Preferences;
 
 /**
  * Main window: sidebar, top bar and the screen of the chosen module. It only
@@ -42,6 +48,14 @@ final class ShellView extends BorderPane {
     private final StackPane host = new StackPane();
     private final List<Button> buttons = new ArrayList<>();
     private final List<FxModule> visible = new ArrayList<>();
+    private static final double WIDE = 260;
+    private static final double NARROW = 84;
+    private static final String COLLAPSED_KEY = "sidebarCollapsed";
+    private final VBox sidebar = new VBox(6);
+    private final HBox brand = new HBox(12);
+    private final Label brandName = new Label("NextFit");
+    private Node promoBlock;
+    private boolean collapsed;
 
     /**
      * @param session   the signed-in user
@@ -68,13 +82,9 @@ final class ShellView extends BorderPane {
     }
 
     private Node buildSidebar() {
-        VBox sidebar = new VBox(6);
         sidebar.getStyleClass().add("nf-sidebar");
         sidebar.setPadding(new Insets(24, 16, 16, 16));
-        sidebar.setPrefWidth(260);
-        sidebar.setMinWidth(260);
 
-        HBox brand = new HBox(12);
         brand.setAlignment(Pos.CENTER_LEFT);
         brand.setPadding(new Insets(0, 0, 24, 8));
         Image logo = FxImages.load("/images/logo/nextfit-logo-256.png");
@@ -85,9 +95,8 @@ final class ShellView extends BorderPane {
             mark.setSmooth(true);
             brand.getChildren().add(mark);
         }
-        Label name = new Label("NextFit");
-        name.getStyleClass().add("nf-sidebar-brand");
-        brand.getChildren().add(name);
+        brandName.getStyleClass().add("nf-sidebar-brand");
+        brand.getChildren().add(brandName);
         sidebar.getChildren().add(brand);
 
         for (FxModule item : visible) {
@@ -95,13 +104,58 @@ final class ShellView extends BorderPane {
             button.getStyleClass().add("nf-nav");
             button.setMaxWidth(Double.MAX_VALUE);
             button.setOnAction(e -> show(item));
+            Tooltip.install(button, new Tooltip(item.title()));
+            FxMotion.nudge(button, 4);
             buttons.add(button);
             sidebar.getChildren().add(button);
         }
         Region spacer = new Region();
         VBox.setVgrow(spacer, Priority.ALWAYS);
-        sidebar.getChildren().addAll(spacer, buildPromo());
+        promoBlock = buildPromo();
+        sidebar.getChildren().addAll(spacer, promoBlock);
+        boolean wasCollapsed = false;
+        try {
+            wasCollapsed = Preferences.userNodeForPackage(ShellView.class).getBoolean(COLLAPSED_KEY, false);
+        } catch (RuntimeException e) {
+            // Without saved preferences the menu simply starts open.
+        }
+        applyCollapsed(wasCollapsed, false);
         return sidebar;
+    }
+
+    /** Opens or closes the menu: closed, it shows only the icons and leaves more room to the screen. */
+    private void applyCollapsed(boolean value, boolean animate) {
+        collapsed = value;
+        double target = value ? NARROW : WIDE;
+        sidebar.setMinWidth(0);
+        if (animate) {
+            Timeline slide = new Timeline(new KeyFrame(Duration.millis(260),
+                    new KeyValue(sidebar.prefWidthProperty(), target, Interpolator.EASE_BOTH),
+                    new KeyValue(sidebar.maxWidthProperty(), target, Interpolator.EASE_BOTH)));
+            slide.setOnFinished(e -> sidebar.setMinWidth(target));
+            slide.play();
+        } else {
+            sidebar.setPrefWidth(target);
+            sidebar.setMaxWidth(target);
+            sidebar.setMinWidth(target);
+        }
+        brandName.setVisible(!value);
+        brandName.setManaged(!value);
+        brand.setAlignment(value ? Pos.CENTER : Pos.CENTER_LEFT);
+        brand.setPadding(value ? new Insets(0, 0, 24, 0) : new Insets(0, 0, 24, 8));
+        for (Button button : buttons) {
+            button.setContentDisplay(value ? ContentDisplay.GRAPHIC_ONLY : ContentDisplay.LEFT);
+            button.setAlignment(value ? Pos.CENTER : Pos.CENTER_LEFT);
+        }
+        if (promoBlock != null) {
+            promoBlock.setVisible(!value);
+            promoBlock.setManaged(!value);
+        }
+        try {
+            Preferences.userNodeForPackage(ShellView.class).putBoolean(COLLAPSED_KEY, value);
+        } catch (RuntimeException e) {
+            // Not being able to remember the choice is not worth an error.
+        }
     }
 
     /**
@@ -150,6 +204,12 @@ final class ShellView extends BorderPane {
         VBox titles = new VBox(2, title, subtitle);
         HBox.setHgrow(titles, Priority.ALWAYS);
 
+        Button menu = new Button("☰");
+        menu.getStyleClass().add("nf-icon-button");
+        menu.setStyle("-fx-font-size: 18px;");
+        Tooltip.install(menu, new Tooltip("Mostrar u ocultar el menú"));
+        menu.setOnAction(e -> applyCollapsed(!collapsed, true));
+
         Button toggle = new Button();
         toggle.getStyleClass().add("nf-icon-button");
         Runnable refreshIcon = () -> toggle.setGraphic(FxIcons.of(
@@ -178,7 +238,7 @@ final class ShellView extends BorderPane {
         logout.setGraphic(FxIcons.of(FxIcons.LOGOUT, 20));
         logout.setOnAction(e -> onLogout.run());
 
-        HBox top = new HBox(16, titles, toggle, chip, logout);
+        HBox top = new HBox(16, menu, titles, toggle, chip, logout);
         top.setAlignment(Pos.CENTER_LEFT);
         top.setPadding(new Insets(24, 0, 20, 0));
 
@@ -210,9 +270,6 @@ final class ShellView extends BorderPane {
         item.onShow();
         Node screen = item.view();
         host.getChildren().setAll(screen);
-        FadeTransition fade = new FadeTransition(Duration.millis(220), screen);
-        fade.setFromValue(0);
-        fade.setToValue(1);
-        fade.play();
+        FxMotion.enter(List.of(screen), 0, 0, 10);
     }
 }

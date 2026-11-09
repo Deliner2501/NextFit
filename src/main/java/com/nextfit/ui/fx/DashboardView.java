@@ -4,7 +4,6 @@ import com.nextfit.service.DashboardService;
 import com.nextfit.service.DashboardService.Summary;
 import com.nextfit.service.Session;
 import com.nextfit.ui.Formats;
-import javafx.animation.Transition;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
@@ -19,11 +18,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Rectangle;
-import javafx.util.Duration;
 
 import java.time.YearMonth;
 import java.util.Map;
-import java.util.function.LongFunction;
 
 /**
  * Home screen with visual hierarchy: a banner with the greeting, one large
@@ -61,9 +58,13 @@ final class DashboardView extends VBox {
                 KpiCard.Kind.VIOLET);
         KpiCard today = new KpiCard("Asistencia de hoy", "0", "Entradas registradas", FxIcons.ACCESS,
                 KpiCard.Kind.LIME);
-        countUp(active.value(), summary.activeSubscriptions(), n -> Long.toString(n));
-        countUp(expiring.value(), summary.expiringSoon(), n -> Long.toString(n));
-        countUp(today.value(), summary.checkInsToday(), n -> Long.toString(n));
+        FxMotion.countUp(active.value(), summary.activeSubscriptions(), n -> Long.toString(n));
+        FxMotion.countUp(expiring.value(), summary.expiringSoon(), n -> Long.toString(n));
+        FxMotion.countUp(today.value(), summary.checkInsToday(), n -> Long.toString(n));
+        long change = summary.checkInsChange();
+        if (change != 0) {
+            today.trend((change > 0 ? "+" : "") + change, change > 0, "Frente a ayer (" + summary.checkInsYesterday() + ")");
+        }
         VBox side = new VBox(16, active, expiring, today);
         for (var child : side.getChildren()) {
             VBox.setVgrow(child, Priority.ALWAYS);
@@ -76,6 +77,9 @@ final class DashboardView extends VBox {
                 split(card("Estado de las membresías", DashboardCharts.statusDonut(vigentes, summary)),
                         card("Asistencia por día de la semana", DashboardCharts.weekdayBars(summary.checkInsByWeekday())),
                         40));
+        // The blocks rise one after another and the three small numbers follow a moment later.
+        FxMotion.enter(getChildren(), 0, 90);
+        FxMotion.enter(side.getChildren(), 240, 110);
     }
 
     private Region hero() {
@@ -160,7 +164,16 @@ final class DashboardView extends VBox {
         badge.getStyleClass().add("nf-badge-solid");
         badge.setMinSize(56, 56);
         badge.setMaxSize(56, 56);
-        VBox texts = new VBox(4, caption, value, hint);
+        // The number with its change next to it: how the month goes against the same days of the last one.
+        HBox valueRow = new HBox(14, value);
+        valueRow.setAlignment(Pos.CENTER_LEFT);
+        summary.incomeChangePercent().ifPresent(percent -> {
+            Label chip = KpiCard.chip(Formats.signedPercent(percent), percent >= 0,
+                    "Frente a los mismos días del mes anterior (" + Formats.money(summary.incomeLastMonthToDate()) + ")");
+            valueRow.getChildren().add(chip);
+            FxMotion.popIn(chip, 1000);
+        });
+        VBox texts = new VBox(4, caption, valueRow, hint);
         HBox.setHgrow(texts, Priority.ALWAYS);
 
         ComboBox<String> range = new ComboBox<>();
@@ -178,28 +191,8 @@ final class DashboardView extends VBox {
         VBox card = new VBox(14, head, chartHolder);
         card.getStyleClass().add("nf-card-feature");
         card.setPadding(new Insets(26));
-        countUp(value, summary.incomeThisMonth(), Formats::money);
+        FxMotion.countUp(value, summary.incomeThisMonth(), Formats::money);
         return card;
-    }
-
-    // The number climbs from zero to its value in a moment.
-    private static void countUp(Label label, long target, LongFunction<String> format) {
-        if (target == 0) {
-            label.setText(format.apply(0));
-            return;
-        }
-        Transition animation = new Transition() {
-            {
-                setCycleDuration(Duration.millis(750));
-            }
-
-            @Override
-            protected void interpolate(double fraction) {
-                double eased = 1 - Math.pow(1 - fraction, 3);
-                label.setText(format.apply(Math.round(target * eased)));
-            }
-        };
-        animation.play();
     }
 
     private static Region card(String title, Region content) {

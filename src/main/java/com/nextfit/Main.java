@@ -1,6 +1,7 @@
 package com.nextfit;
 
-
+import com.nextfit.ui.fx.BackupModule;
+import com.nextfit.service.BackupService;
 import com.nextfit.persistence.AccessKeyStore;
 import com.nextfit.persistence.CsvAttendanceRepository;
 import com.nextfit.persistence.CsvHealthProfileRepository;
@@ -86,6 +87,13 @@ public final class Main {
     public static void main(String[] args) {
         // First run only: fills an empty installation with example data.
         DemoData.seedIfEmpty(DATA_DIR);
+
+        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone());
+        try {
+            backups.backupIfNoneToday(14);
+          } catch (RuntimeException e) {
+           System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
+         }
         
         // Storage. To use a database, replace these repositories only.
         UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
@@ -165,7 +173,8 @@ public final class Main {
                 new AnalyticsModule(analyticsService, memberService),
                 new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),
-                new UsersModule(userService, session)));
+                new UsersModule(userService, session),
+                new BackupModule(backups)));
         accessServer.stop();
     }
 }

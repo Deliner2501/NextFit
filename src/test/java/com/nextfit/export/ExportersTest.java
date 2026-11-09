@@ -75,6 +75,18 @@ class ExportersTest {
     }
 
     @Test
+    void pdfCarriesTheLogoWithItsTransparency() throws IOException {
+        Path file = Files.createTempFile("logo", ".pdf");
+        PdfExporter.table(file, table(5), "", NOW);
+        String text = new String(Files.readAllBytes(file), StandardCharsets.ISO_8859_1);
+        Files.delete(file);
+
+        assertTrue(text.contains("/Subtype /Image"));
+        assertTrue(text.contains("/SMask"));
+        assertTrue(text.contains("/XObject"));
+    }
+
+    @Test
     void aLongTableFlowsToMorePagesAndKeepsAllRows() throws IOException {
         Path small = Files.createTempFile("small", ".pdf");
         Path big = Files.createTempFile("big", ".pdf");
@@ -157,6 +169,19 @@ class ExportersTest {
         } finally {
             Files.delete(file);
         }
+    }
+
+    @Test
+    void xlsxCarriesTheLogoInEverySheet() throws IOException {
+        Path file = Files.createTempFile("logo", ".xlsx");
+        XlsxWriter.write(file, List.of(table(3), table(2)), NOW);
+        try (ZipFile zip = new ZipFile(file.toFile())) {
+            assertTrue(zip.getEntry("xl/media/logo.png") != null);
+            assertTrue(zip.getEntry("xl/drawings/drawing1.xml") != null);
+            assertTrue(zip.getEntry("xl/drawings/drawing2.xml") != null);
+            assertTrue(zip.getEntry("xl/worksheets/_rels/sheet2.xml.rels") != null);
+        }
+        Files.delete(file);
     }
 
     @Test
