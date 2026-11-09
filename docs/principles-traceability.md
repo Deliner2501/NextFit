@@ -238,4 +238,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | Polymorphism | `AttemptLimiter.NONE` | A limiter that never blocks lets `AuthService` work without a limit and keeps the older code unchanged, with no `if` to ask whether there is a limiter. |
 | DIP | `AuthService`, `IdleWatcher` | `AuthService` depends on the `AttemptLimiter` interface and `IdleWatcher` on `InactivityMonitor`; both receive them by constructor and the clock is injected, so tests can move the time. |
 | Controller | `FxApp` | It receives the "inactive for too long" event and decides to end the session and show the sign-in, so no screen has to know about the timer. |
+| SRP | `AuditService`, `AuditCsvMapper`, `AuditModule` | The service writes and reads events, the mapper only knows the CSV columns, and the screen only shows them; none of them does the work of another. |
+| OCP | `AuditRepository` | The service uses the interface, so the CSV log can be replaced by a database table without changing the service or the screen. |
+| Polymorphism | `AuditLog.NONE` | An audit log that writes nothing lets `AuthService`, `UserService` and `BackupService` work without audit and keeps the older code and tests unchanged, with no `if` to ask whether there is a log. |
+| DIP | `AuthService`, `UserService`, `BackupService` | They depend on the small `AuditLog` interface, not on `AuditService` or on the file, and receive it by constructor. |
+| Low coupling | `AuditLog`, `Supplier<String>` actor | The services only know "write this event" and "who is acting now", so none of them knows the session, the screen or the CSV. |
+| Information Expert | `AuditService` | It knows the clock and the entries, so it is the one that puts the time on each event and counts the events of today. |
+| Immutability | `AuditEntry` | A record that cannot change after it is created, and the repository only has `append`, so a line of the log can never be edited or removed. |
+| Controller | `AuthService.logout`, `AuthService.expire` | The sign-out and the idle close go through the service, so `FxApp` does not write audit events itself. |
 
