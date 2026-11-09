@@ -22,6 +22,7 @@ import javafx.scene.layout.VBox;
 
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 /**
  * Screen with the members of the gym: a table with a search box where the user can
@@ -35,9 +36,11 @@ final class MembersPane extends VBox {
     private final MemberService service;
     private final PhotoStorage photoStorage;
     private final BooleanSupplier canEdit;
+    private final Consumer<Member> onOpenFicha;
     private final TableView<Member> table = new TableView<>();
     private final TextField searchField = new TextField();
     private final Label countLabel = new Label();
+    private final Button fichaButton = new Button("Ver ficha");
     private final Button editButton = new Button("Editar");
     private final Button toggleButton = new Button("Dar de baja");
     private final Button createButton = new Button("+ Nuevo socio");
@@ -46,12 +49,15 @@ final class MembersPane extends VBox {
      * @param service      the service that manages the members
      * @param photoStorage where the photos of the members are copied
      * @param canEdit      tells whether the signed-in user may register, edit and deactivate
+     * @param onOpenFicha  called with the selected member when the user asks to see its file
      */
-    MembersPane(MemberService service, PhotoStorage photoStorage, BooleanSupplier canEdit) {
+    MembersPane(MemberService service, PhotoStorage photoStorage, BooleanSupplier canEdit,
+                Consumer<Member> onOpenFicha) {
         super(16);
         this.service = service;
         this.photoStorage = photoStorage;
         this.canEdit = canEdit;
+        this.onOpenFicha = onOpenFicha;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
         refresh();
@@ -70,6 +76,8 @@ final class MembersPane extends VBox {
         searchField.setPrefSize(280, 44);
         searchField.setMinWidth(120);
         searchField.textProperty().addListener((obs, old, now) -> refresh());
+        fichaButton.getStyleClass().add("nf-secondary");
+        fichaButton.setOnAction(e -> openFicha());
         editButton.getStyleClass().add("nf-secondary");
         editButton.setOnAction(e -> editSelected());
         toggleButton.getStyleClass().add("nf-secondary");
@@ -77,11 +85,11 @@ final class MembersPane extends VBox {
         createButton.getStyleClass().add("nf-primary-small");
         createButton.setOnAction(e -> openForm(null));
 
-        for (Button button : List.of(editButton, toggleButton, createButton)) {
+        for (Button button : List.of(fichaButton, editButton, toggleButton, createButton)) {
             button.setMinWidth(Region.USE_PREF_SIZE);
         }
 
-        HBox header = new HBox(10, titles, searchField, editButton, toggleButton, createButton);
+        HBox header = new HBox(10, titles, searchField, fichaButton, editButton, toggleButton, createButton);
         header.setAlignment(Pos.CENTER_LEFT);
         return header;
     }
@@ -113,7 +121,7 @@ final class MembersPane extends VBox {
         table.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> updateButtons());
         table.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                editSelected();
+                openFicha();
             }
         });
         table.setMinHeight(320);
@@ -145,9 +153,17 @@ final class MembersPane extends VBox {
 
     private void updateButtons() {
         Member selected = table.getSelectionModel().getSelectedItem();
+        fichaButton.setDisable(selected == null);
         editButton.setDisable(selected == null);
         toggleButton.setDisable(selected == null);
         toggleButton.setText(selected != null && !selected.isActive() ? "Reactivar" : "Dar de baja");
+    }
+
+    private void openFicha() {
+        Member selected = table.getSelectionModel().getSelectedItem();
+        if (selected != null) {
+            onOpenFicha.accept(selected);
+        }
     }
 
     private void editSelected() {
