@@ -44,24 +44,29 @@ Programación III · Universidad Popular del Cesar
 
 It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its own violet and lime design), following a **layered architecture** and object-oriented design principles. Information is stored in **CSV files**; there is no database yet, so the application runs anywhere with nothing but a JDK.
 
-> This repository is the course project of *Programación III*. The current delivery corresponds to the **70 % milestone**.
+> This repository is the course project of *Programación III*.
+>
+> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table and form), billing, training, access control, analytics, TV screen, reports and cash close, users, audit log and backup. Still in progress: the member health record (health profile, measurements and attendance panel) and the screen of the alerts engine. The last step will be moving the storage from CSV files to a database.
 
 ---
 
 ## Features
 
-### 🔐 Access and users
+### 🔐 Access, users and security
 - Login screen with role-based access.
 - Passwords stored as hashes (never in plain text).
-- User administration (create, edit, activate / deactivate) with protections: you cannot deactivate your own account and at least one active administrator must always remain.
+- **Login lockout**: after 5 failed attempts the user is blocked for 5 minutes.
+- **Inactivity**: the session closes after 15 minutes without activity.
+- User administration (create, edit, reset password, activate / deactivate) with protections: you cannot deactivate your own account and at least one active administrator must always remain.
+- **Audit log**: sign-ins (successful, failed, lockouts), sign-outs, expired sessions, user changes, backups and restores are recorded, and the administrator reads them in the **Auditoría** screen ([details](docs/audit-and-security.md)).
 - A default administrator is created automatically on the first run.
 
 ### 👥 Members and health
-- Register, edit and deactivate members, with photo, emergency contact and validated personal data.
-- **Health profile**: height, blood type, medical conditions and allergies.
-- **Measurements history**: weight, waist, chest and hips, with automatic **BMI** calculation and category (underweight, normal, overweight, obesity).
-- **Attendance**: check-in / check-out of members, with the list of members currently inside the gym.
-- Detail panel per member with tabs for health, measurements and attendance.
+- **Members screen**: table with photo, document, phone and status, and a search box (name, document or phone).
+- Register, edit and deactivate members, with photo, emergency contact and validated personal data. The administrator and the reception can change data; the trainers can only read.
+- **Health profile** (height, blood type, medical conditions, allergies), **measurements history** with automatic **BMI** and category, and the member **detail panel** are implemented in the services; their JavaFX screen is the next step of the interface.
+- **Attendance**: check-in / check-out of members, with the list of members currently inside the gym (see Access control).
+- **Alerts engine**: birthdays, memberships about to expire and members who stopped coming, each with a ready WhatsApp message (`service.alert`). Its screen is pending.
 
 ### 💳 Memberships and billing
 - Membership plans (name, duration, price) that can be activated or retired.
@@ -78,8 +83,32 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - Trainer management.
 
 ### 📊 Dashboard
-- Indicators for active members, memberships about to expire, members inside the gym and income.
-- Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line), with a photo banner.
+- Indicators for active memberships, memberships about to expire, today's attendance and the income of the month.
+- **Trend chips**: income compared with the same days of the previous month, and today's entries compared with yesterday.
+- Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line, in millions of pesos). They animate when the screen opens.
+
+### 🚪 Access control
+- Check-in and check-out by scanning the **carnet QR**, typing the document, or with a USB reader. The result is shown full screen (entry, exit or denied, with the reason).
+- **Phone access**: a member can scan the QR of the carnet with the phone camera; the reception computer serves a small web page and registers the entry ([details](docs/phone-qr-access.md)).
+- List of people inside the gym and printable carnets.
+
+### 📈 Analytics and TV screen
+- **Analytics**: peak hour, average stay, renewal rate, members at risk of leaving, and a heat map of the busiest hours (last 8 weeks).
+- **TV screen** (*Pantalla TV*): live occupation of the gym (people inside, capacity, level, best hour to come), designed to be shown on a television in full screen.
+
+### 🧾 Reports and cash close
+- **Cash close** of any day: total collected, payments by method, discounts, expected cash and a cash count that tells if the drawer is balanced.
+- Reports of payments, attendance and members, exportable to **PDF** and **Excel** with the NextFit branding ([details](docs/reports-cash-close.md)).
+
+### 💾 Backup
+- A backup of the data (CSV files, access key and exercise photos) is made automatically once a day and the last 14 are kept.
+- The administrator can create one, restore one (a safety copy is made first) or save a copy elsewhere ([details](docs/backup-restore.md)).
+
+### 🎨 Interface
+- Dark and light themes with depth: gradient light borders, glows and background images.
+- Motion: cards enter in sequence, numbers count up, charts rise, buttons react when pressed.
+- Collapsible side menu (icons only), remembered between runs.
+- The design rules and the classes to build a new screen are in [`docs/ui-design.md`](docs/ui-design.md).
 
 ### 🧱 Quality
 - Typed exception hierarchy with a different message per kind of error (invalid data, business rule, resource not found, storage problem).
@@ -90,27 +119,39 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 ## Screenshots
 
-> Screenshots live in [`docs/screenshots`](docs/screenshots). Add the images with the file names below and they will show up here.
+> Screenshots live in [`docs/screenshots`](docs/screenshots).
 
-| Login | Dashboard |
+| Login | Dashboard (dark) |
 |:--:|:--:|
 | ![Login](docs/screenshots/login.png) | ![Dashboard](docs/screenshots/dashboard.png) |
 
-| Members | Member detail |
+| Dashboard (light) | Dashboard charts |
 |:--:|:--:|
-| ![Members](docs/screenshots/members.png) | ![Member detail](docs/screenshots/member-detail.png) |
+| ![Dashboard light](docs/screenshots/dashboard-light.png) | ![Dashboard charts](docs/screenshots/dashboard-charts.png) |
 
-| Billing | Receipt |
+| Members | Billing |
 |:--:|:--:|
-| ![Billing](docs/screenshots/billing.png) | ![Receipt](docs/screenshots/receipt.png) |
+| ![Members](docs/screenshots/members.png) | ![Billing](docs/screenshots/billing.png) |
 
-| Exercise catalog | Routines and assignments |
+| Training | Access control |
 |:--:|:--:|
-| ![Exercises](docs/screenshots/exercises.png) | ![Routines](docs/screenshots/routines.png) |
+| ![Exercises](docs/screenshots/exercises.png) | ![Access](docs/screenshots/access.png) |
 
-| Users |
-|:--:|
-| ![Users](docs/screenshots/users.png) |
+| Analytics | TV screen |
+|:--:|:--:|
+| ![Analytics](docs/screenshots/analytics.png) | ![TV](docs/screenshots/tv.png) |
+
+| Reports | Cash close |
+|:--:|:--:|
+| ![Reports](docs/screenshots/reports.png) | ![Cash close](docs/screenshots/cash-close.png) |
+
+| Users | Audit log |
+|:--:|:--:|
+| ![Users](docs/screenshots/users.png) | ![Audit](docs/screenshots/audit.png) |
+
+| Backup | Collapsed menu |
+|:--:|:--:|
+| ![Backup](docs/screenshots/backup.png) | ![Collapsed menu](docs/screenshots/sidebar-collapsed.png) |
 
 ---
 
@@ -121,10 +162,16 @@ The sidebar only shows the modules that the logged-in role can use.
 | Module | Administrator | Reception | Trainer |
 |---|:--:|:--:|:--:|
 | Dashboard | ✅ | ✅ | ❌ |
-| Members (health, attendance) | ✅ | ✅ | ✅ |
+| Members | ✅ edit | ✅ edit | 👁️ read only |
 | Billing (plans, sales, payments) | ✅ | ✅ | ❌ |
 | Training (exercises, routines, assignments) | ✅ | ❌ | ✅ |
+| Access control (kiosk, carnets) | ✅ | ✅ | ❌ |
+| Analytics | ✅ | ✅ | ❌ |
+| TV screen | ✅ | ✅ | ❌ |
+| Reports and cash close | ✅ | ✅ | ❌ |
 | Users | ✅ | ❌ | ❌ |
+| Audit log | ✅ | ❌ | ❌ |
+| Backup | ✅ | ❌ | ❌ |
 
 ---
 
@@ -134,12 +181,17 @@ The sidebar only shows the modules that the logged-in role can use.
 |---|---|
 | **Java 21** | Language (records, `java.time`) |
 | **Maven** | Build, dependencies and tests |
-| **JavaFX** | Desktop user interface |
-| **AtlantaFX** | Base theme of the JavaFX controls |
-| **MigLayout** | Layout manager for forms |
+| **JavaFX 21** | Desktop user interface |
+| **AtlantaFX** | Base theme of the JavaFX controls, extended with the NextFit violet and lime design (`nextfit.css`, `nextfit-violet.css`) |
+| **ZXing** | QR codes of the carnets |
+| **JDK `HttpServer`** | Small web server for the phone access |
 | **CSV files** | Persistence (no database yet) |
+| **Own PDF and Excel writers** | Reports, with no extra dependency (`PdfExporter`, `XlsxWriter`) |
 | **JUnit 5** | Unit testing |
+| **GitHub Actions** | Build and tests on every pull request |
 | **Git / GitHub** | Version control, feature branches and pull requests |
+
+> The first version of the interface was written with Swing (FlatLaf and MigLayout). That code is still in the repository and will be removed in a final cleanup.
 
 ---
 
@@ -173,7 +225,9 @@ Key design decisions:
 - **Immutable model**: entities are never modified in place; `withX(...)` methods return a modified copy.
 - **Injected `Clock`**: services receive a `java.time.Clock`, which makes date-dependent rules testable.
 - **Computed state**: the status of a subscription is calculated from its dates, never stored.
-- **Modules as plugins of the window**: every screen implements `ModulePanel` and `MainWindow` hosts them; `BannerModule` decorates a module with a photo banner.
+- **Modules as plugins of the window**: every JavaFX screen implements `FxModule` (id, title, icon, view and which roles can open it) and `ShellView` builds the menu from them, so a new module appears without changing the window. The composition root (`Main`) lists them.
+- **Rules as plugins**: alerts are `AlertRule` objects and training suggestions are `SuggestionRule` objects; a new rule is a new class, not a change in the service.
+- **Security behind interfaces**: `AttemptLimiter` and `AuditLog` are interfaces, so the in-memory limiter and the CSV audit can be replaced later.
 - **Money as whole pesos** (`long`), avoiding floating point errors.
 
 The full diagrams (Mermaid) are in:
@@ -210,8 +264,16 @@ classDiagram
 NextFit/
 ├── pom.xml
 ├── README.md
-├── data/                          # CSV files (created on first run)
+├── .github/workflows/             # CI: build and tests
+├── data/                          # CSV files, access key and pictures (created on first run)
+├── backups/                       # automatic and manual backups (git-ignored)
 ├── docs/
+│   ├── user-manual.md             # how to use every screen
+│   ├── ui-design.md               # design system and how to build a screen
+│   ├── audit-and-security.md
+│   ├── backup-restore.md
+│   ├── reports-cash-close.md
+│   ├── phone-qr-access.md
 │   ├── layers-diagram.md
 │   ├── domain-class-diagram.md
 │   ├── integrated-class-diagram.md
@@ -228,11 +290,21 @@ NextFit/
     │   │   ├── model/             # domain entities and enums
     │   │   ├── persistence/       # repository interfaces + CSV implementations
     │   │   ├── service/           # business logic
+    │   │   │   ├── alert/         #   alerts engine
+    │   │   │   ├── audit/         #   audit log
+    │   │   │   ├── occupancy/     #   live occupation (TV screen)
+    │   │   │   ├── security/      #   login lockout and inactivity
+    │   │   │   └── suggest/       #   routine suggestions
     │   │   ├── validation/        # one validator per area
+    │   │   ├── export/            # PDF and Excel writers
+    │   │   ├── web/               # phone access server
     │   │   ├── util/              # PasswordHasher, PhotoStorage
-    │   │   └── ui/                # screens: components, members,
-    │   │                          #   billing, training, dashboard, users
-    │   └── resources/images/      # logo, banners, login, exercises
+    │   │   └── ui/
+    │   │       ├── fx/            # JavaFX interface (current)
+    │   │       └── ...            # Swing interface (to be removed)
+    │   └── resources/
+    │       ├── fx/                # nextfit.css and nextfit-violet.css
+    │       └── images/            # logo, backgrounds, banners, login, exercises
     └── test/java/com/nextfit/     # JUnit tests
 ```
 
@@ -269,7 +341,7 @@ mvn clean compile exec:java
 
 Or from the IDE: open the project as a Maven project and run the class `com.nextfit.Main`.
 
-> The application must be started from the project root, because the `data/` folder is created relative to the working directory.
+> The application must be started from the project root, because the `data/` and `backups/` folders are created relative to the working directory.
 
 ### Build a package
 
@@ -319,7 +391,12 @@ Everything is stored as plain CSV files inside `data/`:
 | `routines.csv`, `routine_lines.csv` | Routines, their days and exercises |
 | `assignments.csv` | Routines assigned to members |
 | `training_sessions.csv` | Training sessions log |
+| `audit.csv` | Audit log (who did what and when) |
+| `access.key` | Secret key of the carnet QR codes (never committed; deleting it invalidates the printed carnets) |
+| `images/exercises/` | Pictures of the exercises |
 | `photos/` | Photos uploaded for members and trainers |
+
+Backups of this folder are kept in `backups/` (see [`docs/backup-restore.md`](docs/backup-restore.md)).
 
 Relations between entities are stored as identifiers (for example a subscription keeps the `memberId` and the `planId`). A shared `CsvStore` handles reading and writing, and one `CsvMapper` per entity converts between rows and objects.
 
@@ -337,6 +414,9 @@ Some of the rules enforced by the services (all of them covered by tests):
 - A member cannot check in twice without checking out, nor check out without an open entry. Inactive members cannot check in.
 - Usernames are unique; you cannot deactivate your own user, and at least one active administrator must remain.
 - Plan names are unique.
+- After 5 failed sign-ins a user is blocked for 5 minutes, and a session with no activity for 15 minutes is closed; both are written in the audit log.
+- A carnet code is not the document: it is an HMAC of it with a secret key, and the same code read twice in 10 seconds is counted once.
+- Restoring a backup first saves the current data, and refuses any zip that is not a NextFit backup or that has paths leaving the data folder.
 - Data validation, for example: age between 12 and 100 years, document between 5 and 12 digits, phone between 7 and 15 digits, height between 100 and 250 cm, weight between 20 and 400 kg, valid blood types only.
 
 ---
@@ -347,7 +427,7 @@ Some of the rules enforced by the services (all of them covered by tests):
 mvn test
 ```
 
-The suite covers services (members, health, attendance, plans, subscriptions, payments, exercises, routine assignments, training sessions, users, dashboard), the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. Services are tested with in-memory fake repositories, so the tests need no files and run fast.
+The suite covers services (members, health, attendance, access, plans, subscriptions, payments, cash close, reports, analytics, occupancy, alerts, audit, security, exercises, routine assignments, training sessions, users, dashboard, backup), the phone access server and page, the PDF and Excel writers, the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. The tests run on every pull request through GitHub Actions. Services are tested with in-memory fake repositories, so the tests need no files and run fast.
 
 ---
 
@@ -376,6 +456,12 @@ Some examples:
 
 | Document | Description |
 |---|---|
+| [User manual](docs/user-manual.md) | How to use every screen, by role |
+| [UI design guide](docs/ui-design.md) | Colors, depth, motion and how to build a new screen |
+| [Audit log and security](docs/audit-and-security.md) | Lockout, inactivity and what is recorded |
+| [Backup and restore](docs/backup-restore.md) | How the backups work and how to recover the data |
+| [Reports and cash close](docs/reports-cash-close.md) | The cash close and the PDF and Excel reports |
+| [Phone QR access](docs/phone-qr-access.md) | Entry with the phone camera |
 | [Layers diagram](docs/layers-diagram.md) | Package diagram by layers |
 | [Domain class diagram](docs/domain-class-diagram.md) | Business classes, inheritance and relations |
 | [Integrated class diagram](docs/integrated-class-diagram.md) | All the classes, split by module |
@@ -405,7 +491,7 @@ Some examples:
 ## Credits
 
 - Photos from [Unsplash](https://unsplash.com) and [Pexels](https://www.pexels.com); the authors are listed in [`docs/image-credits.md`](docs/image-credits.md).
-- UI look and feel by [FlatLaf](https://www.formdev.com/flatlaf/).
+- UI controls by [JavaFX](https://openjfx.io) and the [AtlantaFX](https://github.com/mkpaz/atlantafx) theme.
 
 ---
 
