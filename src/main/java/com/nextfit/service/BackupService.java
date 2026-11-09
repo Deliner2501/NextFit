@@ -3,6 +3,9 @@ package com.nextfit.service;
 import com.nextfit.exceptions.InvalidDataException;
 import com.nextfit.exceptions.PersistenceException;
 
+import java.time.format.DateTimeParseException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
@@ -37,6 +40,7 @@ public class BackupService {
 
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final String PREFIX = "nextfit-respaldo-";
+    private static final Pattern NAME = Pattern.compile("nextfit-(?:respaldo|antes-de-restaurar)-(\\d{8}-\\d{6})\\.zip");
     private static final String SAFETY_PREFIX = "nextfit-antes-de-restaurar-";
     private static final Set<String> PICTURE_TYPES = Set.of("png", "jpg", "jpeg", "gif", "webp");
     private static final long MAX_RESTORE_BYTES = 1L << 30;
@@ -121,9 +125,7 @@ public class BackupService {
         }
         try (DirectoryStream<Path> files = Files.newDirectoryStream(backupDir, "nextfit-*.zip")) {
             for (Path file : files) {
-                LocalDateTime created = LocalDateTime.ofInstant(Files.getLastModifiedTime(file).toInstant(),
-                        clock.getZone());
-                found.add(new BackupInfo(file, created, Files.size(file)));
+                found.add(new BackupInfo(file, momentOf(file), Files.size(file)));
             }
         } catch (IOException e) {
             throw new PersistenceException("No se pudo leer la carpeta de respaldos", e);
@@ -267,4 +269,18 @@ public class BackupService {
             // Leftover temporary files are harmless.
         }
     }
+
+    // The moment a backup was made is written in its name, so it does not change when the file is copied
+   // or touched. Only a file with another name falls back to its modification time.
+   private LocalDateTime momentOf(Path file) throws IOException {
+       Matcher match = NAME.matcher(file.getFileName().toString());
+       if (match.matches()) {
+           try {
+               return LocalDateTime.parse(match.group(1), STAMP);
+           } catch (DateTimeParseException e) {
+               // Not a valid date in the name: use the file time below.
+           }
+       }
+       return LocalDateTime.ofInstant(Files.getLastModifiedTime(file).toInstant(), clock.getZone());
+   }
 }

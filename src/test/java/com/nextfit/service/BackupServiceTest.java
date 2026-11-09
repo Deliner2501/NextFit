@@ -143,4 +143,13 @@ class BackupServiceTest {
         assertFalse(kept.contains("nextfit-respaldo-20261101-100000.zip"));
         assertFalse(kept.contains("nextfit-respaldo-20261102-100000.zip"));
     }
+
+    @Test
+    void theDateOfABackupComesFromItsNameNotFromTheFileTime() throws IOException {
+        Path first = service.backupIfNoneToday(5);
+     Files.setLastModifiedTime(first, java.nio.file.attribute.FileTime.from(Instant.parse("2030-01-01T00:00:00Z")));
+
+        assertNull(service.backupIfNoneToday(5));
+     assertEquals(java.time.LocalDate.of(2026, 11, 8), service.list().get(0).createdAt().toLocalDate());
+    }
 }
