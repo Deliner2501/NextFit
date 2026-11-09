@@ -89,13 +89,6 @@ public final class Main {
         // First run only: fills an empty installation with example data.
         DemoData.seedIfEmpty(DATA_DIR);
 
-        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone());
-        try {
-            backups.backupIfNoneToday(14);
-          } catch (RuntimeException e) {
-           System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
-         }
-        
         // Storage. To use a database, replace these repositories only.
         UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
 
@@ -105,8 +98,17 @@ public final class Main {
         AuthService auth = new AuthService(users, new InMemoryAttemptLimiter(), auditService);
         auth.ensureDefaultAdmin();
         Session session = new Session();
-        UserService userService = new UserService(users, new UserValidator(), auditService,
-                () -> session.getCurrentUser().map(User::getUsername).orElse(""));
+        // Who is acting now, for the audit log ("" before anybody signs in).
+        Supplier<String> actor = () -> session.getCurrentUser().map(User::getUsername).orElse("");
+        UserService userService = new UserService(users, new UserValidator(), auditService, actor);
+
+        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone(),
+                auditService, actor);
+        try {
+            backups.backupIfNoneToday(14);
+        } catch (RuntimeException e) {
+            System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
+        }
         
         // Members module
         MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
