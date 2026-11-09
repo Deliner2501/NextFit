@@ -112,4 +112,26 @@ public class AuthService {
         audit.record(user.getUsername(), AuditAction.LOGIN, "Rol: " + user.getRole().getLabel());
         return user;
     }
+        /**
+     * Ends the session of the user who asked to sign out and writes it in the audit log.
+     *
+     * @param session the session to end
+     */
+    public void logout(Session session) {
+        end(session, AuditAction.LOGOUT, "");
+    }
+
+    /**
+     * Ends the session because the user was inactive for too long and writes it in the audit log.
+     *
+     * @param session the session to end
+     */
+    public void expire(Session session) {
+        end(session, AuditAction.SESSION_EXPIRED, "Sin actividad");
+    }
+
+    private void end(Session session, AuditAction action, String detail) {
+        session.getCurrentUser().ifPresent(user -> audit.record(user.getUsername(), action, detail));
+        session.end();
+    }
 }

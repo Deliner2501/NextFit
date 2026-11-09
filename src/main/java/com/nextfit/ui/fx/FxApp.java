@@ -85,14 +85,14 @@ public final class FxApp extends Application {
 
     private void logout() {
         idle.stop();
-        session.end();
+        auth.logout(session);
         showLogin();
     }
 
     // Cierra la sesión porque el usuario dejó el computador solo; avisa en el login.
     private void logoutForInactivity() {
         closeDialogs();
-        session.end();
+        auth.expire(session);
         showLogin();
         Platform.runLater(() -> FxDialogs.message(scene.getRoot(), "Sesión cerrada",
                 "Cerramos tu sesión por inactividad. Vuelve a entrar para continuar."));
