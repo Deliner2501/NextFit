@@ -22,6 +22,9 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
+import com.nextfit.model.AuditAction;
+import com.nextfit.service.audit.AuditLog;
+import java.util.function.Supplier;
 
 /**
  * Makes and restores backups of the data folder. A backup is one zip with the CSV files, the access key
@@ -41,7 +44,8 @@ public class BackupService {
     private final Path dataDir;
     private final Path backupDir;
     private final Clock clock;
-
+    private final AuditLog audit;
+    private final Supplier<String> actor;
     /**
      * Creates the service.
      *
@@ -50,9 +54,24 @@ public class BackupService {
      * @param clock     the clock, to name the files and to know what "today" is
      */
     public BackupService(Path dataDir, Path backupDir, Clock clock) {
+        this(dataDir, backupDir, clock, AuditLog.NONE, () -> "");
+    }
+
+    /**
+     * Creates the service with an audit log.
+     *
+     * @param dataDir   the folder with the application data
+     * @param backupDir the folder where the backups are kept (outside the data folder)
+     * @param clock     the clock, to name the files and to know what "today" is
+     * @param audit     where the backups and restores are written
+     * @param actor     gives the sign-in name of whoever is acting now
+     */
+    public BackupService(Path dataDir, Path backupDir, Clock clock, AuditLog audit, Supplier<String> actor) {
         this.dataDir = dataDir.toAbsolutePath().normalize();
         this.backupDir = backupDir.toAbsolutePath().normalize();
         this.clock = clock;
+        this.audit = audit;
+        this.actor = actor;
     }
 
     /**
@@ -70,7 +89,9 @@ public class BackupService {
      * @return the backup file
      */
     public Path createBackup() {
-        return write(PREFIX);
+        Path file = write(PREFIX);
+        audit.record(actor.get(), AuditAction.BACKUP_CREATED, file.getFileName().toString());
+        return file;
     }
 
     /**
@@ -146,8 +167,9 @@ public class BackupService {
         } finally {
             deleteTree(staging);
         }
-        return safety;
-    }
+        audit.record(actor.get(), AuditAction.BACKUP_RESTORED,
+                zip.getFileName() + " (copia anterior: " + safety.getFileName() + ")");
+        return safety;    }
 
     // Validates the zip and returns the names of the entries to extract.
     private List<String> check(Path zip) {

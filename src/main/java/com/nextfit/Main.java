@@ -1,6 +1,7 @@
 package com.nextfit;
 
 import com.nextfit.ui.fx.BackupModule;
+import com.nextfit.ui.fx.AuditModule;
 import com.nextfit.service.BackupService;
 import com.nextfit.persistence.AccessKeyStore;
 import com.nextfit.persistence.CsvAttendanceRepository;
@@ -37,6 +38,7 @@ import com.nextfit.service.AuthService;
 import com.nextfit.service.CashCloseService;
 import com.nextfit.service.Session;
 import com.nextfit.model.Subscription;
+import com.nextfit.model.User;
 import com.nextfit.ui.fx.AccessModule;
 import com.nextfit.ui.fx.AnalyticsModule;
 import com.nextfit.ui.fx.BillingModule;
@@ -53,6 +55,8 @@ import com.nextfit.util.PhotoStorage;
 import com.nextfit.service.occupancy.OccupancyService;
 import com.nextfit.ui.fx.OccupancyModule;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
+import com.nextfit.persistence.CsvAuditRepository;
+import com.nextfit.service.audit.AuditService;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -84,21 +88,26 @@ public final class Main {
         // First run only: fills an empty installation with example data.
         DemoData.seedIfEmpty(DATA_DIR);
 
-        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone());
-        try {
-            backups.backupIfNoneToday(14);
-          } catch (RuntimeException e) {
-           System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
-         }
-        
         // Storage. To use a database, replace these repositories only.
         UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
 
         // Services
-        AuthService auth = new AuthService(users, new InMemoryAttemptLimiter());
+        AuditService auditService = new AuditService(
+                new CsvAuditRepository(DATA_DIR.resolve("audit.csv")), Clock.systemDefaultZone());
+        AuthService auth = new AuthService(users, new InMemoryAttemptLimiter(), auditService);
         auth.ensureDefaultAdmin();
         Session session = new Session();
-        UserService userService = new UserService(users, new UserValidator());
+        // Who is acting now, for the audit log ("" before anybody signs in).
+        Supplier<String> actor = () -> session.getCurrentUser().map(User::getUsername).orElse("");
+        UserService userService = new UserService(users, new UserValidator(), auditService, actor);
+
+        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone(),
+                auditService, actor);
+        try {
+            backups.backupIfNoneToday(14);
+        } catch (RuntimeException e) {
+            System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
+        }
         
         // Members module
         MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
@@ -167,6 +176,7 @@ public final class Main {
                 new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),
                 new UsersModule(userService, session),
+                new AuditModule(auditService),
                 new BackupModule(backups)));
         accessServer.stop();
     }
