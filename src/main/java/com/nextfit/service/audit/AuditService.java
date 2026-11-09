@@ -3,7 +3,7 @@ package com.nextfit.service.audit;
 import com.nextfit.model.AuditAction;
 import com.nextfit.model.AuditEntry;
 import com.nextfit.persistence.AuditRepository;
-
+import java.time.LocalDate;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -60,5 +60,18 @@ public class AuditService implements AuditLog {
         return findAll().stream()
                 .filter(e -> e.action() == action)
                 .toList();
+    }
+        /**
+     * Counts the entries written today.
+     *
+     * @param action the kind of event to count, or {@code null} to count every kind
+     * @return how many entries there are
+     */
+    public long countToday(AuditAction action) {
+        LocalDate today = LocalDate.now(clock);
+        return repository.findAll().stream()
+                .filter(e -> e.timestamp().toLocalDate().equals(today))
+                .filter(e -> action == null || e.action() == action)
+                .count();
     }
 }

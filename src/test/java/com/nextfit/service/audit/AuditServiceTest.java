@@ -110,7 +110,25 @@ class AuditServiceTest {
     void theNoneLogWritesNothingAndDoesNotFail() {
         assertDoesNotThrow(() -> AuditLog.NONE.record("admin", AuditAction.LOGIN, "x"));
     }
+    @Test
+    void countTodayCountsOnlyTheEventsOfToday() {
+        service.record("admin", AuditAction.LOGIN, "");
+        service.record("admin", AuditAction.LOGIN_FAILED, "");
+        clock.advance(Duration.ofDays(1));
+        service.record("admin", AuditAction.LOGIN, "");
 
+        assertEquals(1, service.countToday(AuditAction.LOGIN));
+        assertEquals(0, service.countToday(AuditAction.LOGIN_FAILED));
+    }
+
+    @Test
+    void countTodayWithoutAKindCountsEveryKind() {
+        service.record("admin", AuditAction.LOGIN, "");
+        service.record("admin", AuditAction.LOGIN_FAILED, "");
+        service.record("admin", AuditAction.LOGOUT, "");
+
+        assertEquals(3, service.countToday(null));
+    }
     /** Keeps the entries in a list, like a real repository but without a file. */
     private static final class InMemoryAudit implements AuditRepository {
 
