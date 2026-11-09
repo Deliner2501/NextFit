@@ -51,8 +51,8 @@ public class MemberService {
     }
 
     /**
-     * Searches members whose name contains the text or whose document number
-     * contains it. An empty text returns every member.
+     * Searches members whose name, document number or phone contains the text.
+     * An empty text returns every member.
      *
      * @param text the text to look for
      * @return the matching members
@@ -64,7 +64,8 @@ public class MemberService {
         String wanted = text.trim().toLowerCase();
         return members.findAll().stream()
                 .filter(m -> m.getFullName().toLowerCase().contains(wanted)
-                        || m.getDocumentNumber().contains(wanted))
+                        || m.getDocumentNumber().contains(wanted)
+                        || m.getPhone().contains(wanted))
                 .toList();
     }
 

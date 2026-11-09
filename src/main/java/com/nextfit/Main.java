@@ -36,28 +36,26 @@ import com.nextfit.persistence.UserRepository;
 import com.nextfit.service.AuthService;
 import com.nextfit.service.CashCloseService;
 import com.nextfit.service.Session;
-import com.nextfit.model.Role;
 import com.nextfit.model.Subscription;
 import com.nextfit.ui.fx.AccessModule;
 import com.nextfit.ui.fx.AnalyticsModule;
 import com.nextfit.ui.fx.BillingModule;
 import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
-import com.nextfit.ui.fx.FxIcons;
-import com.nextfit.ui.fx.PendingModule;
+import com.nextfit.ui.fx.MembersModule;
 import com.nextfit.ui.fx.ReportsModule;
 import com.nextfit.ui.fx.TrainingFxModule;
 import com.nextfit.ui.fx.UsersModule;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
+import com.nextfit.util.PhotoStorage;
 import com.nextfit.service.occupancy.OccupancyService;
 import com.nextfit.ui.fx.OccupancyModule;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
 import java.io.IOException;
@@ -159,8 +157,7 @@ public final class Main {
         // Each owner replaces their PendingModule with the real screen.
         FxApp.run(auth, session, () -> List.of(
                 new DashboardModule(dashboardService, session),
-                new PendingModule("members", "Socios", FxIcons.MEMBERS,
-                        Set.of(Role.ADMIN, Role.RECEPTION, Role.TRAINER)),
+                new MembersModule(memberService, new PhotoStorage(DATA_DIR.resolve("photos")), session),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
