@@ -1,6 +1,7 @@
 package com.nextfit;
 
 import com.nextfit.ui.fx.BackupModule;
+import com.nextfit.ui.fx.AuditModule;
 import com.nextfit.service.BackupService;
 import com.nextfit.persistence.AccessKeyStore;
 import com.nextfit.persistence.CsvAttendanceRepository;
@@ -178,6 +179,7 @@ public final class Main {
                 new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),
                 new UsersModule(userService, session),
+                new AuditModule(auditService),
                 new BackupModule(backups)));
         accessServer.stop();
     }
