@@ -166,6 +166,14 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low coupling | `MemberFicha`, `MembersModule` | The file receives a `Runnable` to go back and does not know the list; the module decides what to show |
 | Reuse | `HealthPane`, `AttendancePane` use `KpiCard`, `FxTables`, `FxDialogs`, `MemberAvatar` | The cards, tables, dialogs and photo are the shared components, so no style or code is repeated |
 | DIP | `HealthPane`, `MeasurementsPane`, `AttendancePane` | They depend on `HealthService` and `AttendanceService`, never on the CSV files, so the storage can change to JDBC without touching the screens |
+| SRP | `StreakCalculator`, `Badge`, `GamificationService` | The calculator knows weeks and streaks, each badge knows its own goal, and the service gathers the data of a member; none of them draws anything |
+| OCP | `Badge` | A new badge is a new constant with its goal; the service and the screens do not change |
+| GRASP Information Expert | `Badge.isEarnedBy`, `StreakCalculator` | The badge decides whether it is earned, and the calculator, which owns the rule of the week, decides what a streak is |
+| GRASP Pure Fabrication | `StreakCalculator` | A class without storage or clock, created so the streak rule can be tested with plain dates |
+| Low coupling | `GamificationService` | It only asks `MemberService` and `AttendanceService`, so it does not know how the visits are stored |
+| Protected Variations | `GamificationService.MIN_DAYS_PER_WEEK` | The weekly goal is one constant that the calculator receives as a parameter, so changing the goal touches one line |
+| Immutability | `Streak`, `Achievements`, `RankingEntry` | They are records: whoever receives a result cannot change it |
+| Testability | `StreakCalculatorTest`, `BadgeTest`, `GamificationServiceTest` | 30 tests with a fixed clock; the service test uses real CSV files in a temporary folder |
 
 ## Santiago: training
 
