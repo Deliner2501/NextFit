@@ -159,6 +159,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | High cohesion | `MembersPane`, `MemberForm`, `MembersModule` | The list, the form and the module are separate classes with one job each |
 | Reuse | `MembersPane` uses `FxTables`, `FxDialogs` and `MemberAvatar` | The table cells, the dialogs and the photo come from the shared components, so no code is repeated |
 | GRASP Pure Fabrication | `MemberForm` and `PhotoStorage` | Copying the photo is delegated to `PhotoStorage`; the form only chooses the file |
+| SRP | `HealthPane`, `MeasurementsPane`, `AttendancePane` | Each tab shows one topic and asks one service; none of them holds a business rule |
+| GRASP Information Expert | `HealthService.currentBmi`, `AttendanceSummary` | The BMI is calculated by the service that knows the profile and the measurements; the visit numbers by the class that receives the visits |
+| GRASP Pure Fabrication | `BmiScale`, `AttendanceSummary`, `Decimals` | Plain classes without JavaFX, created so the arithmetic of the screens can be tested without a window |
+| Testability | `BmiScaleTest`, `AttendanceSummaryTest`, `DecimalsTest` | 15 tests on the logic of the member file that does not need a screen |
+| Low coupling | `MemberFicha`, `MembersModule` | The file receives a `Runnable` to go back and does not know the list; the module decides what to show |
+| Reuse | `HealthPane`, `AttendancePane` use `KpiCard`, `FxTables`, `FxDialogs`, `MemberAvatar` | The cards, tables, dialogs and photo are the shared components, so no style or code is repeated |
+| DIP | `HealthPane`, `MeasurementsPane`, `AttendancePane` | They depend on `HealthService` and `AttendanceService`, never on the CSV files, so the storage can change to JDBC without touching the screens |
 
 ## Santiago: training
 

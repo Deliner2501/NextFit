@@ -1,30 +1,44 @@
 package com.nextfit.ui.fx;
 
+import com.nextfit.model.Member;
 import com.nextfit.model.Role;
+import com.nextfit.service.AttendanceService;
+import com.nextfit.service.HealthService;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.Session;
 import com.nextfit.util.PhotoStorage;
 import javafx.scene.Node;
+import javafx.scene.layout.StackPane;
 
 /**
  * Members module in JavaFX. The administrator, the reception and the trainers can
- * see the members; only the administrator and the reception can register, edit or
- * deactivate them. The module decides who may edit and the screens only ask it, so
- * they never know about roles.
+ * see the members and open the file of each one; only the administrator and the
+ * reception can register, edit or deactivate them. The module decides who may edit
+ * and the screens only ask it, so they never know about roles. It shows the list or,
+ * after "Ver ficha", the file of the selected member.
  */
 public final class MembersModule implements FxModule {
 
     private final Session session;
+    private final HealthService healthService;
+    private final AttendanceService attendanceService;
     private final MembersPane list;
+    private final StackPane root = new StackPane();
 
     /**
-     * @param memberService the service that manages the members
-     * @param photoStorage  where the photos of the members are copied
-     * @param session       the session, to know who is working
+     * @param memberService     the service that manages the members
+     * @param healthService     the service of the health profile and the measurements
+     * @param attendanceService the service of the visits
+     * @param photoStorage      where the photos of the members are copied
+     * @param session           the session, to know who is working
      */
-    public MembersModule(MemberService memberService, PhotoStorage photoStorage, Session session) {
+    public MembersModule(MemberService memberService, HealthService healthService,
+                         AttendanceService attendanceService, PhotoStorage photoStorage, Session session) {
         this.session = session;
-        this.list = new MembersPane(memberService, photoStorage, this::canEdit);
+        this.healthService = healthService;
+        this.attendanceService = attendanceService;
+        this.list = new MembersPane(memberService, photoStorage, this::canEdit, this::openFicha);
+        root.getChildren().add(list);
     }
 
     @Override
@@ -44,18 +58,28 @@ public final class MembersModule implements FxModule {
 
     @Override
     public Node view() {
-        return list;
+        return root;
     }
 
     @Override
     public void onShow() {
-        list.refresh();
+        showList();
     }
 
     /** The administrator, the reception and the trainers can open this module. */
     @Override
     public boolean allowedFor(Role role) {
         return role == Role.ADMIN || role == Role.RECEPTION || role == Role.TRAINER;
+    }
+
+    // Replaces the list with the file of the member; the file's back button brings the list back.
+    private void openFicha(Member member) {
+        root.getChildren().setAll(new MemberFicha(member, healthService, attendanceService, this::showList));
+    }
+
+    private void showList() {
+        root.getChildren().setAll(list);
+        list.refresh();
     }
 
     private boolean canEdit() {

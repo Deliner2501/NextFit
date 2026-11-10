@@ -166,7 +166,8 @@ public final class Main {
         // Each owner replaces their PendingModule with the real screen.
         FxApp.run(auth, session, () -> List.of(
                 new DashboardModule(dashboardService, session),
-                new MembersModule(memberService, new PhotoStorage(DATA_DIR.resolve("photos")), session),
+                new MembersModule(memberService, healthService, attendanceService,
+                        new PhotoStorage(DATA_DIR.resolve("photos")), session),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
