@@ -13,6 +13,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -33,8 +35,8 @@ final class HealthPane extends ScrollPane {
     private final Member member;
     private final HealthService health;
     private final KpiCard bmiCard = new KpiCard("IMC", "—", "", FxIcons.ANALYTICS, KpiCard.Kind.FEATURE);
-    private final KpiCard weightCard = new KpiCard("Peso actual", "—", "", FxIcons.CALENDAR, KpiCard.Kind.VIOLET);
-    private final KpiCard heightCard = new KpiCard("Estatura", "—", "", FxIcons.MEMBERS, KpiCard.Kind.LIME);
+    private final KpiCard weightCard = new KpiCard("Peso actual (kg)", "—", "", FxIcons.CALENDAR, KpiCard.Kind.VIOLET);
+    private final KpiCard heightCard = new KpiCard("Estatura (cm)", "—", "", FxIcons.MEMBERS, KpiCard.Kind.LIME);
     private final BmiGauge gauge = new BmiGauge();
     private final Label conditions = new Label();
     private final Label allergies = new Label();
@@ -78,7 +80,18 @@ final class HealthPane extends ScrollPane {
         profileCard.getStyleClass().add("nf-card");
         profileCard.setPadding(new Insets(20));
 
-        VBox content = new VBox(16, kpis, gaugeCard, profileCard);
+        // The gauge and the profile share a row so the tab fits on a normal screen without scrolling.
+        GridPane lower = new GridPane();
+        lower.setHgap(16);
+        ColumnConstraints wide = new ColumnConstraints();
+        wide.setPercentWidth(60);
+        ColumnConstraints narrow = new ColumnConstraints();
+        narrow.setPercentWidth(40);
+        lower.getColumnConstraints().addAll(wide, narrow);
+        lower.add(gaugeCard, 0, 0);
+        lower.add(profileCard, 1, 0);
+
+        VBox content = new VBox(16, kpis, lower);
         content.setPadding(new Insets(16, 4, 16, 0));
         setContent(content);
         setFitToWidth(true);
@@ -96,10 +109,10 @@ final class HealthPane extends ScrollPane {
         bmiCard.value().setText(bmi.map(Decimals::text).orElse("—"));
         bmiCard.hint().setText(bmi.map(b -> health.classify(b).getLabel())
                 .orElse("Falta la estatura o una medición"));
-        weightCard.value().setText(latest.map(m -> Decimals.text(m.getWeightKg()) + " kg").orElse("—"));
+        weightCard.value().setText(latest.map(m -> Decimals.text(m.getWeightKg())).orElse("—"));
         weightCard.hint().setText(latest.map(m -> "Medido el " + Formats.date(m.getDate()))
                 .orElse("Sin mediciones todavía"));
-        heightCard.value().setText(profile.map(p -> Decimals.text(p.getHeightCm()) + " cm").orElse("—"));
+        heightCard.value().setText(profile.map(p -> Decimals.text(p.getHeightCm())).orElse("—"));
         heightCard.hint().setText(profile.map(p -> "Sangre " + p.getBloodType())
                 .orElse("Sin perfil de salud todavía"));
         gauge.setBmi(bmi.orElse(null));
