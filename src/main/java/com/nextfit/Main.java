@@ -22,6 +22,7 @@ import com.nextfit.service.PaymentService;
 import com.nextfit.service.ReportService;
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.UserService;
+import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.service.suggest.BmiRule;
 import com.nextfit.service.suggest.MedicalConditionRule;
 import com.nextfit.service.suggest.SuggestionRule;
@@ -146,6 +147,8 @@ public final class Main {
         
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
+        GamificationService gamificationService = new GamificationService(memberService, attendanceService,
+                Clock.systemDefaultZone());
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
@@ -166,7 +169,7 @@ public final class Main {
         // Each owner replaces their PendingModule with the real screen.
         FxApp.run(auth, session, () -> List.of(
                 new DashboardModule(dashboardService, session),
-                new MembersModule(memberService, healthService, attendanceService,
+                new MembersModule(memberService, healthService, attendanceService, gamificationService,
                         new PhotoStorage(DATA_DIR.resolve("photos")), session),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
