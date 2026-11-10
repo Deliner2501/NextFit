@@ -174,6 +174,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | Protected Variations | `GamificationService.MIN_DAYS_PER_WEEK` | The weekly goal is one constant that the calculator receives as a parameter, so changing the goal touches one line |
 | Immutability | `Streak`, `Achievements`, `RankingEntry` | They are records: whoever receives a result cannot change it |
 | Testability | `StreakCalculatorTest`, `BadgeTest`, `GamificationServiceTest` | 30 tests with a fixed clock; the service test uses real CSV files in a temporary folder |
+| SRP | `AchievementsPane` | The tab only draws the numbers and the badges that `GamificationService` gives; it holds no rule about streaks or badges |
+| OCP | `AchievementsPane`, `Badge` | The tab draws one card for each constant of `Badge`, so a new badge appears on the screen without changing the tab |
+| DIP | `AchievementsPane`, `MemberFicha`, `MembersModule` | The service is received by constructor from `Main`; the screens never create it and never know where the visits are stored |
+| Low coupling | `AchievementsPane` | It does not know `AttendanceService` or the clock: it asks `achievementsOf` and shows the result |
+| Reuse | `AchievementsPane` uses `KpiCard`, `FxIcons`, `FxDialogs` and the classes of `nextfit.css` | The cards, the icons and the error dialog are the shared components; the only new styles are the three classes of the achievements block |
 
 ## Santiago: training
 

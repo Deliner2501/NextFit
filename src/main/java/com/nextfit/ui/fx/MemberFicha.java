@@ -3,6 +3,7 @@ package com.nextfit.ui.fx;
 import com.nextfit.model.Member;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
+import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.ui.Formats;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -15,8 +16,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /**
- * The file of one member: a header with the photo and the main data, and three tabs
- * (health, measurements and attendance). It builds no rule of its own: each tab
+ * The file of one member: a header with the photo and the main data, and four tabs
+ * (health, measurements, attendance and achievements). It builds no rule of its own: each tab
  * asks its service.
  */
 final class MemberFicha extends VBox {
@@ -24,18 +25,22 @@ final class MemberFicha extends VBox {
     private final HealthPane healthPane;
     private final MeasurementsPane measurementsPane;
     private final AttendancePane attendancePane;
+    private final AchievementsPane achievementsPane;
 
     /**
      * @param member     the member to show
      * @param health     the service of the health profile and the measurements
      * @param attendance the service of the visits
+     * @param gamification the service of the streaks and the badges
      * @param onBack     called when the user presses the back button
      */
-    MemberFicha(Member member, HealthService health, AttendanceService attendance, Runnable onBack) {
+    MemberFicha(Member member, HealthService health, AttendanceService attendance,
+                GamificationService gamification, Runnable onBack) {
         super(16);
         this.healthPane = new HealthPane(member, health);
         this.measurementsPane = new MeasurementsPane(member, health, healthPane::refresh);
         this.attendancePane = new AttendancePane(member, attendance);
+        this.achievementsPane = new AchievementsPane(member, gamification);
 
         Button back = new Button("← Volver a socios");
         back.getStyleClass().add("nf-secondary");
@@ -57,12 +62,13 @@ final class MemberFicha extends VBox {
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().addAll(tab("Salud", healthPane), tab("Mediciones", measurementsPane),
-                tab("Asistencia", attendancePane));
+                tab("Asistencia", attendancePane), tab("Logros", achievementsPane));
         // A visit or a measurement recorded elsewhere must show when the user comes back to the tab.
         tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> {
             healthPane.refresh();
             measurementsPane.refresh();
             attendancePane.refresh();
+            achievementsPane.refresh();
         });
         VBox.setVgrow(tabs, Priority.ALWAYS);
 

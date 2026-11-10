@@ -355,3 +355,8 @@
 .nf-level-moderate > .bar { -fx-background-color: -nf-accent; }
 .nf-level-busy > .bar { -fx-background-color: -nf-warning; }
 .nf-level-full > .bar { -fx-background-color: -nf-danger; }
+
+/* ---------- Logros del socio (Ronald) ---------- */
+.nf-achievement-earned { -fx-border-color: -nf-accent; }
+.nf-achievement-locked { -fx-opacity: 0.55; }
+.nf-achievement-earned-text { -fx-text-fill: -nf-success; -fx-font-size: 12px; -fx-font-weight: bold; }

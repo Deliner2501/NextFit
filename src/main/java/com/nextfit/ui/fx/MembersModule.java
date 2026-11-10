@@ -6,6 +6,7 @@ import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.Session;
+import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.util.PhotoStorage;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
@@ -22,6 +23,7 @@ public final class MembersModule implements FxModule {
     private final Session session;
     private final HealthService healthService;
     private final AttendanceService attendanceService;
+    private final GamificationService gamificationService;
     private final MembersPane list;
     private final StackPane root = new StackPane();
 
@@ -29,14 +31,17 @@ public final class MembersModule implements FxModule {
      * @param memberService     the service that manages the members
      * @param healthService     the service of the health profile and the measurements
      * @param attendanceService the service of the visits
+     * @param gamificationService the service of the streaks and the badges
      * @param photoStorage      where the photos of the members are copied
      * @param session           the session, to know who is working
      */
     public MembersModule(MemberService memberService, HealthService healthService,
-                         AttendanceService attendanceService, PhotoStorage photoStorage, Session session) {
+                         AttendanceService attendanceService, GamificationService gamificationService,
+                         PhotoStorage photoStorage, Session session) {
         this.session = session;
         this.healthService = healthService;
         this.attendanceService = attendanceService;
+        this.gamificationService = gamificationService;
         this.list = new MembersPane(memberService, photoStorage, this::canEdit, this::openFicha);
         root.getChildren().add(list);
     }
@@ -74,7 +79,8 @@ public final class MembersModule implements FxModule {
 
     // Replaces the list with the file of the member; the file's back button brings the list back.
     private void openFicha(Member member) {
-        root.getChildren().setAll(new MemberFicha(member, healthService, attendanceService, this::showList));
+        root.getChildren().setAll(new MemberFicha(member, healthService, attendanceService,
+                gamificationService, this::showList));
     }
 
     private void showList() {
