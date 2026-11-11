@@ -179,6 +179,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP | `AchievementsPane`, `MemberFicha`, `MembersModule` | The service is received by constructor from `Main`; the screens never create it and never know where the visits are stored |
 | Low coupling | `AchievementsPane` | It does not know `AttendanceService` or the clock: it asks `achievementsOf` and shows the result |
 | Reuse | `AchievementsPane` uses `KpiCard`, `FxIcons`, `FxDialogs` and the classes of `nextfit.css` | The cards, the icons and the error dialog are the shared components; the only new styles are the three classes of the achievements block |
+| SRP | `AlertsPane`, `AlertsModule`, `AlertText` | The pane draws the cards, the list and the buttons, the module only decides who can open it, and `AlertText` only writes the detail line; none of them calculates an alert or writes the message for the member |
+| DIP | `AlertsPane`, `AlertsModule` | They receive `AlertService`, `AlertMessages` and `WhatsAppLink` by constructor from `Main`, so the screen does not know the CSV files, the rules of each alert or the clock |
+| OCP | `AlertsModule`, `Main` | The alert center enters the menu as one more `FxModule` with one line in `Main`; the main window does not change |
+| Reuse | `AlertsPane` uses `AlertService`, `AlertMessages`, `WhatsAppLink`, `KpiCard`, `FxTables`, `FxDialogs` | The alerts, the message and the link already existed; the screen only joins them, so no rule or text is repeated |
+| GRASP Pure Fabrication | `AlertText` | A plain class without JavaFX, created so the wording of the detail line can be tested without a window |
+| Low coupling | `AlertIcons` | The icons of this screen live in their own class, so the screen does not edit `FxIcons`, which every module shares |
+| Testability | `AlertTextTest` | 5 tests on the singular, plural and date of each kind of alert |
 
 ## Santiago: training
 
