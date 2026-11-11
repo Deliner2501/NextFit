@@ -106,6 +106,8 @@ public final class AccessServer {
                 String token = path.substring(3);
                 AccessResult result = phone.scan(token);
                 sendHtml(exchange, 200, AccessPage.render(result, token));
+            } else if (path.equals("/logo.png")) {
+                sendLogo(exchange);
             } else if (path.startsWith("/photo/")) {
                 sendPhoto(exchange, path.substring(7));
             } else {
@@ -115,6 +117,16 @@ public final class AccessServer {
             sendHtml(exchange, 500, AccessPage.notFound());
         } finally {
             exchange.close();
+        }
+    }
+
+    private void sendLogo(HttpExchange exchange) throws IOException {
+        try (java.io.InputStream in = AccessServer.class.getResourceAsStream("/images/logo/nextfit-logo-128.png")) {
+            if (in == null) {
+                send(exchange, 404, "text/plain; charset=utf-8", new byte[0]);
+                return;
+            }
+            send(exchange, 200, "image/png", in.readAllBytes());
         }
     }
 

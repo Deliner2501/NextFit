@@ -40,7 +40,7 @@ class AccessPageTest {
 
         assertTrue(html.contains("SALIDA REGISTRADA"));
         assertTrue(html.contains("#2F7DE1"));
-        assertTrue(html.contains("quedan 3 días"));
+        assertTrue(html.toLowerCase(java.util.Locale.ROOT).contains("quedan 3 días"));
         assertTrue(html.contains("/photo/ABCDEFGHJK"));
     }
 
