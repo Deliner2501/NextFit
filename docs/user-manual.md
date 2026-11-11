@@ -51,7 +51,11 @@ exercises with sets, repetitions and rest), **Asignación** (give a routine to a
   inside now.
 - With a phone: scan the QR of the carnet with the camera (same Wi-Fi as the computer). The address to test the
   connection is shown on the screen ([details](phone-qr-access.md)).
-- **Carnets**: choose a member to see the carnet and save it as an image with **Guardar carnet como imagen**.
+- **Carnets**: choose a member to see the carnet. **Guardar carnet como imagen** saves a PNG, **Guardar carnet en PDF** saves the front and back at credit-card size, and **PDF de todos los socios activos** makes one file with every active member (four per A4 page) to print and cut.
+
+## Alertas
+
+The alerts of the day, grouped by type: memberships that end in the next days (*Por vencer*), members who pay but stopped coming (*Inactivos*) and birthdays (*Cumpleaños*). Choose an alert to read the message prepared for that member; **Abrir WhatsApp** opens the chat with the text ready and **Copiar mensaje** copies it. If the phone of the member is not valid, the screen says so and you can fix it in the member file.
 
 ## Analítica
 
@@ -94,6 +98,7 @@ drive ([details](backup-restore.md)). After restoring, close and open NextFit ag
 | Membresías y pagos | ✅ | ✅ | ❌ |
 | Entrenamiento | ✅ | ❌ | ✅ |
 | Control de acceso | ✅ | ✅ | ❌ |
+| Alertas | ✅ | ✅ | ❌ |
 | Analítica | ✅ | ✅ | ❌ |
 | Pantalla TV | ✅ | ✅ | ❌ |
 | Reportes | ✅ | ✅ | ❌ |
@@ -106,4 +111,4 @@ drive ([details](backup-restore.md)). After restoring, close and open NextFit ag
 - **I cannot sign in.** Check the user and the password. After 5 failures wait 5 minutes or ask the administrator.
 - **A member cannot enter.** The membership may be expired or the member inactive; the screen says the reason.
 - **I deleted something by mistake.** Ask the administrator to restore the last backup from **Respaldo**.
-- **The phone does not open the QR.** The phone and the computer must be on the same Wi-Fi; see [phone-qr-access.md](phone-qr-access.md).
+- **The phone does not open the QR.** The phone and the computer must be on the same Wi-Fi and the network must allow devices to talk to each other. Public and university networks often do not: use the hotspot of the phone and restart NextFit (see [phone-qr-access.md](phone-qr-access.md)).

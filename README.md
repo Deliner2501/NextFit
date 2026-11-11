@@ -46,7 +46,7 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 > This repository is the course project of *Programación III*.
 >
-> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table and form), billing, training, access control, analytics, TV screen, reports and cash close, users, audit log and backup. Still in progress: the member health record (health profile, measurements and attendance panel) and the screen of the alerts engine. The last step will be moving the storage from CSV files to a database.
+> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, analytics, TV screen, reports and cash close, alerts, users, audit log and backup. The last step will be moving the storage from CSV files to a database.
 
 ---
 
@@ -64,9 +64,9 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 ### 👥 Members and health
 - **Members screen**: table with photo, document, phone and status, and a search box (name, document or phone).
 - Register, edit and deactivate members, with photo, emergency contact and validated personal data. The administrator and the reception can change data; the trainers can only read.
-- **Health profile** (height, blood type, medical conditions, allergies), **measurements history** with automatic **BMI** and category, and the member **detail panel** are implemented in the services; their JavaFX screen is the next step of the interface.
+- **Health profile** (height, blood type, medical conditions, allergies), **measurements history** with automatic **BMI** and category, and the member **detail panel** live in the **member file** (button *Ver ficha*), with the tabs *Salud*, *Mediciones*, *Asistencia* and *Logros* (streaks and badges).
 - **Attendance**: check-in / check-out of members, with the list of members currently inside the gym (see Access control).
-- **Alerts engine**: birthdays, memberships about to expire and members who stopped coming, each with a ready WhatsApp message (`service.alert`). Its screen is pending.
+- **Alerts engine**: birthdays, memberships about to expire and members who stopped coming, each with a ready WhatsApp message (`service.alert`). The **Alertas** screen shows them in cards and a list, writes the message for the member and opens WhatsApp or copies the text (administrator and reception).
 
 ### 💳 Memberships and billing
 - Membership plans (name, duration, price) that can be activated or retired.
@@ -89,8 +89,9 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 ### 🚪 Access control
 - Check-in and check-out by scanning the **carnet QR**, typing the document, or with a USB reader. The result is shown full screen (entry, exit or denied, with the reason).
-- **Phone access**: a member can scan the QR of the carnet with the phone camera; the reception computer serves a small web page and registers the entry ([details](docs/phone-qr-access.md)).
-- List of people inside the gym and printable carnets.
+- **Phone access**: a member can scan the QR of the carnet with the phone camera; the reception computer serves a small NextFit-branded web page (animated status, photo, membership end date) and registers the entry ([details](docs/phone-qr-access.md)).
+- List of people inside the gym.
+- **Carnets**: each member has a credit-card sized carnet (front and back) that can be saved as an image or as a **PDF**; one more button makes a single PDF with every active member, four carnets per A4 page, ready to print and cut. The QR is drawn as vectors so it scans at any size.
 
 ### 📈 Analytics and TV screen
 - **Analytics**: peak hour, average stay, renewal rate, members at risk of leaving, and a heat map of the busiest hours (last 8 weeks).
@@ -167,6 +168,7 @@ The sidebar only shows the modules that the logged-in role can use.
 | Training (exercises, routines, assignments) | ✅ | ❌ | ✅ |
 | Access control (kiosk, carnets) | ✅ | ✅ | ❌ |
 | Analytics | ✅ | ✅ | ❌ |
+| Alerts | ✅ | ✅ | ❌ |
 | TV screen | ✅ | ✅ | ❌ |
 | Reports and cash close | ✅ | ✅ | ❌ |
 | Users | ✅ | ❌ | ❌ |
