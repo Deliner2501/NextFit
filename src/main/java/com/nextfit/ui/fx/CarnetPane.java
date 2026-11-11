@@ -1,6 +1,8 @@
 package com.nextfit.ui.fx;
 
 import com.nextfit.exceptions.PersistenceException;
+import com.nextfit.export.CarnetPdf;
+import com.nextfit.export.QrMatrix;
 import com.nextfit.model.Member;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.PhoneAccess;
@@ -23,6 +25,8 @@ import javafx.stage.FileChooser;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -36,18 +40,22 @@ final class CarnetPane extends HBox {
 
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("d/MM/yyyy", Locale.forLanguageTag("es-CO"));
 
+    private final MemberService members;
     private final SubscriptionService subscriptions;
     private final PhoneAccess phone;
     private final Supplier<String> phoneUrl;
     private final MemberPicker picker;
     private final StackPane previewHolder = new StackPane();
     private final Button save = new Button("Guardar carnet como imagen");
+    private final Button savePdf = new Button("Guardar carnet en PDF");
+    private final Button saveAllPdf = new Button("PDF de todos los socios activos");
     private VBox carnet;
     private Member current;
 
     CarnetPane(MemberService members, SubscriptionService subscriptions, PhoneAccess phone,
                Supplier<String> phoneUrl) {
         super(24);
+        this.members = members;
         this.subscriptions = subscriptions;
         this.phone = phone;
         this.phoneUrl = phoneUrl;
@@ -61,10 +69,16 @@ final class CarnetPane extends HBox {
         save.getStyleClass().add("nf-primary");
         save.setDisable(true);
         save.setOnAction(e -> export());
+        savePdf.getStyleClass().add("nf-secondary");
+        savePdf.setDisable(true);
+        savePdf.setOnAction(e -> exportPdf(List.of(current)));
+        saveAllPdf.getStyleClass().add("nf-secondary");
+        saveAllPdf.setOnAction(e -> exportPdf(members.findAll().stream().filter(Member::isActive).toList()));
         previewHolder.setPadding(new Insets(10, 0, 0, 0));
         previewHolder.setAlignment(Pos.TOP_LEFT);
 
-        VBox right = new VBox(12, title, hint, previewHolder, save);
+        HBox actions = new HBox(10, save, savePdf, saveAllPdf);
+        VBox right = new VBox(12, title, hint, previewHolder, actions);
         HBox.setHgrow(right, Priority.ALWAYS);
         getChildren().addAll(picker, right);
         select(null);
@@ -82,6 +96,7 @@ final class CarnetPane extends HBox {
         current = member;
         previewHolder.getChildren().clear();
         save.setDisable(member == null);
+        savePdf.setDisable(member == null);
         if (member == null) {
             Label empty = new Label("Selecciona un socio de la lista");
             empty.getStyleClass().add("nf-muted-small");
@@ -156,5 +171,42 @@ final class CarnetPane extends HBox {
         } catch (IOException e) {
             FxDialogs.error(save, new PersistenceException("No se pudo guardar el carnet", e));
         }
+    }
+
+    /**
+     * Saves one or many carnets in a PDF to print and cut (four per A4 page, front and back).
+     *
+     * @param chosen the members whose carnets go in the file
+     */
+    private void exportPdf(List<Member> chosen) {
+        if (chosen.isEmpty()) {
+            FxDialogs.message(savePdf, "Sin socios", "No hay socios activos para generar carnets.");
+            return;
+        }
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Guardar carnets en PDF");
+        chooser.setInitialFileName(chosen.size() == 1
+                ? "carnet-" + chosen.get(0).getDocumentNumber() + ".pdf" : "carnets-socios.pdf");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Documento PDF", "*.pdf"));
+        File target = chooser.showSaveDialog(savePdf.getScene().getWindow());
+        if (target == null) {
+            return;
+        }
+        try {
+            CarnetPdf.save(target.toPath(), chosen.stream().map(this::cardOf).toList());
+            FxDialogs.message(savePdf, "Carnets guardados", "El PDF quedó en " + target.getAbsolutePath());
+        } catch (PersistenceException e) {
+            FxDialogs.error(savePdf, e);
+        }
+    }
+
+    private CarnetPdf.Card cardOf(Member member) {
+        String validity = subscriptions.findCurrentFor(member.getId())
+                .map(s -> "Membresía hasta " + s.getEndDate().format(DAY))
+                .orElse("Sin membresía vigente");
+        String photo = member.getPhotoPath();
+        return new CarnetPdf.Card(member.getFullName(), member.getDocumentNumber(), validity,
+                QrMatrix.of(phoneUrl.get() + "/a/" + phone.tokenOf(member)),
+                photo == null || photo.isBlank() ? null : Path.of(photo));
     }
 }
