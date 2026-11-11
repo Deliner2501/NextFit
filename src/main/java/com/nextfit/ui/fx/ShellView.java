@@ -8,6 +8,7 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -54,6 +55,7 @@ final class ShellView extends BorderPane {
     private final VBox sidebar = new VBox(6);
     private final HBox brand = new HBox(12);
     private final Label brandName = new Label("NextFit");
+    private static final double MIN_PROMO_HEIGHT = 110;
     private Node promoBlock;
     private boolean collapsed;
 
@@ -170,7 +172,22 @@ final class ShellView extends BorderPane {
             ImageView photo = new ImageView(athlete);
             photo.setPreserveRatio(true);
             photo.setSmooth(true);
-            photo.setFitWidth(228);
+            // The picture is placed by hand: it always shrinks to fit the free space (never cropped) and sits at
+            // the bottom of the block. When there is almost no room it is hidden.
+            photo.setManaged(false);
+            promo.setPrefHeight(athlete.getWidth() > 0 ? athlete.getHeight() * 228 / athlete.getWidth() : 270);
+            Runnable place = () -> {
+                double w = promo.getWidth();
+                double h = promo.getHeight();
+                photo.setVisible(h >= MIN_PROMO_HEIGHT);
+                photo.setFitWidth(w);
+                photo.setFitHeight(h);
+                Bounds box = photo.getBoundsInLocal();
+                photo.setLayoutX((w - box.getWidth()) / 2 - box.getMinX());
+                photo.setLayoutY(h - box.getHeight() - box.getMinY());
+            };
+            promo.widthProperty().addListener((o, a1, b1) -> place.run());
+            promo.heightProperty().addListener((o, a1, b1) -> place.run());
             promo.getChildren().add(photo);
         } else {
             Label first = new Label("Entrena.");
@@ -186,10 +203,8 @@ final class ShellView extends BorderPane {
             promo.getChildren().add(lines);
             StackPane.setAlignment(lines, Pos.BOTTOM_LEFT);
         }
-        // The block may shrink (cutting the top of the picture) so the sidebar never forces the window taller
-        // than the screen; the slogan sits at the bottom of the picture and stays visible.
+        // The block may shrink so the sidebar never forces the window taller than the screen.
         promo.setMinHeight(0);
-        promo.setAlignment(Pos.BOTTOM_CENTER);
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
         clip.setArcWidth(40);
         clip.setArcHeight(40);
