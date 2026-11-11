@@ -6,10 +6,12 @@ import com.nextfit.service.security.InactivityMonitor;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Region;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -55,7 +57,9 @@ public final class FxApp extends Application {
     @Override
     public void start(Stage stage) {
         modules = moduleFactory.get();
-        scene = new Scene(new Region(), 1360, 840);
+        // The window never starts bigger than the usable screen (screen minus taskbar), whatever the scale.
+        Rectangle2D area = Screen.getPrimary().getVisualBounds();
+        scene = new Scene(new Region(), Math.min(1360, area.getWidth()), Math.min(840, area.getHeight() - 60));
         theme.attach(scene);
         FxMotion.installPressEffect(scene);
         FxDialogs.useTheme(theme);
@@ -63,7 +67,7 @@ public final class FxApp extends Application {
         stage.setScene(scene);
         stage.setTitle("NextFit");
         stage.setMinWidth(1040);
-        stage.setMinHeight(680);
+        stage.setMinHeight(Math.min(680, area.getHeight() - 60));
         Image icon = FxImages.load("/images/logo/nextfit-logo-256.png");
         if (icon != null) {
             stage.getIcons().add(icon);

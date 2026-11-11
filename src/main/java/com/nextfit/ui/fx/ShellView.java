@@ -182,11 +182,14 @@ final class ShellView extends BorderPane {
             VBox lines = new VBox(0, first, second, third);
             lines.setAlignment(Pos.BOTTOM_LEFT);
             lines.setPadding(new Insets(0, 0, 18, 18));
-            promo.setMinHeight(190);
             promo.setPrefHeight(230);
             promo.getChildren().add(lines);
             StackPane.setAlignment(lines, Pos.BOTTOM_LEFT);
         }
+        // The block may shrink (cutting the top of the picture) so the sidebar never forces the window taller
+        // than the screen; the slogan sits at the bottom of the picture and stays visible.
+        promo.setMinHeight(0);
+        promo.setAlignment(Pos.BOTTOM_CENTER);
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
         clip.setArcWidth(40);
         clip.setArcHeight(40);
