@@ -5,6 +5,7 @@ import com.nextfit.service.CashCloseService;
 import com.nextfit.service.ReportService;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
@@ -28,7 +29,7 @@ public final class ReportsModule implements FxModule {
         this.reports = new ReportsPane(reportService);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
-        tabs.getTabs().addAll(tab("Cierre de caja", cashClose), tab("Reportes", reports));
+        tabs.getTabs().addAll(tab("Cierre de caja", scrolling(cashClose)), tab("Reportes", reports));
         tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> refresh());
     }
 
@@ -66,6 +67,18 @@ public final class ReportsModule implements FxModule {
     private void refresh() {
         cashClose.refresh();
         reports.refresh();
+    }
+
+    /**
+     * The close of the day is taller than a short window, so it scrolls instead of being cut at the bottom.
+     * On a tall window it still fills the whole height.
+     */
+    private static ScrollPane scrolling(Node content) {
+        ScrollPane scroll = new ScrollPane(content);
+        scroll.setFitToWidth(true);
+        scroll.setFitToHeight(true);
+        scroll.getStyleClass().add("nf-scroll");
+        return scroll;
     }
 
     private static Tab tab(String title, Node content) {
