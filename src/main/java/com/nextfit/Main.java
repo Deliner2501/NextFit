@@ -22,6 +22,9 @@ import com.nextfit.service.PaymentService;
 import com.nextfit.service.ReportService;
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.UserService;
+import com.nextfit.service.alert.AlertMessages;
+import com.nextfit.service.alert.AlertService;
+import com.nextfit.service.alert.WhatsAppLink;
 import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.service.suggest.BmiRule;
 import com.nextfit.service.suggest.MedicalConditionRule;
@@ -45,6 +48,7 @@ import com.nextfit.ui.fx.AnalyticsModule;
 import com.nextfit.ui.fx.BillingModule;
 import com.nextfit.ui.fx.DashboardModule;
 import com.nextfit.ui.fx.FxApp;
+import com.nextfit.ui.fx.AlertsModule;
 import com.nextfit.ui.fx.MembersModule;
 import com.nextfit.ui.fx.ReportsModule;
 import com.nextfit.ui.fx.TrainingFxModule;
@@ -149,6 +153,8 @@ public final class Main {
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
         GamificationService gamificationService = new GamificationService(memberService, attendanceService,
                 Clock.systemDefaultZone());
+        AlertService alertService = AlertService.withStandardRules(subscriptionService, attendanceService,
+                memberService, Clock.systemDefaultZone());
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
@@ -171,6 +177,7 @@ public final class Main {
                 new DashboardModule(dashboardService, session),
                 new MembersModule(memberService, healthService, attendanceService, gamificationService,
                         new PhotoStorage(DATA_DIR.resolve("photos")), session),
+                new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),

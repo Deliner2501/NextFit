@@ -360,3 +360,7 @@
 .nf-achievement-earned { -fx-border-color: -nf-accent; }
 .nf-achievement-locked { -fx-opacity: 0.55; }
 .nf-achievement-earned-text { -fx-text-fill: -nf-success; -fx-font-size: 12px; -fx-font-weight: bold; }
+
+
+/* ---------- Centro de alertas (Ronald) ---------- */
+.nf-alert-message { -fx-text-fill: -nf-text; -fx-font-size: 15px; }
