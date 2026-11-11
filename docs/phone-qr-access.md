@@ -2,7 +2,7 @@
 
 The QR of a member carnet opens a small web page served by the reception
 computer. Scanning it with the camera of any phone registers the entry or the
-exit and shows a full-screen answer (green entry, blue exit, red denied). The
+exit and shows a NextFit-branded answer (green entry, blue exit, red denied) with the photo of the member, the end of the membership and a warning when it ends in 7 days or less. The
 kiosk screen of NextFit reacts at the same time.
 
 ## How it works
@@ -19,6 +19,7 @@ kiosk screen of NextFit reacts at the same time.
 |---|---|
 | `/ping` | Connection test: open it from the phone to check that it reaches the computer |
 | `/a/CODE` | Registers the entry or exit and answers with the result page |
+| `/logo.png` | NextFit logo for the result page |
 | `/photo/CODE` | Photo of the member for the result page, only when the code is valid |
 
 ## Requirements
@@ -26,6 +27,19 @@ kiosk screen of NextFit reacts at the same time.
 - The phone and the computer must be in the same Wi-Fi network. If the network isolates devices, turn on the hotspot of the phone and connect the computer to it.
 - The first time, Windows asks if Java may receive connections: allow it on private networks.
 - The secret key is in `data/access.key` (created automatically, not committed). Deleting it invalidates every printed carnet.
+
+## Networks that isolate devices
+
+Many public and university Wi-Fi networks do not let two devices talk to each other (client isolation). The phone then
+shows `ERR_ADDRESS_UNREACHABLE` even when both are "on the same Wi-Fi". To solve it:
+
+1. Turn on the hotspot of the phone and connect the computer to it.
+2. Close NextFit and open it again: the address of the computer is read when the program starts.
+3. Open `http://<address of the computer>:8765/ping` on the phone to check the connection.
+4. Show the carnet again (or save the PDF again) and scan that one.
+
+The QR of a carnet contains the address of the computer, so a carnet printed on another network has to be printed
+again after changing network. Typing the document in the access screen always works, with or without network.
 
 ## Limits
 
