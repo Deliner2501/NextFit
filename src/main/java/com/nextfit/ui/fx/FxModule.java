@@ -56,6 +56,15 @@ public interface FxModule {
     }
 
     /**
+     * Extra words that lead to this module in the global search, such as the tabs it contains.
+     *
+     * @return the words, in Spanish like the screens
+     */
+    default List<String> keywords() {
+        return List.of();
+    }
+
+    /**
      * Results this module adds to the global search. Modules without searchable content keep the default.
      *
      * @param query what the user typed

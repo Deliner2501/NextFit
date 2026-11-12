@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import java.util.List;
 
 /**
  * TV module: the live occupancy of the gym. It shows the screen inside the application and a
@@ -52,6 +53,11 @@ public final class OccupancyModule implements FxModule {
     @Override
     public String id() {
         return "occupancy";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("aforo", "ocupación", "tv");
     }
 
     @Override

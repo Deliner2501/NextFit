@@ -296,7 +296,7 @@ final class ShellView extends BorderPane {
     private List<SearchHit> searchAll(String query) {
         List<SearchHit> hits = new ArrayList<>();
         for (FxModule module : visible) {
-            if (GlobalSearch.matches(query, module.title())) {
+            if (GlobalSearch.matches(query, module.title()) || GlobalSearch.matchesAny(query, module.keywords())) {
                 hits.add(new SearchHit(module.id(), "", module.title(), "Ir a la sección"));
             }
         }

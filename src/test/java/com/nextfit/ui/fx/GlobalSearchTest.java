@@ -54,4 +54,12 @@ class GlobalSearchTest {
         assertTrue(inactive.detail().contains("Inactivo"));
         assertEquals(1, GlobalSearch.memberHits("members", "gomez", members, 1).size());
     }
+
+    @Test
+    void keywordsLeadToTheModule() {
+        List<String> words = List.of("cierre de caja", "excel");
+        assertTrue(GlobalSearch.matchesAny("CAJA", words));
+        assertTrue(GlobalSearch.matchesAny("cierre caja", words));
+        assertFalse(GlobalSearch.matchesAny("rutina", words));
+    }
 }

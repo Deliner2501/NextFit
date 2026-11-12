@@ -21,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import java.util.List;
 
 /**
  * Users module in JavaFX, only for the administrator: lists the accounts and
@@ -50,6 +51,11 @@ public final class UsersModule implements FxModule {
     @Override
     public String id() {
         return "users";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("usuarios", "contraseña", "roles", "cuentas");
     }
 
     @Override

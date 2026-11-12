@@ -58,6 +58,11 @@ public final class MembersModule implements FxModule {
     }
 
     @Override
+    public List<String> keywords() {
+        return List.of("socios", "clientes", "carnet", "ficha", "salud", "medidas");
+    }
+
+    @Override
     public String title() {
         return "Socios";
     }

@@ -51,6 +51,20 @@ public final class GlobalSearch {
     }
 
     /**
+     * @param query    what the user typed
+     * @param keywords alternative names of something, each one is tried alone
+     * @return true when the query matches at least one of the keywords
+     */
+    public static boolean matchesAny(String query, List<String> keywords) {
+        for (String keyword : keywords) {
+            if (matches(query, keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @param moduleId the module that shows the members
      * @param query    what the user typed
      * @param members  the members to look into
