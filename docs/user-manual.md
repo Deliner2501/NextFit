@@ -8,8 +8,11 @@ How to use NextFit, screen by screen. The names in quotes are the ones shown in 
    `entrenador / entrenador123`: **change the passwords** from **Usuarios** before using it for real.
 2. The **menu** on the left shows only what your role can use (see the table at the end).
 3. The **☰** button next to the title collapses the menu to icons; click it again to open it. NextFit remembers the choice.
-4. The **sun / moon** button switches between the dark and the light theme. The exit button signs you out.
-5. After 15 minutes without activity the session closes by itself, and after 5 wrong passwords a user is blocked for
+4. The **magnifier** button (or **Ctrl+K**) opens the global search: type a member's name, document or phone, or the name
+   of a section, and press Enter to open the first result (arrows move the selection, Esc closes). Searches ignore
+   capitals and accents.
+5. The **sun / moon** button switches between the dark and the light theme. The exit button signs you out.
+6. After 15 minutes without activity the session closes by itself, and after 5 wrong passwords a user is blocked for
    5 minutes.
 
 ## Panel (dashboard)

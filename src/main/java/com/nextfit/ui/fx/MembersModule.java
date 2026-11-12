@@ -11,6 +11,8 @@ import com.nextfit.util.PhotoStorage;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 
+import java.util.List;
+
 /**
  * Members module in JavaFX. The administrator, the reception and the trainers can
  * see the members and open the file of each one; only the administrator and the
@@ -20,6 +22,9 @@ import javafx.scene.layout.StackPane;
  */
 public final class MembersModule implements FxModule {
 
+    private static final int MAX_HITS = 6;
+
+    private final MemberService memberService;
     private final Session session;
     private final HealthService healthService;
     private final AttendanceService attendanceService;
@@ -38,6 +43,7 @@ public final class MembersModule implements FxModule {
     public MembersModule(MemberService memberService, HealthService healthService,
                          AttendanceService attendanceService, GamificationService gamificationService,
                          PhotoStorage photoStorage, Session session) {
+        this.memberService = memberService;
         this.session = session;
         this.healthService = healthService;
         this.attendanceService = attendanceService;
@@ -75,6 +81,20 @@ public final class MembersModule implements FxModule {
     @Override
     public boolean allowedFor(Role role) {
         return role == Role.ADMIN || role == Role.RECEPTION || role == Role.TRAINER;
+    }
+
+    @Override
+    public List<SearchHit> search(String query) {
+        return GlobalSearch.memberHits(id(), query, memberService.findAll(), MAX_HITS);
+    }
+
+    @Override
+    public void open(String targetId) {
+        try {
+            openFicha(memberService.findById(Long.parseLong(targetId)));
+        } catch (RuntimeException e) {
+            showList();
+        }
     }
 
     // Replaces the list with the file of the member; the file's back button brings the list back.

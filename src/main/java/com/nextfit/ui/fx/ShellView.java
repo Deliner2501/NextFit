@@ -19,6 +19,8 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -58,6 +60,7 @@ final class ShellView extends BorderPane {
     private static final double MIN_PROMO_HEIGHT = 110;
     private Node promoBlock;
     private boolean collapsed;
+    private SearchPalette palette;
 
     /**
      * @param session   the signed-in user
@@ -77,7 +80,14 @@ final class ShellView extends BorderPane {
             }
         }
         setLeft(buildSidebar());
-        setCenter(buildContent(onLogout));
+        palette = new SearchPalette(this::searchAll, this::openHit);
+        setCenter(new StackPane(buildContent(onLogout), palette));
+        addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+            if (e.isShortcutDown() && e.getCode() == KeyCode.K) {
+                palette.open();
+                e.consume();
+            }
+        });
         if (!visible.isEmpty()) {
             show(visible.get(0));
         }
@@ -256,7 +266,13 @@ final class ShellView extends BorderPane {
         logout.setGraphic(FxIcons.of(FxIcons.LOGOUT, 20));
         logout.setOnAction(e -> onLogout.run());
 
-        HBox top = new HBox(16, menu, titles, toggle, chip, logout);
+        Button search = new Button();
+        search.getStyleClass().add("nf-icon-button");
+        search.setGraphic(FxIcons.of(FxIcons.SEARCH, 20));
+        Tooltip.install(search, new Tooltip("Buscar (Ctrl+K)"));
+        search.setOnAction(e -> palette.open());
+
+        HBox top = new HBox(16, menu, titles, search, toggle, chip, logout);
         top.setAlignment(Pos.CENTER_LEFT);
         top.setPadding(new Insets(24, 0, 20, 0));
 
@@ -274,6 +290,32 @@ final class ShellView extends BorderPane {
     private static String longDate(LocalDate day) {
         String text = day.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-CO")));
         return text.substring(0, 1).toUpperCase() + text.substring(1);
+    }
+
+    // The modules whose name matches, followed by what each module finds by itself (the members, for one).
+    private List<SearchHit> searchAll(String query) {
+        List<SearchHit> hits = new ArrayList<>();
+        for (FxModule module : visible) {
+            if (GlobalSearch.matches(query, module.title())) {
+                hits.add(new SearchHit(module.id(), "", module.title(), "Ir a la sección"));
+            }
+        }
+        for (FxModule module : visible) {
+            hits.addAll(module.search(query));
+        }
+        return hits;
+    }
+
+    private void openHit(SearchHit hit) {
+        for (FxModule module : visible) {
+            if (module.id().equals(hit.moduleId())) {
+                show(module);
+                if (!hit.targetId().isEmpty()) {
+                    module.open(hit.targetId());
+                }
+                return;
+            }
+        }
     }
 
     private void show(FxModule item) {
