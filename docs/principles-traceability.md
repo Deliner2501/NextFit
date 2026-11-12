@@ -186,6 +186,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Pure Fabrication | `AlertText` | A plain class without JavaFX, created so the wording of the detail line can be tested without a window |
 | Low coupling | `AlertIcons` | The icons of this screen live in their own class, so the screen does not edit `FxIcons`, which every module shares |
 | Testability | `AlertTextTest` | 5 tests on the singular, plural and date of each kind of alert |
+| SRP | `MemberPortal`, `PortalPage`, `WorkoutPlanner` | `MemberPortal` only gathers what the member sees, `WorkoutPlanner` only decides which day of the routine comes next and `PortalPage` only turns the summary into HTML; none of them changes data |
+| GRASP Information Expert | `WorkoutPlanner` | The rule "the next day follows the last one logged and the routine starts again after its last day" lives in one plain class that knows the routine and the sessions, so it is tested without a server |
+| Protected Variations | `PortalSummary`, `PortalPage` | The summary is plain data and the page is a pure function of it; a mobile app or another page would replace `PortalPage` only |
+| DIP and dependency injection | `MemberPortal` constructor, `Main` | The portal receives `PhoneAccess` and the services of memberships, routines and gamification from `Main`; it does not know the CSV files or the clock |
+| OCP | `AccessServer` | The portal is one more route (`/m/CODE`) added with a second constructor; the old constructor and the routes of the entry control do not change, and without a portal the route does not exist |
+| Reuse | `MemberPortal`, `AccessPage` | The member is found with the same code of the carnet (`PhoneAccess`), the progress comes from `GamificationService` and the scan page only adds a link; no rule is repeated |
+| Testability | `WorkoutPlannerTest`, `PortalPageTest`, `MemberPortalTest`, `AccessPageTest` | 20 new tests: the rotation of the days, the wording and the escaping of the page, and the real server answering a phone with CSV files in a temporary folder |
 
 ## Santiago: training
 
