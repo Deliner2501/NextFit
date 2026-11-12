@@ -13,6 +13,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
 
 import java.util.function.Supplier;
+import java.util.List;
 
 /**
  * Access control module in JavaFX: the kiosk that reads the QR of the carnet
@@ -47,6 +48,11 @@ public final class AccessModule implements FxModule {
     @Override
     public String id() {
         return "access";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("entrada", "ingreso", "qr", "escanear", "asistencia", "carnet");
     }
 
     @Override

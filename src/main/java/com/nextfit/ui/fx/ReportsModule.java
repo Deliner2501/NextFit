@@ -9,6 +9,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
+import java.util.List;
 
 /**
  * Reports module in JavaFX: the daily cash close and the exportable reports. It is for the administrator
@@ -36,6 +37,11 @@ public final class ReportsModule implements FxModule {
     @Override
     public String id() {
         return "reports";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("cierre de caja", "caja", "excel", "pdf", "informes", "ingresos", "exportar");
     }
 
     @Override

@@ -67,6 +67,11 @@ public final class AuditModule implements FxModule {
     }
 
     @Override
+    public List<String> keywords() {
+        return List.of("historial", "registro", "eventos", "auditoria");
+    }
+
+    @Override
     public String title() {
         return "Auditoría";
     }

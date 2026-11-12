@@ -55,6 +55,11 @@ public final class BackupModule implements FxModule {
     }
 
     @Override
+    public List<String> keywords() {
+        return List.of("copia de seguridad", "backup", "restaurar", "respaldo");
+    }
+
+    @Override
     public String title() {
         return "Respaldo";
     }

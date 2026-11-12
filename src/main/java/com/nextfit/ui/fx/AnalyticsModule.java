@@ -4,6 +4,7 @@ import com.nextfit.model.Role;
 import com.nextfit.service.AnalyticsService;
 import com.nextfit.service.MemberService;
 import javafx.scene.Node;
+import java.util.List;
 
 /** Analytics as a module: it adapts {@link AnalyticsView} to {@link FxModule}. */
 public final class AnalyticsModule implements FxModule {
@@ -21,6 +22,11 @@ public final class AnalyticsModule implements FxModule {
     @Override
     public String id() {
         return "analytics";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("estadísticas", "gráficas", "retención", "ingresos");
     }
 
     @Override

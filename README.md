@@ -66,6 +66,7 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - Register, edit and deactivate members, with photo, emergency contact and validated personal data. The administrator and the reception can change data; the trainers can only read.
 - **Health profile** (height, blood type, medical conditions, allergies), **measurements history** with automatic **BMI** and category, and the member **detail panel** live in the **member file** (button *Ver ficha*), with the tabs *Salud*, *Mediciones*, *Asistencia* and *Logros* (streaks and badges).
 - **Attendance**: check-in / check-out of members, with the list of members currently inside the gym (see Access control).
+- **Global search**: Ctrl+K or the magnifier in the top bar finds members (name, document, phone) and sections, ignoring case and accents; every module can add its own results through `FxModule.search`.
 - **Alerts engine**: birthdays, memberships about to expire and members who stopped coming, each with a ready WhatsApp message (`service.alert`). The **Alertas** screen shows them in cards and a list, writes the message for the member and opens WhatsApp or copies the text (administrator and reception).
 
 ### 💳 Memberships and billing

@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
+import java.util.List;
 
 /**
  * Memberships and payments module in JavaFX. It groups its screens in tabs:
@@ -53,6 +54,11 @@ public final class BillingModule implements FxModule {
     @Override
     public String id() {
         return "billing";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("planes", "pagos", "cobros", "suscripción", "recibo", "membresía");
     }
 
     @Override

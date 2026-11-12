@@ -5,6 +5,7 @@ import com.nextfit.service.alert.AlertMessages;
 import com.nextfit.service.alert.AlertService;
 import com.nextfit.service.alert.WhatsAppLink;
 import javafx.scene.Node;
+import java.util.List;
 
 /**
  * Alert center in JavaFX. The administrator and the reception see who needs a call today
@@ -29,6 +30,11 @@ public final class AlertsModule implements FxModule {
     @Override
     public String id() {
         return "alerts";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("cumpleaños", "vencimientos", "inactivos", "whatsapp", "avisos");
     }
 
     @Override

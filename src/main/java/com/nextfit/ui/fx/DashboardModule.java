@@ -4,6 +4,7 @@ import com.nextfit.model.Role;
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.Session;
 import javafx.scene.Node;
+import java.util.List;
 
 /** The home screen as a module: it only adapts {@link DashboardView} to {@link FxModule}. */
 public final class DashboardModule implements FxModule {
@@ -21,6 +22,11 @@ public final class DashboardModule implements FxModule {
     @Override
     public String id() {
         return "panel";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("inicio", "resumen", "indicadores", "dashboard");
     }
 
     @Override

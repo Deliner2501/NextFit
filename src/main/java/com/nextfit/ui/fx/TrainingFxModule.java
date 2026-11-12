@@ -10,6 +10,7 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
 
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Training module in JavaFX. It groups its screens in tabs: exercises, routines,
@@ -49,6 +50,11 @@ public final class TrainingFxModule implements FxModule {
     @Override
     public String id() {
         return "training";
+    }
+
+    @Override
+    public List<String> keywords() {
+        return List.of("rutinas", "ejercicios", "entrenadores", "sesiones", "clases");
     }
 
     @Override

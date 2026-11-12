@@ -3,6 +3,8 @@ package com.nextfit.ui.fx;
 import com.nextfit.model.Role;
 import javafx.scene.Node;
 
+import java.util.List;
+
 /**
  * Contract every JavaFX screen implements so the main window can host it in
  * the sidebar. It mirrors the Swing {@code ModulePanel}: each team member
@@ -51,5 +53,32 @@ public interface FxModule {
      */
     default boolean allowedFor(Role role) {
         return true;
+    }
+
+    /**
+     * Extra words that lead to this module in the global search, such as the tabs it contains.
+     *
+     * @return the words, in Spanish like the screens
+     */
+    default List<String> keywords() {
+        return List.of();
+    }
+
+    /**
+     * Results this module adds to the global search. Modules without searchable content keep the default.
+     *
+     * @param query what the user typed
+     * @return the matching results, at most a few
+     */
+    default List<SearchHit> search(String query) {
+        return List.of();
+    }
+
+    /**
+     * Opens something inside the module after the user chose one of its search results.
+     *
+     * @param targetId the identifier given by the module in its {@link SearchHit}
+     */
+    default void open(String targetId) {
     }
 }
