@@ -70,6 +70,9 @@ public final class AccessPage {
             }
             body.append("</div>");
         }
+        if (result.granted() && member != null) {
+            body.append("<a class=\"portal\" href=\"/m/").append(esc(token)).append("\">Ver mi rutina y mi progreso</a>");
+        }
         return page(color, body.toString());
     }
 
@@ -132,6 +135,8 @@ public final class AccessPage {
             .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
             .chip{padding:8px 14px;border-radius:999px;font-size:14px;background:rgba(122,53,232,.35);border:1px solid rgba(255,255,255,.14)}
             .chip.warn{background:rgba(255,176,32,.18);border-color:rgba(255,176,32,.55);color:#FFD27A;font-weight:600}
+            .portal{display:inline-block;margin-top:22px;padding:13px 22px;border-radius:999px;background:#A7F626;color:#14101F;
+            font-weight:700;font-size:15px;text-decoration:none}
             footer{margin-top:26px;font-size:13px;letter-spacing:2px;color:#A7F626;opacity:0;animation:rise .6s .5s forwards}
             footer span{display:block;margin:0 auto 10px;width:56px;height:4px;border-radius:2px;background:#A7F626}
             @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}

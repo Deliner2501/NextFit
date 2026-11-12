@@ -65,6 +65,7 @@ import com.nextfit.service.audit.AuditService;
 
 import java.nio.file.Path;
 import java.util.List;
+import com.nextfit.service.portal.MemberPortal;
 import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
 import java.io.IOException;
@@ -163,7 +164,10 @@ public final class Main {
                 Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
-        AccessServer accessServer = new AccessServer(phoneAccess, ACCESS_PORT);
+        MemberPortal memberPortal = new MemberPortal(phoneAccess, subscriptionService, planService,
+                training.assignments(), training.routines(), training.exercises(), training.sessions(),
+                gamificationService);
+        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, ACCESS_PORT);
         try {
             accessServer.start();
         } catch (IOException e) {

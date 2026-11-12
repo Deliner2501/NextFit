@@ -66,4 +66,23 @@ class AccessPageTest {
         assertTrue(html.contains("&lt;script&gt;"));
         assertTrue(html.contains("&quot;quoted&quot; &amp; &lt;b&gt;"));
     }
+
+    @Test
+    void aGrantedScanLinksToThePortalOfTheMember() {
+        AccessResult entry = new AccessResult(Outcome.ENTRY, member("Juan Pablo Cuello", ""),
+                "Bienvenido, Juan", LocalDate.of(2026, 11, 20), 15);
+        AccessResult exit = new AccessResult(Outcome.EXIT, member("Juan Pablo Cuello", ""),
+                "Hasta pronto", LocalDate.of(2026, 11, 20), 15);
+
+        assertTrue(AccessPage.render(entry, "ABCDEFGHJK").contains("href=\"/m/ABCDEFGHJK\""));
+        assertTrue(AccessPage.render(exit, "ABCDEFGHJK").contains("href=\"/m/ABCDEFGHJK\""));
+    }
+
+    @Test
+    void aDeniedScanHasNoLinkToThePortal() {
+        AccessResult denied = new AccessResult(Outcome.DENIED, member("Juan Pablo Cuello", ""),
+                "Membresía vencida", null, -1);
+
+        assertFalse(AccessPage.render(denied, "ABCDEFGHJK").contains("/m/"));
+    }
 }
