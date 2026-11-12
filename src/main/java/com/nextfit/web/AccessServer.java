@@ -3,6 +3,8 @@ package com.nextfit.web;
 import com.nextfit.model.Member;
 import com.nextfit.service.AccessResult;
 import com.nextfit.service.PhoneAccess;
+import com.nextfit.service.portal.MemberPortal;
+import com.nextfit.service.portal.PortalSummary;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -21,8 +23,9 @@ import java.util.concurrent.Executors;
  * Small web server of the reception computer, built into the JDK. A phone that
  * scans the QR of a carnet opens {@code /a/CODE}; the server registers the entry
  * or the exit and answers with {@link AccessPage}. It only serves the local
- * network and has three routes: {@code /a/CODE}, {@code /photo/CODE} and
- * {@code /ping} (to check the connection from a phone).
+ * network and has these routes: {@code /a/CODE}, {@code /m/CODE} (the portal of the member, only
+ * when a {@link MemberPortal} was given), {@code /photo/CODE} and {@code /ping} (to check the
+ * connection from a phone).
  */
 public final class AccessServer {
 
@@ -30,6 +33,7 @@ public final class AccessServer {
     private static final long MAX_PHOTO_BYTES = 5L * 1024 * 1024;
 
     private final PhoneAccess phone;
+    private final MemberPortal portal;
     private final int preferredPort;
     private HttpServer server;
     private ExecutorService executor;
@@ -41,7 +45,19 @@ public final class AccessServer {
      * @param preferredPort the port to try first; 0 lets the system choose a free one
      */
     public AccessServer(PhoneAccess phone, int preferredPort) {
+        this(phone, null, preferredPort);
+    }
+
+    /**
+     * Creates the server with the portal of the member, without starting it.
+     *
+     * @param phone         the service that registers the scans
+     * @param portal        the service that gathers what the member sees; null leaves the portal off
+     * @param preferredPort the port to try first; 0 lets the system choose a free one
+     */
+    public AccessServer(PhoneAccess phone, MemberPortal portal, int preferredPort) {
         this.phone = phone;
+        this.portal = portal;
         this.preferredPort = preferredPort;
     }
 
@@ -106,6 +122,8 @@ public final class AccessServer {
                 String token = path.substring(3);
                 AccessResult result = phone.scan(token);
                 sendHtml(exchange, 200, AccessPage.render(result, token));
+            } else if (path.startsWith("/m/") && portal != null) {
+                sendPortal(exchange, path.substring(3));
             } else if (path.equals("/logo.png")) {
                 sendLogo(exchange);
             } else if (path.startsWith("/photo/")) {
@@ -118,6 +136,15 @@ public final class AccessServer {
         } finally {
             exchange.close();
         }
+    }
+
+    private void sendPortal(HttpExchange exchange, String token) throws IOException {
+        Optional<PortalSummary> summary = portal.summaryFor(token);
+        if (summary.isEmpty()) {
+            sendHtml(exchange, 404, PortalPage.invalid());
+            return;
+        }
+        sendHtml(exchange, 200, PortalPage.render(summary.get(), token));
     }
 
     private void sendLogo(HttpExchange exchange) throws IOException {
