@@ -53,7 +53,8 @@ final class RoutineLineRow extends HBox {
 
         for (Spinner<Integer> spinner : List.of(sets, repetitions, rest)) {
             spinner.setEditable(true);
-            spinner.setPrefWidth(95);
+            spinner.setPrefWidth(120);
+            spinner.setMinWidth(120);
             spinner.getStyleClass().add("nf-input");
             commitOnFocusLost(spinner);
         }
