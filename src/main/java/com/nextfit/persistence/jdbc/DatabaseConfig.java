@@ -50,7 +50,7 @@ public record DatabaseConfig(String url, String user, String password) {
     private static String required(Properties properties, String key) {
         String value = properties.getProperty(key);
         if (value == null || value.isBlank()) {
-            throw new PersistenceException("Falta la línea " + key + " en " + FILE_NAME);
+            throw new PersistenceException("Falta la línea " + key + " en " + FILE_NAME, (Throwable) null);
         }
         return value.trim();
     }
