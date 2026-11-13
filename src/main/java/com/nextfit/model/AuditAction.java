@@ -16,7 +16,9 @@ public enum AuditAction {
     USER_DEACTIVATED("Usuario desactivado"),
     USER_REACTIVATED("Usuario reactivado"),
     BACKUP_CREATED("Respaldo creado"),
-    BACKUP_RESTORED("Respaldo restaurado");
+    BACKUP_RESTORED("Respaldo restaurado"),
+    FACE_ENROLLED("Rostro registrado"),
+    FACE_REMOVED("Rostro eliminado");
 
     private final String label;
 
