@@ -1,0 +1,5 @@
+# Copia este archivo como nextfit.properties (en la carpeta del proyecto) y completa la clave.
+# nextfit.properties NO se sube a GitHub.
+db.url=jdbc:oracle:thin:@nextfit_tp?TNS_ADMIN=C:/Users/Ronal/oracle-wallet/NEXTFIT
+db.user=NEXTFIT_APP
+db.password=PON_AQUI_LA_CLAVE_DE_NEXTFIT_APP
