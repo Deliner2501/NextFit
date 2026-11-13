@@ -33,3 +33,15 @@ data/*.csv
 data/*.tmp
 data/access.key
 backups/
+
+# Local database settings and Oracle wallet: never commit them
+nextfit.properties
+oracle-wallet/
+*.p12
+*.sso
+keystore.jks
+truststore.jks
+
+# Face recognition models (each computer downloads them) and the camera check output
+data/models/
+facelab.jpg
