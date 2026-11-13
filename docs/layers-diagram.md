@@ -11,13 +11,9 @@ graph TD
     end
 
     subgraph PRES["Presentation layer (JavaFX + AtlantaFX)"]
-        UI["<b>ui</b><br/>BannerModule<br/>Formats<br/>LoginFrame<br/>MainWindow<br/>ModulePanel<br/>PlaceholderPanel<br/>Sidebar<br/>Theme<br/>TopBar<br/>UserChip"]
-        UIC["<b>ui.components</b><br/>Avatar<br/>BarChart<br/>BmiGauge<br/>BrandPanel<br/>Branding<br/>CoverPhoto<br/>DonutChart<br/>GymArt<br/>HeroBanner<br/>Icons<br/>ImageCard<br/>Images<br/>LineChart<br/>MemberAvatar<br/>MuscleArt<br/>PictureSource<br/>StatCard"]
-        UIM["<b>ui.members</b><br/>AttendanceTab<br/>Forms<br/>HealthTab<br/>MeasurementsTab<br/>MemberDetailPanel<br/>MemberFormDialog<br/>MembersPanel"]
-        UIB["<b>ui.billing</b><br/>BillingPanel<br/>PaymentListView<br/>PlanFormDialog<br/>PlanListView<br/>ReceiptDialog<br/>ReceiptText<br/>SaleView<br/>SubscriptionListView"]
-        UIT["<b>ui.training</b><br/>AssignmentView<br/>ExerciseCatalogView<br/>ExerciseFormDialog<br/>MemberPickerPanel<br/>RoutineFormDialog<br/>RoutineListView<br/>SessionView<br/>TrainerFormDialog<br/>TrainerListView<br/>TrainingPanel"]
-        UID["<b>ui.dashboard</b><br/>DashboardPanel"]
-        UIU["<b>ui.users</b><br/>UserFormDialog<br/>UsersPanel"]
+        UI["<b>ui</b><br/>Formats"]
+        UIB["<b>ui.billing</b><br/>ReceiptText"]
+        UIF["<b>ui.fx</b><br/>FxApp<br/>ShellView<br/>FxModule<br/>GlobalSearch<br/>SearchPalette<br/>one module and its panes per area<br/>(69 classes)"]
     end
 
     subgraph BUS["Business layer"]
@@ -38,42 +34,27 @@ graph TD
         UT["<b>util</b><br/>PasswordHasher<br/>PhotoStorage"]
     end
 
-    R --> UI
-    R --> UIM
-    R --> UIB
-    R --> UIT
-    R --> UID
-    R --> UIU
+    R --> UIF
     R --> SV
     R --> PE
     R --> VA
 
-    UI --> UIC
-    UIM --> UIC
-    UIT --> UIC
-    UID --> UIC
-    UIM --> UI
+    UIF --> UI
+    UIF --> UIB
     UIB --> UI
-    UIT --> UI
-    UID --> UI
-    UIU --> UI
 
-    UI --> SV
-    UIM --> SV
-    UIB --> SV
-    UIT --> SV
-    UID --> SV
-    UIU --> SV
+    UIF --> SV
 
     SV --> VA
     SV --> PE
     SV --> MO
     VA --> MO
     PE --> MO
-    UI --> MO
+    UIF --> MO
+    UIB --> MO
 
     SV --> UT
-    UIM --> UT
+    UIF --> UT
     SV --> EX
     PE --> EX
     VA --> EX
@@ -82,18 +63,14 @@ graph TD
 
 ## Package dependencies (simplified)
 
-Same dependencies with one node per package. The two dashed arrows are the known exceptions to a strict layering: `ui.components` reads the shared `Theme` from `ui`, and `ui.billing` reuses `MemberPickerPanel` from `ui.training`.
+Same dependencies with one node per package. The Swing packages were removed; `ui.fx` is the only interface.
 
 ```mermaid
 graph LR
     root["nextfit (root)"]
+    fx["ui.fx"]
     ui
-    comp["ui.components"]
-    members["ui.members"]
     billing["ui.billing"]
-    training["ui.training"]
-    dashboard["ui.dashboard"]
-    users["ui.users"]
     service
     validation
     persistence
@@ -101,16 +78,11 @@ graph LR
     exceptions
     util
 
-    root --> ui & members & billing & training & dashboard & users
-    root --> service & validation & persistence
-    ui & members & billing & training & dashboard & users --> service
-    ui & members & training & dashboard --> comp
-    members & billing & training & dashboard & users --> ui
+    root --> fx & service & validation & persistence
+    fx --> service & ui & billing & util
+    billing --> ui
     service --> validation & persistence & util
-    service & validation & persistence & ui --> model
-    members --> util
+    service & validation & persistence & ui & billing & fx --> model
     service & validation & persistence & model --> exceptions
     util --> exceptions
-    comp -.-> ui
-    billing -.-> training
 ```

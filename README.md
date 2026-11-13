@@ -194,7 +194,7 @@ The sidebar only shows the modules that the logged-in role can use.
 | **GitHub Actions** | Build and tests on every pull request |
 | **Git / GitHub** | Version control, feature branches and pull requests |
 
-> The first version of the interface was written with Swing (FlatLaf and MigLayout). That code is still in the repository and will be removed in a final cleanup.
+> The first version of the interface was written with Swing; it was replaced by JavaFX and removed from the code (it stays in the `v0.7-swing` tag).
 
 ---
 
@@ -303,8 +303,9 @@ NextFit/
     │   │   ├── web/               # phone access server
     │   │   ├── util/              # PasswordHasher, PhotoStorage
     │   │   └── ui/
-    │   │       ├── fx/            # JavaFX interface (current)
-    │   │       └── ...            # Swing interface (to be removed)
+    │   │       ├── fx/            # JavaFX interface
+    │   │       ├── billing/       # ReceiptText, shared by the receipts
+    │   │       └── Formats.java   # how pesos and dates are written and read
     │   └── resources/
     │       ├── fx/                # nextfit.css and nextfit-violet.css
     │       └── images/            # logo, backgrounds, banners, login, exercises
@@ -451,7 +452,6 @@ Some examples:
 | **Creator / Controller** | `Main` composes the application; services coordinate each use case |
 | **Polymorphism** | `Discount.amountOff` and `Person.getPersonType` |
 | **Low coupling / High cohesion** | Layers with one-way dependencies (see the package diagram) |
-| **Decorator** | `BannerModule` adds a banner to any `ModulePanel` |
 
 ---
 

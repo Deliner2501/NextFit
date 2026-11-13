@@ -7,8 +7,7 @@ import java.util.List;
 
 /**
  * Contract every JavaFX screen implements so the main window can host it in
- * the sidebar. It mirrors the Swing {@code ModulePanel}: each team member
- * delivers a module as an implementation, so adding a screen never requires
+ * the sidebar. Each team member delivers a module as an implementation, so adding a screen never requires
  * editing {@link ShellView} (Open/Closed).
  */
 public interface FxModule {
