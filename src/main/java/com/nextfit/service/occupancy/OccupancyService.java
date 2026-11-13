@@ -3,7 +3,6 @@ package com.nextfit.service.occupancy;
 import com.nextfit.exceptions.InvalidDataException;
 import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.AttendanceRecord;
-import com.nextfit.service.AnalyticsService;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.OccupancyHeatmap;
@@ -85,13 +84,14 @@ public class OccupancyService {
                 quietestHour(records, now), now);
     }
 
-    // EXPLICACIÓN: una entrada abierta hace más de 6 horas es una salida olvidada, no una
-    // persona dentro; se usa el mismo límite que la analítica (MAX_STAY_MINUTES).
+    // EXPLICACIÓN: una entrada abierta de un día anterior es una salida olvidada, no una persona
+    // dentro. Las de hoy sí cuentan, igual que en el control de acceso, para que las dos
+    // pantallas muestren a las mismas personas.
     private static List<AttendanceRecord> insideAt(List<AttendanceRecord> records, LocalDateTime now) {
-        LocalDateTime oldest = now.minusMinutes(AnalyticsService.MAX_STAY_MINUTES);
+        LocalDate today = now.toLocalDate();
         return records.stream()
                 .filter(AttendanceRecord::isOpen)
-                .filter(r -> !r.getCheckIn().isAfter(now) && r.getCheckIn().isAfter(oldest))
+                .filter(r -> !r.getCheckIn().isAfter(now) && r.getCheckIn().toLocalDate().equals(today))
                 .sorted(Comparator.comparing(AttendanceRecord::getCheckIn))
                 .toList();
     }

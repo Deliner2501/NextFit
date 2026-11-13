@@ -105,6 +105,13 @@ public final class OccupancyModule implements FxModule {
         stage.setTitle("NextFit · Ocupación");
         stage.setScene(scene);
         stage.setFullScreenExitHint("Presiona Esc para salir");
+        // EXPLICACIÓN: al salir de la pantalla completa (Esc) se cierra la ventana del televisor,
+        // para que no quede una segunda ventana abierta.
+        stage.fullScreenProperty().addListener((obs, was, now) -> {
+            if (!now) {
+                stage.close();
+            }
+        });
         stage.setFullScreen(true);
         stage.setOnHidden(e -> tv.stop());
         stage.show();

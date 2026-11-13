@@ -117,15 +117,16 @@ class OccupancyServiceTest {
     }
 
     @Test
-    void aForgottenExitIsNotCountedAsInside() {
+    void anEntryOfAnotherDayIsAForgottenExitNotAPersonInside() {
         open(ana, TODAY.minusDays(1), 18, 0);   // entró ayer y nunca salió
-        open(luis, TODAY, 3, 0);                // lleva 7 horas, más del límite
+        open(luis, TODAY, 3, 0);                // lleva 7 horas pero entró hoy: sigue dentro
         open(carla, TODAY, 9, 0);
 
         OccupancySnapshot snapshot = service.snapshot();
 
-        assertEquals(1, snapshot.inside());
-        assertEquals("Carla", snapshot.visitors().get(0).firstName());
+        assertEquals(2, snapshot.inside());
+        assertEquals("Luis", snapshot.visitors().get(0).firstName());
+        assertEquals("Carla", snapshot.visitors().get(1).firstName());
     }
 
     @Test
