@@ -68,32 +68,11 @@ classDiagram
         +hash(password String)$ String
         +verify(password String, stored String)$ boolean
     }
-    class LoginFrame {
-    }
-    class MainWindow {
-    }
-    class ModulePanel {
-        <<interface>>
-    }
-    class BannerModule {
-    }
-    class UsersPanel {
-    }
-    class UserFormDialog {
-    }
 
     UserRepository <|.. CsvUserRepository
-    ModulePanel <|.. BannerModule
-    ModulePanel <|.. UsersPanel
     UserService ..> UserRepository
     UserService ..> UserValidator
     AuthService ..> UserRepository
-    LoginFrame ..> AuthService
-    LoginFrame ..> Session
-    MainWindow ..> Session
-    BannerModule ..> ModulePanel
-    UsersPanel ..> UserService
-    UsersPanel ..> Session
 ```
 
 ## Members and health
@@ -219,18 +198,6 @@ classDiagram
         +countCheckInsOn(date LocalDate) long
         +findByMember(memberId long) List~AttendanceRecord~
     }
-    class MembersPanel {
-    }
-    class MemberDetailPanel {
-    }
-    class MemberFormDialog {
-    }
-    class HealthTab {
-    }
-    class MeasurementsTab {
-    }
-    class AttendanceTab {
-    }
 
     Person <|-- Member
     MemberRepository <|.. CsvMemberRepository
@@ -245,12 +212,6 @@ classDiagram
     HealthService ..> HealthValidator
     AttendanceService ..> MemberService
     AttendanceService ..> AttendanceRepository
-    MembersPanel ..> MemberService
-    MembersPanel ..> HealthService
-    MembersPanel ..> AttendanceService
-    MemberDetailPanel ..> HealthService
-    MemberDetailPanel ..> AttendanceService
-    MemberFormDialog ..> MemberService
 ```
 
 ## Memberships and payments
@@ -391,20 +352,6 @@ classDiagram
         +subscription() Subscription
         +payment() Payment
     }
-    class BillingPanel {
-    }
-    class SaleView {
-    }
-    class PlanListView {
-    }
-    class PlanFormDialog {
-    }
-    class SubscriptionListView {
-    }
-    class PaymentListView {
-    }
-    class ReceiptDialog {
-    }
     class ReceiptText {
     }
 
@@ -426,17 +373,6 @@ classDiagram
     MembershipSale ..> Subscription
     MembershipSale ..> Payment
     MembershipSale ..> MembershipPlan
-    BillingPanel ..> MembershipPlanService
-    BillingPanel ..> SubscriptionService
-    BillingPanel ..> PaymentService
-    SaleView ..> MembershipPlanService
-    SaleView ..> SubscriptionService
-    SaleView ..> PaymentService
-    PlanListView ..> MembershipPlanService
-    PlanFormDialog ..> MembershipPlanService
-    SubscriptionListView ..> SubscriptionService
-    SubscriptionListView ..> MembershipPlanService
-    PaymentListView ..> PaymentService
 ```
 
 ## Training
@@ -635,8 +571,6 @@ classDiagram
         +log(session TrainingSession) TrainingSession
         +findByMember(memberId long) List~TrainingSession~
     }
-    class TrainingPanel {
-    }
     class TrainingModule {
         +members() MemberService
         +trainers() TrainerService
@@ -644,24 +578,6 @@ classDiagram
         +routines() RoutineService
         +sessions() TrainingSessionService
         +assignments() RoutineAssignmentService
-    }
-    class TrainerListView {
-    }
-    class TrainerFormDialog {
-    }
-    class ExerciseCatalogView {
-    }
-    class ExerciseFormDialog {
-    }
-    class RoutineListView {
-    }
-    class RoutineFormDialog {
-    }
-    class AssignmentView {
-    }
-    class SessionView {
-    }
-    class MemberPickerPanel {
     }
 
     TrainerRepository <|.. CsvTrainerRepository
@@ -683,22 +599,6 @@ classDiagram
     TrainingSessionService ..> TrainingSessionValidator
     TrainingSessionService ..> RoutineAssignmentService
     TrainingSessionService ..> RoutineService
-    TrainingPanel ..> TrainingModule
-    TrainerListView ..> TrainerService
-    TrainerFormDialog ..> TrainerService
-    ExerciseCatalogView ..> ExerciseService
-    ExerciseFormDialog ..> ExerciseService
-    RoutineListView ..> RoutineService
-    RoutineListView ..> TrainerService
-    RoutineListView ..> ExerciseService
-    RoutineFormDialog ..> RoutineService
-    RoutineFormDialog ..> TrainerService
-    RoutineFormDialog ..> ExerciseService
-    AssignmentView ..> RoutineAssignmentService
-    AssignmentView ..> RoutineService
-    SessionView ..> TrainingSessionService
-    SessionView ..> RoutineAssignmentService
-    SessionView ..> RoutineService
 ```
 
 ## Dashboard and composition root
@@ -714,10 +614,7 @@ classDiagram
     class DashboardService {
         +summary() DashboardService$Summary
     }
-    class DashboardPanel {
-    }
 
-    DashboardPanel ..> DashboardService
 ```
 
 ## Shared UI and infrastructure
@@ -725,53 +622,11 @@ classDiagram
 ```mermaid
 classDiagram
     direction TB
-    class Theme {
-    }
     class Formats {
-    }
-    class Forms {
-    }
-    class Sidebar {
-    }
-    class TopBar {
-    }
-    class UserChip {
-    }
-    class PlaceholderPanel {
-    }
-    class Avatar {
-    }
-    class BarChart {
     }
     class BmiGauge {
     }
-    class BrandPanel {
-    }
-    class Branding {
-    }
-    class CoverPhoto {
-    }
-    class DonutChart {
-    }
-    class GymArt {
-    }
-    class HeroBanner {
-    }
-    class Icons {
-    }
-    class ImageCard {
-    }
-    class Images {
-    }
-    class LineChart {
-    }
     class MemberAvatar {
-    }
-    class MuscleArt {
-    }
-    class PictureSource {
-    }
-    class StatCard {
     }
     class CsvStore {
         +readAll() List~String[]~

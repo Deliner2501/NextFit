@@ -11,8 +11,6 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `AuthService.login` | Sign-in rules live in the service, not in the window |
 | DIP | `AuthService` and `UserRepository` | The service depends on the interface, not on the CSV file |
 | GRASP Protected Variations | `CsvStore` | The file format is isolated in one class; moving to a database does not touch the services |
-| OCP | `ModulePanel` and `MainWindow` | A new module is added to the list without editing the main window |
-| GRASP Controller and low coupling | `LoginFrame` | The window collects input and delegates to `AuthService`; it holds no business rules |
 | GRASP Pure Fabrication | `PasswordHasher`, `Session` | They are not gym concepts, but they concentrate a technical task and reduce coupling |
 | Encapsulation | `User`, `PasswordHasher` | `final` attributes; the hash is one-way and never exposes the password |
 | ISP and DIP | `SubscriptionChecker` | Other modules depend on a one-method contract, not on the membership module |
@@ -27,62 +25,27 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP and testability | `Clock` injected in `SubscriptionService` and `PaymentService` | The rules can be tested on any date without waiting for real time |
 | GRASP Controller (use case) | `PaymentService.sellMembership` | One operation coordinates subscription and payment, and cancels the subscription if the payment cannot be stored |
 | GRASP Information Expert | `SubscriptionService.firstFreeDay`, `PaymentService.revenueByMonth` | The service that holds the data computes renewal dates and revenue totals |
-| SRP | `StatCard`, `DonutChart`, `BarChart` | Each class only draws; the screen decides which data to show and how to write it |
-| Low coupling and reuse | `DonutChart.Slice`, `BarChart.Bar` | The charts receive plain records and know nothing about memberships or payments, so any screen can reuse them |
-| Strategy (injected function) | `StatCard` constructor (`LongFunction`), `BarChart.setValueFormatter` | The way a number is written (pesos, count) is supplied from outside and the component does not change |
-| GRASP High cohesion | `DonutChart.drawRing`, `drawCenter`, `drawLegend`; `BarChart.drawGrid`, `drawBars`, `drawLabels`, `drawTooltip` | Each private method draws one part of the chart |
-| GRASP Information Expert | `BarChart.axisMax` | The chart owns the scale, so it rounds the axis to clean values itself |
 | SRP and GRASP Pure Fabrication | `Formats` | It is not a gym concept, but it concentrates how pesos and dates are written and read, so no screen repeats that code |
 | Testability | `FormatsTest` | The writing and reading rules are checked without opening any window |
-| GRASP Controller | `PlanListView`, `PlanFormDialog` | The screens collect clicks and typed text and delegate every rule to `MembershipPlanService`; they hold no business rules |
-| Low coupling | `PlanListView` and `MembershipPlanService` | The screen depends only on the service, never on repositories or CSV files |
-| High cohesion | `BillingPanel` | It only groups the screens of the module in tabs; each tab is its own class |
-| OCP | `BillingPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
-| GRASP Controller (use case) | `SaleView` | The screen collects member, plan, method and discount and delegates the sale to `PaymentService.sellMembership`; it holds no business rules |
-| OCP and polymorphism | `SaleView.buildDiscount` | The screen builds a `NoDiscount`, `PercentageDiscount` or `FixedDiscount` and passes it as a `Discount`; the service does not need to know which one |
-| SRP and testability | `ReceiptText`, `ReceiptTextTest` | One class only builds the receipt text, without Swing, so the window, the clipboard and the tests use the same text |
-| SRP | `ReceiptDialog` | It only shows the text and copies it; it never calculates amounts |
-| Low coupling | `SaleView` and `PaymentService`, `SubscriptionService`, `MembershipPlanService` | The screen depends only on services, never on repositories or CSV files |
-| Reuse | `MemberPickerPanel` in `SaleView` | The member search column built for training is reused instead of writing it again |
+| SRP and testability | `ReceiptText`, `ReceiptTextTest` | One class only builds the receipt text, independent of any screen toolkit, so the window, the clipboard and the tests use the same text |
 | GRASP Information Expert | `SubscriptionService.statusOf`, `daysLeftOf` | The service owns the clock, so "what state is it in today" is answered there and no screen reads the date itself |
 | GRASP Information Expert | `PaymentService.findSale` | The service that owns payments, subscriptions and plans rebuilds the sale; the screen does not chain three lookups |
-| GRASP Controller | `SubscriptionListView`, `PaymentListView` | The screens collect search text, filters and clicks and delegate to the services; they hold no business rules |
-| Low coupling | `SubscriptionListView`, `PaymentListView` and the services | Each screen depends only on services, never on repositories or CSV files |
-| Low coupling (callback) | `SaleView` `onSold` and `BillingPanel` | The sale screen only runs an action after selling; it does not know which other tabs need to refresh |
 | Testability | `SubscriptionServiceTest.statusAndDaysLeftAreWorkedOutFromToday`, `PaymentServiceTest.findSaleRebuildsTheSaleFromItsPayment` | The new service methods are checked with a fixed `Clock` and in-memory repositories |
 | GRASP Pure Fabrication | `DashboardService` | It is not a gym concept, but it gathers numbers from the membership, payment and attendance services so no screen does that math |
 | Encapsulation | `DashboardService.Summary` | One immutable record carries every number of the dashboard from the service to the screen |
-| Low coupling | `DashboardPanel` and `DashboardService` | The panel depends on one service and only draws; it knows nothing about repositories, CSV files or the other services |
 | DIP and testability | `DashboardServiceTest` | The summary is checked with a fixed `Clock` and in-memory repositories, with memberships in every state |
-| Reuse | `StatCard`, `DonutChart`, `BarChart`, `LineChart` in `DashboardPanel` | The components built with plain data are reused without any change |
-| OCP | `DashboardPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
-| Least privilege | `DashboardPanel.allowedFor` | The trainer role does not see the income numbers, because the screen is hidden from that role |
 | SRP | `UserService`, `UserValidator` | The validator only checks data; the service holds the account rules |
 | DIP | `UserService` and `UserRepository` | The service depends on the interface, not on the CSV file |
 | GRASP Information Expert | `UserService.ensureAnotherActiveAdmin` | The service that sees every account is the one that protects the last administrator |
-| OCP | `UsersPanel` implements `ModulePanel` | The module replaced its placeholder in `Main`; the main window did not change |
-| GRASP Controller | `UsersPanel`, `UserFormDialog` | The screens collect clicks and delegate every rule to `UserService` |
-| Security | `UserService.resetPassword`, `LoginFrame` | Only the hash is stored; the default credentials are no longer shown on screen |
-| SRP | `GymArt`, `MuscleArt`, `HeroBanner` | One only draws equipment, one only draws muscle groups, one only paints a banner |
-| Low coupling and reuse | `GymArt` | The login and the dashboard share the same drawings without knowing each other |
-| GRASP Protected Variations | `PictureSource` with the `art:` path | Screens ask for a picture by path; whether it is a photo or a drawing is hidden |
-| OCP | `MuscleArt` and `ImageCard` | The catalog gained illustrations without changing how `ImageCard` draws |
-| SRP | `CoverPhoto` | It only fits a photo into an area and keeps the scaled copy; screens decide where to use it |
-| Decorator | `BannerModule` | It adds a banner to any `ModulePanel` and forwards every call, so the modules stay unchanged |
-| GRASP Protected Variations | `HeroBanner`, `MuscleArt.pathFor` | A missing photo falls back to the drawing, so the screens never break |
 | DIP and reuse | `DemoData` | It creates the example data through the same services the screens use, so it follows the same rules and needs no special code path |
 | DIP and testability | `DemoData.at` with `Clock.fixed` | Each past day is reproduced with its own fixed clock, so "a membership must be valid to enter" holds on that day |
 | GRASP Protected Variations | `DemoData.isEmptyInstallation` | Example data is only created when nothing exists, so real data is never mixed with it |
-| GRASP Information Expert and SRP | `Images.deviceScale` | The only place that knows how to read the screen density from a `Graphics2D`; `CoverPhoto` and `ImageCard` ask it instead of repeating the calculation |
-| GRASP Protected Variations | `CoverPhoto.paint`, `ImageCard.paintPicture` | The photo is prepared at the real pixel size of the screen, so Windows scaling (125 %, 150 %) changes nothing for the callers, who keep drawing in logical pixels |
-| SRP | `Images.scale` | One class owns the quality of resizing (progressive halving plus bicubic), so every screen gets the same sharpness |
 | GRASP Protected Variations | `FxTheme` and `nextfit.css` | Dark and light modes change only the values of the style sheet; no screen writes a color in code, so a new mode does not touch any screen |
 | DIP | `FxApp.run` | The JavaFX interface receives `AuthService`, `Session` and `DashboardService` from `Main` and never creates a repository; the interface never creates a repository, so the CSV files can be replaced by a database in `Main` only |
 | SRP and GRASP Information Expert | `DashboardView` | It only draws the `Summary` that `DashboardService` calculates; no business rule is repeated in the view |
 | OCP | `Main` (JavaFX only) | The interface was replaced without changing services, model or persistence |
 | SRP | `LoginView`, `ShellView`, `FxIcons`, `FxImages` | One class per concern: sign-in screen, main window, vector icons, photo areas |
 | OCP and polymorphism | `FxModule`, `DashboardModule`, `PendingModule`, `UsersModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
-| GRASP Pure Fabrication and DRY | `FxDialogs` | Forms and messages shared by every module, so no module builds its own window; the form stays open and shows the business error |
 | SRP and DIP | `UsersModule` | It only collects clicks and shows data; every rule (last administrator, own account, password strength) stays in `UserService` |
 | DRY and GRASP Pure Fabrication | `MemberPicker` | The member search column is one reusable class that any module (sales, training, members) can use instead of copying it |
 | SRP and DIP | `SalePane`, `PlansPane` | They only collect data and show the total; the discount math is the `Discount` hierarchy and the sale rules are in `PaymentService` |
@@ -126,18 +89,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | ISP and DIP | `AttendanceService` and `SubscriptionChecker` | Attendance depends on a one-method contract, not on the membership module, and the tests use a fake one |
 | GRASP Low coupling | `HealthService`, `AttendanceService` and `MemberService.findById` | They ask the member service whether a member exists instead of reading the members file |
 | Dependency injection | `AttendanceService` constructor with `Clock` | The clock is received from outside so the tests can fix the time |
-| Low coupling and reuse | `LineChart` | The chart receives plain `Point(label, value)` data and knows nothing about members or payments, so any screen can reuse it |
-| SRP | `LineChart` | It only draws a chart; services provide the data and each screen decides what to show |
-| GRASP High cohesion | `LineChart.drawGrid`, `drawLineAndArea`, `drawPoints`, `drawTooltip` | Each private method draws one part of the chart |
-| GRASP Controller | `MembersPanel`, `MemberFormDialog` | The screens collect what the user types and delegate every rule to `MemberService`; they hold no business rules |
-| Low coupling | `MembersPanel` and `MemberService` | The screen depends only on the service, never on repositories or CSV files |
-| OCP | `MembersPanel` implements `ModulePanel` | The module joins the menu by replacing a placeholder in `Main`; the main window does not change |
 | SRP | `PhotoStorage`, `MemberAvatar` | One only copies photos into the data folder, the other only draws a picture or initials |
 | GRASP Pure Fabrication | `PhotoStorage` | It is not a gym concept, but it keeps file work out of the screens and the services |
-| GRASP Controller | `MemberDetailPanel`, `HealthTab`, `MeasurementsTab`, `AttendanceTab` | Each tab collects input and delegates to `HealthService` or `AttendanceService`; none holds business rules |
-| High cohesion | `HealthTab`, `MeasurementsTab`, `AttendanceTab` | The member record is split into one class per topic instead of one huge screen |
 | Information Expert | `BmiGauge` | It knows how an index maps to a colored position and asks `BmiCategory` for the category |
-| Low coupling and reuse | `MeasurementsTab` uses `LineChart` | The weight chart reuses the generic component without changing it |
 | DIP | `Main` | Services are created with their CSV repositories in one place, so a database only changes those lines |
 | Testability (DIP) | `BillingFakeRepositories` | The billing services are tested with in-memory repositories because they depend on interfaces, not on CSV files |
 | Testability (DIP) | `Clock.fixed` in `SubscriptionServiceTest`, `PaymentServiceTest` | The rules about dates (start, renewal, expiry, revenue by month) are checked on a known day |
@@ -217,13 +171,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `TrainingSessionService.log` | The service that records sessions knows which rules a session must satisfy |
 | DIP | `TrainingSessionService` and `TrainingSessionRepository`, `SubscriptionChecker` | The service depends on interfaces, not on CSV or the membership module |
 | Encapsulation | `TrainingSession` | `final` attributes; the only copy allowed is `withId` |
-| SRP and reuse | `PictureSource`, `Avatar`, `ImageCard` | Finding a picture, showing a person and showing an item are separate classes that any module can reuse |
 | Testability (DIP) | `RoutineAssignmentServiceTest`, `TrainingSessionServiceTest` | `SubscriptionChecker` is replaced by a lambda in tests because the services depend on an interface, not on the membership module |
-| GRASP Controller and low coupling | `ExerciseCatalogView`, `ExerciseFormDialog` | The screens collect input and delegate to `ExerciseService`; they hold no business rules |
-| OCP | `TrainingPanel` | A new tab (trainers, routines, sessions) is added to the panel without changing the existing tabs |
-| SRP | `RoutineFormDialog.DayPanel`, `RoutineFormDialog.LineRow` | Each nested class handles one level of the routine (a day, a line); the dialog only assembles the result and delegates saving to `RoutineService` |
-| GRASP Information Expert | `AssignmentView` and `RoutineAssignmentService.findCurrentFor` | The screen asks the service which routine is current instead of filtering assignments itself |
-| DRY and SRP | `MemberPickerPanel` | The member search column is one reusable class instead of being copied into each screen |
 | SRP | `SuggestionRequest`, `SuggestionSettings`, `WeeklySplit` | One class only carries what was asked, one only holds the adjustable settings and one only decides the days; none of them builds a routine |
 | OCP and ISP | `SuggestionRule`, `BmiRule`, `MedicalConditionRule` | A new rule is a new class that implements a one-method interface; `SuggestionService` does not change |
 | DIP | `SuggestionService` and `SuggestionRule`, `ExerciseService`, `HealthService` | The service receives its rules and collaborators through the constructor and depends on the interface, not on concrete rules |
