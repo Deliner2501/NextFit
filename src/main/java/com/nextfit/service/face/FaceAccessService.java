@@ -25,6 +25,7 @@ public class FaceAccessService {
     /** Frames with a face nobody knows before telling the person. */
     static final int UNKNOWN_FRAMES = 10;
     private static final int UNKNOWN_PAUSE = -40;
+    public static final String UNKNOWN_MESSAGE = "Rostro no reconocido. Usa el carnet (QR) o el documento.";
 
     private final FaceTemplateRepository templates;
     private final MemberLookup members;
@@ -76,6 +77,46 @@ public class FaceAccessService {
     }
 
     /**
+     * Looks for the member of a face, without any waiting or other safety check.
+     *
+     * @param frame what the camera saw
+     * @return the member id when the face looks at the camera and is clearly one registered member
+     */
+    public Optional<Long> match(FaceFrame frame) {
+        if (!frame.isFrontal()) {
+            return Optional.empty();
+        }
+        return FaceMatcher.best(frame.vector(), cache, threshold, margin).map(FaceMatcher.Match::memberId);
+    }
+
+    /**
+     * Applies the usual access rules to a member that was already recognized.
+     *
+     * @param memberId the recognized member
+     * @return the access result: entry, exit or a denial
+     */
+    public AccessResult finish(long memberId) {
+        Optional<Member> member = members.find(memberId);
+        if (member.isEmpty()) {
+            return deny.apply("El rostro pertenece a un socio que ya no existe.");
+        }
+        if (!member.get().isActive()) {
+            return deny.apply("Socio inactivo: " + member.get().getFullName());
+        }
+        return admit.apply(member.get());
+    }
+
+    /**
+     * Writes a denied access.
+     *
+     * @param message why it was denied
+     * @return the denied result
+     */
+    public AccessResult reject(String message) {
+        return deny.apply(message);
+    }
+
+    /**
      * Processes one picture of the camera. Faces looking to the side are ignored: they are not reliable.
      *
      * @param frame what the camera saw
@@ -87,29 +128,17 @@ public class FaceAccessService {
             stabilizer.feed(Optional.empty());
             return Optional.empty();
         }
-        Optional<Long> recognized = FaceMatcher.best(frame.vector(), cache, threshold, margin)
-                .map(FaceMatcher.Match::memberId);
+        Optional<Long> recognized = match(frame);
         if (recognized.isEmpty()) {
             stabilizer.feed(Optional.empty());
             unknownFrames++;
             if (unknownFrames == UNKNOWN_FRAMES) {
                 unknownFrames = UNKNOWN_PAUSE;
-                return Optional.of(deny.apply("Rostro no reconocido. Usa el carnet (QR) o el documento."));
+                return Optional.of(deny.apply(UNKNOWN_MESSAGE));
             }
             return Optional.empty();
         }
         unknownFrames = 0;
-        Optional<Long> confirmed = stabilizer.feed(recognized);
-        if (confirmed.isEmpty()) {
-            return Optional.empty();
-        }
-        Optional<Member> member = members.find(confirmed.get());
-        if (member.isEmpty()) {
-            return Optional.of(deny.apply("El rostro pertenece a un socio que ya no existe."));
-        }
-        if (!member.get().isActive()) {
-            return Optional.of(deny.apply("Socio inactivo: " + member.get().getFullName()));
-        }
-        return Optional.of(admit.apply(member.get()));
+        return stabilizer.feed(recognized).map(this::finish);
     }
 }
