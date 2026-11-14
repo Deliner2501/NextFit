@@ -12,6 +12,7 @@ import com.nextfit.model.RoutineDay;
 import com.nextfit.model.RoutineExercise;
 import com.nextfit.model.Trainer;
 import com.nextfit.model.TrainingSession;
+import com.nextfit.service.occupancy.OccupancyForecastService;
 import com.nextfit.persistence.CsvAttendanceRepository;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.persistence.CsvMembershipPlanRepository;
@@ -74,7 +75,8 @@ class MemberPortalTest {
         phone = new PhoneAccess(members, access, new AccessTokens(key), CLOCK);
         training = new TrainingModule(folder, members, subscriptions);
         portal = new MemberPortal(phone, subscriptions, plans, training.assignments(), training.routines(),
-                training.exercises(), training.sessions(), new GamificationService(members, attendance, CLOCK));
+                training.exercises(), training.sessions(), new GamificationService(members, attendance, CLOCK),
+                new BestTimesAdvisor(new OccupancyForecastService(attendance, CLOCK), CLOCK));
         ana = members.register(new Member(0, "Ana Gómez", "1065123456", "3001234567", "ana@example.com",
                 LocalDate.of(1998, 3, 1), LocalDate.now(), "", "Mamá 3110000000", true));
     }

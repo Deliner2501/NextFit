@@ -3,6 +3,9 @@ package com.nextfit.web;
 import com.nextfit.model.Member;
 import com.nextfit.service.gamification.Achievements;
 import com.nextfit.service.gamification.Badge;
+import com.nextfit.service.occupancy.HourForecast;
+import com.nextfit.service.occupancy.OccupancyLevel;
+import com.nextfit.service.portal.PortalBestTimes;
 import com.nextfit.service.portal.PortalExercise;
 import com.nextfit.service.portal.PortalMembership;
 import com.nextfit.service.portal.PortalSummary;
@@ -12,9 +15,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 /**
- * The page a member opens on the phone to see the membership, the routine of the day and the
- * progress. It is a pure function from a summary to text, like {@link AccessPage}, so it is tested
- * without a server. It uses the same colors as the access page so both feel like one product.
+ * The page a member opens on the phone to see the membership, the routine of the day, the best
+ * hours to train and the progress. It is a pure function from a summary to text, like
+ * {@link AccessPage}, so it is tested without a server. It uses the same colors as the access page
+ * so both feel like one product.
  */
 public final class PortalPage {
 
@@ -37,6 +41,7 @@ public final class PortalPage {
         header(body, summary.member(), token);
         membership(body, summary);
         workout(body, summary);
+        bestTimes(body, summary);
         progress(body, summary.achievements());
         return page(body.toString());
     }
@@ -102,6 +107,33 @@ public final class PortalPage {
             body.append("</ol>");
         }
         body.append("</section>");
+    }
+
+    private static void bestTimes(StringBuilder body, PortalSummary summary) {
+        body.append("<section class=\"card\"><h2>Mejor hora para entrenar</h2>");
+        if (summary.bestTimes().isEmpty()) {
+            body.append("<p class=\"muted\">Aún no hay suficientes visitas para recomendarte una hora.</p>");
+        } else {
+            PortalBestTimes times = summary.bestTimes().get();
+            body.append("<p class=\"muted\">").append(esc(times.dayLabel()))
+                    .append(" el gimnasio estará más tranquilo a las:</p><div class=\"chips\">");
+            for (HourForecast hour : times.hours()) {
+                body.append("<span class=\"chip ").append(styleOf(hour.level())).append("\">")
+                        .append(String.format("%02d:00", hour.hour())).append(" · ")
+                        .append(esc(hour.level().getLabel())).append("</span>");
+            }
+            body.append("</div>");
+        }
+        body.append("</section>");
+    }
+
+    // EXPLICACIÓN: verde si está tranquilo, ámbar si está muy lleno; los colores viven en el CSS de la página
+    private static String styleOf(OccupancyLevel level) {
+        return switch (level) {
+            case QUIET -> "badge";
+            case MODERATE -> "";
+            case BUSY, FULL -> "warn";
+        };
     }
 
     private static void progress(StringBuilder body, Achievements achievements) {

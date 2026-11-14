@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Gathers what a member sees from the phone: the membership, the day of the routine to train and
- * the progress. The member is found with the access code of the carnet. It only reads from the
- * services that already exist; it draws nothing and changes nothing, so the same summary can feed
- * a web page, a mobile app or a screen of the gym.
+ * Gathers what a member sees from the phone: the membership, the day of the routine to train, the
+ * progress and the best hours to train. The member is found with the access code of the carnet. It
+ * only reads from the services that already exist; it draws nothing and changes nothing, so the
+ * same summary can feed a web page, a mobile app or a screen of the gym.
  */
 public class MemberPortal {
 
@@ -33,6 +33,7 @@ public class MemberPortal {
     private final ExerciseService exercises;
     private final TrainingSessionService sessions;
     private final GamificationService gamification;
+    private final BestTimesAdvisor bestTimes;
 
     /**
      * Creates the portal.
@@ -45,10 +46,12 @@ public class MemberPortal {
      * @param exercises     the catalog of exercises
      * @param sessions      the sessions the member already did
      * @param gamification  the source of the streaks and the badges
+     * @param bestTimes     advises the best hours to train
      */
     public MemberPortal(PhoneAccess phone, SubscriptionService subscriptions, MembershipPlanService plans,
                         RoutineAssignmentService assignments, RoutineService routines, ExerciseService exercises,
-                        TrainingSessionService sessions, GamificationService gamification) {
+                        TrainingSessionService sessions, GamificationService gamification,
+                        BestTimesAdvisor bestTimes) {
         this.phone = phone;
         this.subscriptions = subscriptions;
         this.plans = plans;
@@ -57,6 +60,7 @@ public class MemberPortal {
         this.exercises = exercises;
         this.sessions = sessions;
         this.gamification = gamification;
+        this.bestTimes = bestTimes;
     }
 
     /**
@@ -67,7 +71,7 @@ public class MemberPortal {
      */
     public Optional<PortalSummary> summaryFor(String token) {
         return phone.findMember(token).map(member -> new PortalSummary(member, membershipOf(member),
-                workoutOf(member), gamification.achievementsOf(member.getId())));
+                workoutOf(member), gamification.achievementsOf(member.getId()), bestTimes.advise()));
     }
 
     private Optional<PortalMembership> membershipOf(Member member) {

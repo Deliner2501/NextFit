@@ -28,4 +28,20 @@ public record ChurnRisk(Member member, int score, RiskLevel level, List<String> 
     public String action() {
         return level.getAction();
     }
+
+    /**
+     * Returns the full explanation of the risk, to show it complete when the list cuts the text.
+     *
+     * @return the level, the reasons one by one and what to do
+     */
+    public String detail() {
+        StringBuilder text = new StringBuilder("Riesgo ")
+                .append(level.getLabel().toLowerCase()).append(" (").append(score).append("/100)\n\nMotivos:\n");
+        if (reasons.isEmpty()) {
+            text.append("- Sin señales de abandono\n");
+        } else {
+            reasons.forEach(reason -> text.append("- ").append(reason).append("\n"));
+        }
+        return text.append("\nQué hacer: ").append(action()).toString();
+    }    
 }
