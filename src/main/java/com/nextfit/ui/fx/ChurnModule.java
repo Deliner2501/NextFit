@@ -16,10 +16,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.Tooltip;
 
 /**
  * Churn module in JavaFX: it shows which members with a membership may stop coming, why, and what
@@ -124,9 +126,39 @@ public final class ChurnModule implements FxModule {
         TableColumn<ChurnRisk, String> reasons = FxTables.column("Motivos", 420,
                 r -> r.reasons().isEmpty() ? "Sin señales de abandono" : String.join(". ", r.reasons()));
         TableColumn<ChurnRisk, String> action = FxTables.column("Qué hacer", 240, ChurnRisk::action);
+            // EXPLICACIÓN: el texto se ajusta en varias líneas y, si aún no cabe, el tooltip y el clic lo muestran completo
+        reasons.setCellFactory(col -> new TableCell<>() {
+            {
+                setWrapText(true);
+            }
+
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setText(null);
+                    setTooltip(null);
+                } else {
+                    setText(value);
+                    Tooltip tip = new Tooltip(value);
+                    tip.setWrapText(true);
+                    tip.setMaxWidth(420);
+                    setTooltip(tip);
+                }
+            }
+        });
         table.getColumns().addAll(List.of(member, score, level, reasons, action));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        table.setFixedCellSize(46);
+        table.setFixedCellSize(66);
+        table.setRowFactory(tv -> {
+            TableRow<ChurnRisk> row = new TableRow<>();
+            row.setOnMouseClicked(e -> {
+                if (!row.isEmpty()) {
+                    showDetail(row.getItem());
+                }
+            });
+            return row;
+        });
         table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         table.setPlaceholder(new Label("No hay socios con membresía vigente"));
         table.getStyleClass().add("nf-table");
@@ -134,6 +166,11 @@ public final class ChurnModule implements FxModule {
         return table;
     }
 
+        // Shows the complete reasons of one member in a window.
+    private void showDetail(ChurnRisk risk) {
+        FxDialogs.message(view, risk.member().getFullName(), risk.detail());
+    }
+    
     // Asks the service again and updates the cards and the list.
     private void refresh() {
         Map<RiskLevel, Long> counts;
