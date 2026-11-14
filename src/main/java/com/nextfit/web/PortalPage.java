@@ -16,9 +16,9 @@ import java.util.Locale;
 
 /**
  * The page a member opens on the phone to see the membership, the routine of the day, the best
- * hours to train and the progress. It is a pure function from a summary to text, like
- * {@link AccessPage}, so it is tested without a server. It uses the same colors as the access page
- * so both feel like one product.
+ * hours to train, the progress and, when the assistant is on, a chat to ask about his own data. It
+ * is a pure function from a summary to text, like {@link AccessPage}, so it is tested without a
+ * server. It uses the same colors as the access page so both feel like one product.
  */
 public final class PortalPage {
 
@@ -30,18 +30,33 @@ public final class PortalPage {
     }
 
     /**
-     * Draws the portal of a member.
+     * Draws the portal of a member, without the chat.
      *
      * @param summary what the member sees
      * @param token   the access code, used to ask the server for the member photo
      * @return the HTML page
      */
     public static String render(PortalSummary summary, String token) {
+        return render(summary, token, false);
+    }
+
+    /**
+     * Draws the portal of a member.
+     *
+     * @param summary     what the member sees
+     * @param token       the access code, used to ask the server for the member photo and for the chat
+     * @param chatEnabled true when the assistant is on and the chat must be shown
+     * @return the HTML page
+     */
+    public static String render(PortalSummary summary, String token, boolean chatEnabled) {
         StringBuilder body = new StringBuilder();
         header(body, summary.member(), token);
         membership(body, summary);
         workout(body, summary);
         bestTimes(body, summary);
+        if (chatEnabled) {
+            chat(body, token);
+        }
         progress(body, summary.achievements());
         return page(body.toString());
     }
@@ -136,6 +151,19 @@ public final class PortalPage {
         };
     }
 
+    // EXPLICACIÓN: el código va en un atributo data-, no dentro del script; y la respuesta se escribe con
+    // textContent, así que lo que diga la IA nunca se interpreta como HTML
+    private static void chat(StringBuilder body, String token) {
+        body.append("<section class=\"card\" id=\"chat\" data-token=\"").append(esc(token)).append("\">")
+                .append("<h2>Pregúntale a tu gimnasio</h2>")
+                .append("<div id=\"chat-log\" class=\"chat-log\"></div>")
+                .append("<form id=\"chat-form\" class=\"chat-form\">")
+                .append("<input id=\"chat-input\" type=\"text\" maxlength=\"500\" autocomplete=\"off\" ")
+                .append("placeholder=\"¿Qué me toca hoy?\"><button type=\"submit\">Enviar</button></form>")
+                .append("<p class=\"muted small\">Solo responde sobre tus propios datos.</p>")
+                .append("<script>").append(CHAT_SCRIPT).append("</script></section>");
+    }
+
     private static void progress(StringBuilder body, Achievements achievements) {
         body.append("<section class=\"card\"><h2>Mi progreso</h2><div class=\"stats\">")
                 .append(stat(achievements.trainingDays(), "días entrenados"))
@@ -159,6 +187,28 @@ public final class PortalPage {
         return "<div class=\"stat\"><b>" + value + "</b><span>" + label + "</span></div>";
     }
 
+    private static final String CHAT_SCRIPT = """
+            (function(){
+            var box=document.getElementById('chat'),log=document.getElementById('chat-log'),
+            form=document.getElementById('chat-form'),input=document.getElementById('chat-input'),
+            button=form.querySelector('button');
+            function add(text,cls){var p=document.createElement('p');p.className='bubble '+cls;
+            p.textContent=text;log.appendChild(p);p.scrollIntoView({block:'nearest'});return p;}
+            form.addEventListener('submit',function(e){
+            e.preventDefault();var q=input.value.trim();if(!q){return;}
+            input.value='';add(q,'me');var wait=add('Pensando…','bot');
+            input.disabled=true;button.disabled=true;
+            fetch('/m/'+encodeURIComponent(box.dataset.token)+'/chat',{method:'POST',
+            headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})
+            .then(function(r){return r.json().catch(function(){return {error:'No pude responder. Intenta de nuevo'};});})
+            .then(function(d){wait.textContent=d.answer||d.error||'No pude responder. Intenta de nuevo';
+            if(!d.answer){wait.className='bubble err';}})
+            .catch(function(){wait.textContent='No hay conexión con el gimnasio. Intenta de nuevo';
+            wait.className='bubble err';})
+            .finally(function(){input.disabled=false;button.disabled=false;input.focus();});
+            });})();
+            """;
+
     private static final String STYLE = """
             *{box-sizing:border-box}
             body{margin:0;min-height:100vh;padding:22px 16px 34px;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
@@ -180,6 +230,7 @@ public final class PortalPage {
             .center{text-align:center}
             .big{font-size:22px;font-weight:700;margin:0 0 6px}
             .muted{margin:0;color:#B9AFD6;font-size:15px;line-height:1.4}
+            .small{font-size:12px;margin-top:10px}
             .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
             .chip{padding:8px 14px;border-radius:999px;font-size:14px;background:rgba(122,53,232,.35);border:1px solid rgba(255,255,255,.14)}
             .chip.warn{background:rgba(255,176,32,.18);border-color:rgba(255,176,32,.55);color:#FFD27A;font-weight:600}
@@ -187,6 +238,16 @@ public final class PortalPage {
             .exercises{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}
             .exercises li{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);display:flex;flex-direction:column;gap:4px}
             .exercises span{font-size:13px;color:#B9AFD6}
+            .chat-log{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;margin-bottom:12px}
+            .bubble{margin:0;padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.4;max-width:88%;white-space:pre-wrap}
+            .bubble.me{align-self:flex-end;background:rgba(122,53,232,.45)}
+            .bubble.bot{align-self:flex-start;background:rgba(255,255,255,.08)}
+            .bubble.err{align-self:flex-start;background:rgba(255,77,79,.18);color:#FFB3B4}
+            .chat-form{display:flex;gap:8px}
+            .chat-form input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.2);
+            background:rgba(255,255,255,.06);color:#fff;font-size:16px}
+            .chat-form button{padding:12px 16px;border-radius:14px;border:0;background:#A7F626;color:#0B0A12;font-weight:700;font-size:15px}
+            .chat-form button:disabled{opacity:.5}
             .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
             .stat{padding:14px 6px;border-radius:16px;background:rgba(255,255,255,.06);text-align:center;display:flex;flex-direction:column;gap:4px}
             .stat b{font-size:28px;color:#A7F626}

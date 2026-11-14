@@ -276,6 +276,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP | `BestTimesAdvisor`, `MemberPortal` | The portal receives the advisor by constructor and a clock, so tests use a fixed day. |
 | Low Coupling | `PortalPage` | It only receives `PortalBestTimes` and does not know the forecast service or the attendance. |
 | Information Expert | `PortalBestTimes` | It owns the recommended hours and the day label that belong together. |
+| Single Responsibility | `PortalChatEndpoint` | Only validates the request of the chat and builds the answer; the web server only moves bytes and the chat service holds the rules. |
+| Single Responsibility | `PortalChatService` | Keeps the conversation and the hourly limit of each member; it does not know the web nor the AI provider. |
+| Low Coupling | `MemberSummaryLookup` | The member tools depend on a one-method interface, not on the portal service nor on the CSV files. |
+| Protected Variations | `MyMembershipTool`, `MyNextWorkoutTool`, `BestHoursTool` | The tools take no arguments, so the model cannot ask for the data of another member; the member comes from the carnet code. |
+| Dependency Inversion | `AccessServer` | Receives the chat as a `PortalChatEndpoint` that can be null, so the portal works the same with the assistant off. |
 
 ## Face recognition screens
 
@@ -285,3 +290,4 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP | `FacePane` | It receives `FaceAccessService` and `FaceEnrollmentService` from `Main` and reads the camera only through `FaceCamera` |
 | ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
 | Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |
+

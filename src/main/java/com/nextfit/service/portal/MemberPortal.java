@@ -69,9 +69,25 @@ public class MemberPortal {
      * @param token the access code of the carnet
      * @return the summary, or empty when the code belongs to nobody
      */
+    /**
+     * Builds the summary of the member that owns an access code.
+     *
+     * @param token the access code of the carnet
+     * @return the summary, or empty when the code belongs to nobody
+     */
     public Optional<PortalSummary> summaryFor(String token) {
-        return phone.findMember(token).map(member -> new PortalSummary(member, membershipOf(member),
-                workoutOf(member), gamification.achievementsOf(member.getId()), bestTimes.advise()));
+        return phone.findMember(token).map(this::summaryOf);
+    }
+
+    /**
+     * Builds the summary of a member that was already identified.
+     *
+     * @param member the member
+     * @return what the member sees in the portal
+     */
+    public PortalSummary summaryOf(Member member) {
+        return new PortalSummary(member, membershipOf(member), workoutOf(member),
+                gamification.achievementsOf(member.getId()), bestTimes.advise());
     }
 
     private Optional<PortalMembership> membershipOf(Member member) {

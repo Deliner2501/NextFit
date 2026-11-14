@@ -62,6 +62,7 @@ import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
 import com.nextfit.util.PhotoStorage;
+import com.nextfit.service.occupancy.OccupancyForecastService;
 import com.nextfit.service.occupancy.OccupancyService;
 import com.nextfit.ui.fx.OccupancyModule;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
@@ -71,24 +72,30 @@ import com.nextfit.service.churn.ChurnService;
 import com.nextfit.ui.fx.ChurnModule;
 import java.nio.file.Path;
 import java.util.List;
+import com.nextfit.service.portal.BestTimesAdvisor;
 import com.nextfit.service.portal.MemberPortal;
 import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
+import com.nextfit.web.PortalChatEndpoint;
 import java.io.IOException;
 import java.util.function.Supplier;
+import com.nextfit.ai.AiAssistant;
 import com.nextfit.ai.AiSetup;
 import com.nextfit.ai.AiTool;
 import com.nextfit.ai.AiUser;
 import com.nextfit.ai.AssistantChat;
+import com.nextfit.ai.PortalChatService;
+import com.nextfit.ai.tools.BestHoursTool;
 import com.nextfit.ai.tools.GymAlertsTool;
+import com.nextfit.ai.tools.MemberSummaryLookup;
 import com.nextfit.ai.tools.MembersAtRiskTool;
+import com.nextfit.ai.tools.MyMembershipTool;
+import com.nextfit.ai.tools.MyNextWorkoutTool;
 import com.nextfit.ai.tools.RevenueSummaryTool;
 import com.nextfit.exceptions.AiException;
 import com.nextfit.persistence.jdbc.DatabaseConfig;
 import com.nextfit.ui.fx.AssistantModule;
 import java.util.Optional;
-import com.nextfit.service.occupancy.OccupancyForecastService;
-import com.nextfit.service.portal.BestTimesAdvisor;
 
 /**
  * Application entry point. Repositories, services and screens are wired here
@@ -133,7 +140,7 @@ public final class Main {
         } catch (RuntimeException e) {
             System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
         }
-        
+
         // Members module
         MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
         MemberService memberService = new MemberService(memberRepository, new MemberValidator());
@@ -175,7 +182,7 @@ public final class Main {
                 Clock.systemDefaultZone());
         DashboardService dashboardService = new DashboardService(
                 subscriptionService, paymentService, attendanceService, Clock.systemDefaultZone());
-        
+
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
         GamificationService gamificationService = new GamificationService(memberService, attendanceService,
@@ -185,21 +192,11 @@ public final class Main {
         ChurnService churnService = ChurnService.withStandardRules(attendanceService, subscriptionService,
                 memberService, Clock.systemDefaultZone());
 
-        // The AI assistant. Without an ai.apiKey line in nextfit.properties it stays off and NextFit works as always.
-        List<AiTool> aiTools = List.of(
-                new MembersAtRiskTool(churnService),
-                new RevenueSummaryTool(paymentService, Clock.systemDefaultZone()),
-                new GymAlertsTool(alertService));
-        Optional<AssistantChat> assistantChat = AiSetup
-                .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone())
-                .map(assistant -> new AssistantChat(assistant, () -> session.getCurrentUser()
-                        .map(user -> AiUser.staff(user.getRole(), user.getUsername()))
-                        .orElseThrow(() -> new AiException("No hay una sesión iniciada"))));
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
-        
-                OccupancyService occupancyService = new OccupancyService(attendanceService, memberService,
+
+        OccupancyService occupancyService = new OccupancyService(attendanceService, memberService,
                 Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
@@ -209,7 +206,31 @@ public final class Main {
         MemberPortal memberPortal = new MemberPortal(phoneAccess, subscriptionService, planService,
                 training.assignments(), training.routines(), training.exercises(), training.sessions(),
                 gamificationService, bestTimesAdvisor);
-        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, ACCESS_PORT);
+
+        // The AI assistant. Without an ai.apiKey line in nextfit.properties it stays off and NextFit works as always.
+        // EXPLICACIÓN: es UN solo asistente con las herramientas del personal y las del socio; cada quien solo ve
+        // las de su rol (AiAudience), y el socio nunca puede pedir datos de otro porque sus herramientas no
+        // reciben argumentos: el socio sale del código de su carnet.
+        MemberSummaryLookup memberSummaries = id -> Optional.of(memberPortal.summaryOf(memberService.findById(id)));
+        List<AiTool> aiTools = List.of(
+                new MembersAtRiskTool(churnService),
+                new RevenueSummaryTool(paymentService, Clock.systemDefaultZone()),
+                new GymAlertsTool(alertService),
+                new MyMembershipTool(memberSummaries),
+                new MyNextWorkoutTool(memberSummaries),
+                new BestHoursTool(memberSummaries));
+        Optional<AiAssistant> assistant = AiSetup
+                .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone());
+        Optional<AssistantChat> assistantChat = assistant
+                .map(ai -> new AssistantChat(ai, () -> session.getCurrentUser()
+                        .map(user -> AiUser.staff(user.getRole(), user.getUsername()))
+                        .orElseThrow(() -> new AiException("No hay una sesión iniciada"))));
+        PortalChatEndpoint portalChat = assistant
+                .map(ai -> new PortalChatService(ai, phoneAccess::findMember, Clock.systemDefaultZone()))
+                .map(service -> new PortalChatEndpoint(service::ask))
+                .orElse(null);
+
+        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat, ACCESS_PORT);
         try {
             accessServer.start();
         } catch (IOException e) {

@@ -24,16 +24,19 @@ import java.util.concurrent.Executors;
  * scans the QR of a carnet opens {@code /a/CODE}; the server registers the entry
  * or the exit and answers with {@link AccessPage}. It only serves the local
  * network and has these routes: {@code /a/CODE}, {@code /m/CODE} (the portal of the member, only
- * when a {@link MemberPortal} was given), {@code /photo/CODE} and {@code /ping} (to check the
- * connection from a phone).
+ * when a {@link MemberPortal} was given), {@code POST /m/CODE/chat} (the questions of the chat of the
+ * portal, only when a {@link PortalChatEndpoint} was given), {@code /photo/CODE} and {@code /ping}
+ * (to check the connection from a phone).
  */
 public final class AccessServer {
 
     private static final int PORT_TRIES = 10;
     private static final long MAX_PHOTO_BYTES = 5L * 1024 * 1024;
+    private static final String CHAT_SUFFIX = "/chat";
 
     private final PhoneAccess phone;
     private final MemberPortal portal;
+    private final PortalChatEndpoint chat;
     private final int preferredPort;
     private HttpServer server;
     private ExecutorService executor;
@@ -45,7 +48,7 @@ public final class AccessServer {
      * @param preferredPort the port to try first; 0 lets the system choose a free one
      */
     public AccessServer(PhoneAccess phone, int preferredPort) {
-        this(phone, null, preferredPort);
+        this(phone, null, null, preferredPort);
     }
 
     /**
@@ -56,8 +59,21 @@ public final class AccessServer {
      * @param preferredPort the port to try first; 0 lets the system choose a free one
      */
     public AccessServer(PhoneAccess phone, MemberPortal portal, int preferredPort) {
+        this(phone, portal, null, preferredPort);
+    }
+
+    /**
+     * Creates the server with the portal and the chat of the member, without starting it.
+     *
+     * @param phone         the service that registers the scans
+     * @param portal        the service that gathers what the member sees; null leaves the portal off
+     * @param chat          the door of the chat of the portal; null leaves the chat off
+     * @param preferredPort the port to try first; 0 lets the system choose a free one
+     */
+    public AccessServer(PhoneAccess phone, MemberPortal portal, PortalChatEndpoint chat, int preferredPort) {
         this.phone = phone;
         this.portal = portal;
+        this.chat = chat;
         this.preferredPort = preferredPort;
     }
 
@@ -114,7 +130,10 @@ public final class AccessServer {
     private void handle(HttpExchange exchange) throws IOException {
         try {
             String path = exchange.getRequestURI().getPath();
-            if (!"GET".equals(exchange.getRequestMethod())) {
+            String method = exchange.getRequestMethod();
+            if ("POST".equals(method) && chat != null && portal != null && isChatPath(path)) {
+                sendChat(exchange, path.substring(3, path.length() - CHAT_SUFFIX.length()));
+            } else if (!"GET".equals(method)) {
                 send(exchange, 405, "text/plain; charset=utf-8", "Método no permitido".getBytes(StandardCharsets.UTF_8));
             } else if (path.equals("/") || path.equals("/ping")) {
                 sendHtml(exchange, 200, AccessPage.ping());
@@ -138,13 +157,28 @@ public final class AccessServer {
         }
     }
 
+    // EXPLICACIÓN: la ruta del chat es /m/CODIGO/chat; el código es lo que queda en el medio
+    private static boolean isChatPath(String path) {
+        return path.startsWith("/m/") && path.endsWith(CHAT_SUFFIX) && path.length() > 3 + CHAT_SUFFIX.length();
+    }
+
+    private void sendChat(HttpExchange exchange, String token) throws IOException {
+        // EXPLICACIÓN: se leen como mucho MAX+1 bytes; si llega más, el endpoint lo rechaza sin cargar todo en memoria
+        byte[] raw = exchange.getRequestBody().readNBytes(PortalChatEndpoint.MAX_BODY_CHARS + 1);
+        String body = new String(raw, StandardCharsets.UTF_8);
+        PortalChatEndpoint.Response response = chat.post(token,
+                exchange.getRequestHeaders().getFirst("Content-Type"), body);
+        send(exchange, response.status(), "application/json; charset=utf-8",
+                response.json().getBytes(StandardCharsets.UTF_8));
+    }
+
     private void sendPortal(HttpExchange exchange, String token) throws IOException {
         Optional<PortalSummary> summary = portal.summaryFor(token);
         if (summary.isEmpty()) {
             sendHtml(exchange, 404, PortalPage.invalid());
             return;
         }
-        sendHtml(exchange, 200, PortalPage.render(summary.get(), token));
+        sendHtml(exchange, 200, PortalPage.render(summary.get(), token, chat != null));
     }
 
     private void sendLogo(HttpExchange exchange) throws IOException {
