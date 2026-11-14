@@ -234,4 +234,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `AuditService` | It knows the clock and the entries, so it is the one that puts the time on each event and counts the events of today. |
 | Immutability | `AuditEntry` | A record that cannot change after it is created, and the repository only has `append`, so a line of the log can never be edited or removed. |
 | Controller | `AuthService.logout`, `AuthService.expire` | The sign-out and the idle close go through the service, so `FxApp` does not write audit events itself. |
+| SRP | `FrequencyDropRule`, `DaysAwayRule`, `ExpiringSoonRule` | Each rule looks for one sign of abandonment and gives its points and its reason; none knows the others, the services or the screen. |
+| OCP | `ChurnRule` | `ChurnService` asks the interface, so a new sign (for example a late payment) is a new class added to the list and the service does not change. |
+| Polymorphism | `ChurnRule` | The service treats every rule the same way, whatever it calculates, with no `if` for each kind of sign. |
+| Information Expert | `MemberActivity` | It holds the visit days and the membership, so it is the one that counts the visits of a range, the days away and the days left. |
+| Low coupling | `MemberActivity` | The rules receive this plain value and never ask the services, so they are tested without files or services. |
+| Protected Variations | `RiskLevel` | The limit and the action of each level live in one enum, so changing a limit touches no service or screen. |
+| Immutability | `ChurnFactor`, `ChurnRisk`, `MemberActivity` | Records that cannot change after they are created; the lists are copied. |
+| DIP | `ChurnService` | It depends on the `ChurnRule` interface and receives the rules, the services and the clock by constructor, so the tests choose the day. |
+| SRP | `ChurnModule` | It only shows what `ChurnService` calculates and decides who may open it. |
 
