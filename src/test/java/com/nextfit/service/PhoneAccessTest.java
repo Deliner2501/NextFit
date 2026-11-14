@@ -72,7 +72,7 @@ class PhoneAccessTest {
         byte[] key = new byte[32];
         Arrays.fill(key, (byte) 3);
         phone = new PhoneAccess(members, access, new AccessTokens(key), clock);
-        token = phone.tokenOf(member);
+        token = phone.liveTokenOf(member);
     }
 
     @Test
@@ -98,9 +98,9 @@ class PhoneAccessTest {
     @Test
     void aLaterScanRegistersTheExit() {
         phone.scan(token);
-        clock.advanceSeconds(PhoneAccess.REPEAT_SECONDS + 1);
+        clock.advanceSeconds(AccessTokens.WINDOW_SECONDS + 1);
 
-        AccessResult exit = phone.scan(token);
+        AccessResult exit = phone.scan(phone.liveTokenOf(member));
 
         assertEquals(Outcome.EXIT, exit.outcome());
         assertTrue(attendance.findInside().isEmpty());
@@ -137,5 +137,45 @@ class PhoneAccessTest {
         assertEquals(Outcome.DENIED, seen.get(1).outcome());
         assertEquals(Outcome.EXIT, seen.get(2).outcome());
         assertFalse(seen.get(1).granted());
+    }
+
+    @Test
+    void theSameCodeLaterIsRefusedEvenIfItIsStillValid() {
+        phone.scan(token);
+        clock.advanceSeconds(PhoneAccess.REPEAT_SECONDS + 1);
+
+        AccessResult again = phone.scan(token);
+
+        assertEquals(Outcome.DENIED, again.outcome());
+        assertTrue(again.message().contains("ya se usó"));
+        assertEquals(1, attendance.findInside().size());
+    }
+
+    @Test
+    void anExpiredCodeIsRefused() {
+        clock.advanceSeconds(AccessTokens.WINDOW_SECONDS * 3L);
+
+        AccessResult result = phone.scan(token);
+
+        assertEquals(Outcome.DENIED, result.outcome());
+        assertTrue(attendance.findInside().isEmpty());
+    }
+
+    @Test
+    void theFixedCodeOfThePrintedCarnetDoesNotLetIn() {
+        AccessResult result = phone.scan(phone.tokenOf(member));
+
+        assertEquals(Outcome.DENIED, result.outcome());
+        assertTrue(result.message().contains("carnet digital"));
+        assertTrue(attendance.findInside().isEmpty());
+    }
+
+    @Test
+    void aCodeThatJustChangedStillWorksForAMoment() {
+        clock.advanceSeconds(AccessTokens.WINDOW_SECONDS - 5L);
+        String shown = phone.liveTokenOf(member);
+        clock.advanceSeconds(10);
+
+        assertEquals(Outcome.ENTRY, phone.scan(shown).outcome());
     }
 }

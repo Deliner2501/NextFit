@@ -128,7 +128,7 @@ final class CarnetPane extends HBox {
         VBox identity = new VBox(14, MemberAvatar.of(member, 120), data);
         identity.setAlignment(Pos.TOP_LEFT);
 
-        ImageView qr = new ImageView(QrImage.of(phoneUrl.get() + "/a/" + phone.tokenOf(member), 6));
+        ImageView qr = new ImageView(QrImage.of(phoneUrl.get() + "/c/" + phone.tokenOf(member), 6));
         qr.setFitWidth(170);
         qr.setFitHeight(170);
         qr.setSmooth(false);
@@ -206,7 +206,7 @@ final class CarnetPane extends HBox {
                 .orElse("Sin membresía vigente");
         String photo = member.getPhotoPath();
         return new CarnetPdf.Card(member.getFullName(), member.getDocumentNumber(), validity,
-                QrMatrix.of(phoneUrl.get() + "/a/" + phone.tokenOf(member)),
+                QrMatrix.of(phoneUrl.get() + "/c/" + phone.tokenOf(member)),
                 photo == null || photo.isBlank() ? null : Path.of(photo));
     }
 }

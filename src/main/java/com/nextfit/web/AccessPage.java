@@ -77,6 +77,44 @@ public final class AccessPage {
     }
 
     /**
+     * Draws the digital carnet: the name, the code that changes by itself and the link to the portal. The
+     * page asks the server for a new picture of the code every few seconds.
+     *
+     * @param member the owner of the carnet
+     * @param token  the fixed code of the carnet, which only opens this page
+     * @return the HTML page
+     */
+    public static String card(Member member, String token) {
+        StringBuilder body = new StringBuilder();
+        body.append("<style>.qr{width:260px;height:260px;margin:14px auto 6px;border-radius:18px;background:#fff;")
+                .append("padding:8px}.qr img{width:100%;height:100%;display:block}.hint{font-size:14px;color:#BDB3D6;")
+                .append("margin:10px 0 0}.live{display:inline-block;margin-top:6px;font-size:13px;color:#A7F626}</style>");
+        body.append("<h2>").append(esc(member.getFullName())).append("</h2>");
+        body.append("<h1>CARNET DIGITAL</h1>");
+        body.append("<div class=\"qr\"><img id=\"qr\" src=\"/q/").append(esc(token)).append("\" alt=\"Código de entrada\"></div>");
+        body.append("<span class=\"live\" id=\"live\">Se actualiza solo</span>");
+        body.append("<p class=\"hint\">Muestra este código en la entrada. Una captura de pantalla no sirve: "
+                + "el código cambia cada 30 segundos.</p>");
+        body.append("<a class=\"portal\" href=\"/m/").append(esc(token)).append("\">Ver mi rutina y mi progreso</a>");
+        body.append("<script>var img=document.getElementById('qr'),live=document.getElementById('live');")
+                .append("function r(){img.src='/q/").append(esc(token)).append("?t='+Date.now()}")
+                .append("img.onerror=function(){live.textContent='Sin conexión con el gimnasio'};")
+                .append("img.onload=function(){live.textContent='Se actualiza solo'};")
+                .append("setInterval(r,10000);</script>");
+        return page("#7A35E8", body.toString());
+    }
+
+    /**
+     * Draws the page of a carnet code that is not valid.
+     *
+     * @return the HTML page
+     */
+    public static String invalidCard() {
+        return page("#E5484D", "<div class=\"badge\">" + CROSS + "</div><h1>CARNET NO VÁLIDO</h1>"
+                + "<p class=\"msg\">Este carnet no existe o fue reemplazado. Pide uno nuevo en recepción.</p>");
+    }
+
+    /**
      * Draws the simple page of the connection test.
      *
      * @return the HTML page
@@ -145,7 +183,7 @@ public final class AccessPage {
             @media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
             """;
 
-    private static String page(String color, String body) {
+    static String page(String color, String body) {
         return "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">"
                 + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
                 + "<meta name=\"theme-color\" content=\"#0B0A12\">"

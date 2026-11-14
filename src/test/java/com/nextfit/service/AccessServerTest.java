@@ -27,6 +27,7 @@ class AccessServerTest {
     private AccessServer server;
     private AttendanceService attendance;
     private String token;
+    private String fixedToken;
     private final HttpClient client = HttpClient.newHttpClient();
 
     @BeforeEach
@@ -39,7 +40,8 @@ class AccessServerTest {
         byte[] key = new byte[32];
         Arrays.fill(key, (byte) 5);
         PhoneAccess phone = new PhoneAccess(members, access, new AccessTokens(key), Clock.systemDefaultZone());
-        token = phone.tokenOf(member);
+        fixedToken = phone.tokenOf(member);
+        token = phone.liveTokenOf(member);
         server = new AccessServer(phone, 0);
         server.start();
     }
@@ -83,7 +85,35 @@ class AccessServerTest {
     @Test
     void otherAddressesAreNotFoundAndPhotoWithoutPhotoIs404() throws Exception {
         assertEquals(404, get("/admin").statusCode());
-        assertEquals(404, get("/photo/" + token).statusCode());
+        assertEquals(404, get("/photo/" + fixedToken).statusCode());
         assertEquals(404, get("/photo/ZZZZZZZZZZ").statusCode());
+    }
+
+    @Test
+    void digitalCarnetShowsAQrThatChanges() throws Exception {
+        HttpResponse<String> page = get("/c/" + fixedToken);
+        HttpResponse<String> qr = get("/q/" + fixedToken);
+
+        assertEquals(200, page.statusCode());
+        assertTrue(page.body().contains("CARNET DIGITAL"));
+        assertTrue(page.body().contains("/q/" + fixedToken));
+        assertEquals(200, qr.statusCode());
+        assertTrue(qr.headers().firstValue("Content-Type").orElse("").startsWith("image/svg+xml"));
+        assertTrue(qr.body().startsWith("<svg"));
+        assertEquals("no-store", qr.headers().firstValue("Cache-Control").orElse(""));
+    }
+
+    @Test
+    void digitalCarnetOfAnUnknownCodeIsNotFound() throws Exception {
+        assertEquals(404, get("/c/ZZZZZZZZZZ").statusCode());
+        assertEquals(404, get("/q/ZZZZZZZZZZ").statusCode());
+    }
+
+    @Test
+    void theFixedCodeDoesNotLetInThroughTheServer() throws Exception {
+        HttpResponse<String> response = get("/a/" + fixedToken);
+
+        assertTrue(response.body().contains("ACCESO DENEGADO"));
+        assertTrue(attendance.findInside().isEmpty());
     }
 }

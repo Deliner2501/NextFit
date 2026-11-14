@@ -8,19 +8,24 @@ kiosk screen of NextFit reacts at the same time.
 ## How it works
 
 1. `Main` starts `AccessServer` (JDK `com.sun.net.httpserver`) on port 8765, or the next free one.
-2. The carnet QR contains `http://<ip of the computer>:8765/a/<CODE>`.
-3. `CODE` is `HMAC-SHA256(secret key, document)` cut to 10 letters and digits (`AccessTokens`). It is not the document number and it is not stored anywhere.
-4. `PhoneAccess.scan` finds the member that owns the code and calls `AccessService.processMember`, which applies the same rules as the USB reader and the typed document.
-5. If the same code arrives twice in 10 seconds, the first answer is returned and nothing is toggled.
+2. The carnet QR (printed, in the PDF or on the carnet screen) contains `http://<ip of the computer>:8765/c/<FIXED CODE>`. It does **not** let anybody in: it only opens the **digital carnet** of the member.
+3. The digital carnet shows a second QR that the page renews every 10 seconds. It contains `http://<ip>:8765/a/<LIVE CODE>`. The live code is `HMAC-SHA256(secret key, document + time window)` cut to 10 letters and digits (`AccessTokens.liveTokenFor`); the window is 30 seconds long, and the server accepts the current and the previous one.
+4. Reception scans the live QR (a phone camera or any scanner that opens the address). `PhoneAccess.scan` finds the member that owns the code and calls `AccessService.processMember`, which applies the same rules as the typed document.
+5. A live code works once. If the same code arrives twice in 10 seconds (a phone may send a scan twice) the first answer is returned; later, the same code is refused ("ya se usó"). The fixed code of a printed carnet is refused when it is used to enter.
+
+Why: a fixed QR can be photographed or forwarded and works forever. A screenshot of the live code stops working in less than a minute and can be used only once.
 
 ## Routes
 
 | Route | What it does |
 |---|---|
 | `/ping` | Connection test: open it from the phone to check that it reaches the computer |
-| `/a/CODE` | Registers the entry or exit and answers with the result page |
+| `/c/FIXED` | The digital carnet: name, live QR and a link to the portal |
+| `/q/FIXED` | The picture (SVG) of the live QR of this moment; the digital carnet asks for it every 10 seconds |
+| `/a/LIVE` | Registers the entry or exit and answers with the result page |
+| `/m/FIXED` | The portal of the member (routine, progress, best hours) |
 | `/logo.png` | NextFit logo for the result page |
-| `/photo/CODE` | Photo of the member for the result page, only when the code is valid |
+| `/photo/FIXED` | Photo of the member for the result page, only when the code is valid |
 
 ## Requirements
 
@@ -36,7 +41,7 @@ shows `ERR_ADDRESS_UNREACHABLE` even when both are "on the same Wi-Fi". To solve
 1. Turn on the hotspot of the phone and connect the computer to it.
 2. Close NextFit and open it again: the address of the computer is read when the program starts.
 3. Open `http://<address of the computer>:8765/ping` on the phone to check the connection.
-4. Show the carnet again (or save the PDF again) and scan that one.
+4. Show the carnet again (or save the PDF again) and scan that one, then open the digital carnet again.
 
 The QR of a carnet contains the address of the computer, so a carnet printed on another network has to be printed
 again after changing network. Typing the document in the access screen always works, with or without network.
