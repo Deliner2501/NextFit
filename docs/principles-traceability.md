@@ -243,4 +243,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | Immutability | `ChurnFactor`, `ChurnRisk`, `MemberActivity` | Records that cannot change after they are created; the lists are copied. |
 | DIP | `ChurnService` | It depends on the `ChurnRule` interface and receives the rules, the services and the clock by constructor, so the tests choose the day. |
 | SRP | `ChurnModule` | It only shows what `ChurnService` calculates and decides who may open it. |
+| SRP | `AiAssistant` | Only runs the question-and-tools loop; the service, the tools and the limit are other classes. |
+| OCP | `AiTool` | A new question the assistant can answer is a new tool class; the assistant does not change. |
+| DIP | `AiAssistant`, `AiClient` | The assistant depends on the `AiClient` interface, so Claude, another provider or a fake for tests are interchangeable. |
+| Polymorphism | `AiClient`, `AiTool` | The assistant treats every service and every tool through the same interface. |
+| Protected Variations | `AiClient` | A change of AI provider or model is isolated behind one interface. |
+| Information Expert | `DailyTokenBudget` | It owns the count of tokens, so it decides when the daily limit is reached. |
+| Information Expert | `AiConversation` | It owns the messages of a chat, so it can leave them as they were when a question fails. |
+| Low Coupling | `AiUser`, `AiAudience` | Tools decide what to answer from these two values, without knowing the screens or the session. |
+| SRP | `Json` | Only reads and writes JSON, so no library is needed and the AI code does not depend on one. |
 
