@@ -260,4 +260,6 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `MembersAtRiskTool` | It reuses `ChurnService`, which owns the risk, instead of recalculating it. |
 | Protected Variations | `RevenueSummaryTool` | Money is limited to the administrator by the tool itself, so no screen has to remember the rule. |
 | Low Coupling | `RevenueSummaryTool` | It depends on `PaymentService` and a clock only. |
+| SRP | `ToolInput` | Only reads the arguments that the AI sends, so every tool validates them the same way. |
+| OCP | `GymAlertsTool` | The alerts became available to the assistant as a new class; the assistant and the other tools did not change. |
 
