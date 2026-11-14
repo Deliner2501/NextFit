@@ -248,4 +248,28 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `OccupancyForecastService` | It reads the attendance and decides how a person counts between the entry and the exit. |
 | Protected Variations | `HourForecast`, `OccupancyLevel` | Screens use the percent and the level, so the way of forecasting can change without touching them. |
 | Low Coupling | `OccupancyForecastService` | It depends on `AttendanceService` and a clock only. |
+| SRP | `AiAssistant` | Only runs the question-and-tools loop; the service, the tools and the limit are other classes. |
+| OCP | `AiTool` | A new question the assistant can answer is a new tool class; the assistant does not change. |
+| DIP | `AiAssistant`, `AiClient` | The assistant depends on the `AiClient` interface, so Claude, another provider or a fake for tests are interchangeable. |
+| Polymorphism | `AiClient`, `AiTool` | The assistant treats every service and every tool through the same interface. |
+| Protected Variations | `AiClient` | A change of AI provider or model is isolated behind one interface. |
+| Information Expert | `DailyTokenBudget` | It owns the count of tokens, so it decides when the daily limit is reached. |
+| Information Expert | `AiConversation` | It owns the messages of a chat, so it can leave them as they were when a question fails. |
+| Low Coupling | `AiUser`, `AiAudience` | Tools decide what to answer from these two values, without knowing the screens or the session. |
+| SRP | `Json` | Only reads and writes JSON, so no library is needed and the AI code does not depend on one. |
+| SRP | `AiConfig` | Only reads the AI settings from the local file, and hides the key when printed. |
+| SRP | `ClaudeClient` | Only translates between the assistant's values and the Claude HTTPS API. |
+| Liskov | `ClaudeClient` | It can replace any other `AiClient`, such as the fake of the tests, without the assistant noticing. |
+| Protected Variations | `ClaudeClient` | The details of the provider (address, headers, JSON) stay in this class. |
+| OCP | `MembersAtRiskTool` | A new question for the assistant is a new tool class that implements `AiTool`; nothing existing changes. |
+| Information Expert | `MembersAtRiskTool` | It reuses `ChurnService`, which owns the risk, instead of recalculating it. |
+| Protected Variations | `RevenueSummaryTool` | Money is limited to the administrator by the tool itself, so no screen has to remember the rule. |
+| Low Coupling | `RevenueSummaryTool` | It depends on `PaymentService` and a clock only. |
+| SRP | `ToolInput` | Only reads the arguments that the AI sends, so every tool validates them the same way. |
+| OCP | `GymAlertsTool` | The alerts became available to the assistant as a new class; the assistant and the other tools did not change. |
+| SRP | `AssistantChat` | Only keeps the conversation and starts a new one when the user changes; the screen only draws. |
+| SRP | `AiSetup` | The only place that joins the key, the limit and the tools, so `Main` and the screens carry no AI logic. |
+| Pure Fabrication | `AiSetup`, `AssistantChat` | They do not exist in the gym domain; they were created to keep the screen and `Main` free of rules. |
+| Null Object | `AiSetup` (empty result) | Without a key the assistant is "off": the screen shows how to turn it on and the rest of NextFit works the same. |
+| Low Coupling | `AssistantModule` | The screen only knows `AssistantChat`; it does not know the service, the tools or the key. |
 

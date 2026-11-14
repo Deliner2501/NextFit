@@ -364,3 +364,10 @@
 
 /* ---------- Centro de alertas (Ronald) ---------- */
 .nf-alert-message { -fx-text-fill: -nf-text; -fx-font-size: 15px; }
+
+
+/* ---------- Asistente (chat) ---------- */
+.nf-chat-bubble { -fx-padding: 10 14; -fx-background-radius: 14; -fx-font-size: 14px; }
+.nf-chat-user { -fx-background-color: -nf-accent-soft; -fx-text-fill: -nf-text; }
+.nf-chat-assistant { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-text; }
+.nf-chat-error { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-danger; }

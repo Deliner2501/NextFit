@@ -71,6 +71,17 @@ import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
 import java.io.IOException;
 import java.util.function.Supplier;
+import com.nextfit.ai.AiSetup;
+import com.nextfit.ai.AiTool;
+import com.nextfit.ai.AiUser;
+import com.nextfit.ai.AssistantChat;
+import com.nextfit.ai.tools.GymAlertsTool;
+import com.nextfit.ai.tools.MembersAtRiskTool;
+import com.nextfit.ai.tools.RevenueSummaryTool;
+import com.nextfit.exceptions.AiException;
+import com.nextfit.persistence.jdbc.DatabaseConfig;
+import com.nextfit.ui.fx.AssistantModule;
+import java.util.Optional;
 
 /**
  * Application entry point. Repositories, services and screens are wired here
