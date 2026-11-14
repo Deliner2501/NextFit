@@ -10,7 +10,12 @@ import com.nextfit.persistence.CsvMeasurementRepository;
 import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
 import com.nextfit.persistence.CsvPaymentRepository;
+import com.nextfit.persistence.CsvFaceTemplateRepository;
+import com.nextfit.persistence.FaceTemplateRepository;
 import com.nextfit.service.AccessService;
+import com.nextfit.service.face.FaceAccessService;
+import com.nextfit.service.face.FaceEnrollmentService;
+import com.nextfit.service.face.MemberLookup;
 import com.nextfit.service.AccessTokens;
 import com.nextfit.service.AnalyticsService;
 import com.nextfit.service.AttendanceService;
@@ -82,6 +87,8 @@ import com.nextfit.exceptions.AiException;
 import com.nextfit.persistence.jdbc.DatabaseConfig;
 import com.nextfit.ui.fx.AssistantModule;
 import java.util.Optional;
+import com.nextfit.service.occupancy.OccupancyForecastService;
+import com.nextfit.service.portal.BestTimesAdvisor;
 
 /**
  * Application entry point. Repositories, services and screens are wired here
@@ -154,6 +161,13 @@ public final class Main {
         PhoneAccess phoneAccess = new PhoneAccess(memberService, accessService,
                 new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))),
                 Clock.systemDefaultZone());
+        // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
+        FaceTemplateRepository faceTemplates = new CsvFaceTemplateRepository(DATA_DIR.resolve("face_templates.csv"));
+        FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
+        FaceAccessService faceAccess = new FaceAccessService(faceTemplates, MemberLookup.of(memberService),
+                accessService::processMember, accessService::deny, Clock.systemDefaultZone());
+        // Faces of members who left are deleted automatically.
+        faceEnrollment.purgeInactive(memberService.findAll());
         CashCloseService cashCloseService = new CashCloseService(paymentService, memberService);
         ReportService reportService = new ReportService(cashCloseService, memberService, subscriptionService,
                 attendanceService);
@@ -170,6 +184,17 @@ public final class Main {
                 memberService, Clock.systemDefaultZone());
         ChurnService churnService = ChurnService.withStandardRules(attendanceService, subscriptionService,
                 memberService, Clock.systemDefaultZone());
+
+        // The AI assistant. Without an ai.apiKey line in nextfit.properties it stays off and NextFit works as always.
+        List<AiTool> aiTools = List.of(
+                new MembersAtRiskTool(churnService),
+                new RevenueSummaryTool(paymentService, Clock.systemDefaultZone()),
+                new GymAlertsTool(alertService));
+        Optional<AssistantChat> assistantChat = AiSetup
+                .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone())
+                .map(assistant -> new AssistantChat(assistant, () -> session.getCurrentUser()
+                        .map(user -> AiUser.staff(user.getRole(), user.getUsername()))
+                        .orElseThrow(() -> new AiException("No hay una sesión iniciada"))));
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
@@ -178,9 +203,12 @@ public final class Main {
                 Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
+        BestTimesAdvisor bestTimesAdvisor = new BestTimesAdvisor(
+                new OccupancyForecastService(attendanceService, Clock.systemDefaultZone()),
+                Clock.systemDefaultZone());
         MemberPortal memberPortal = new MemberPortal(phoneAccess, subscriptionService, planService,
                 training.assignments(), training.routines(), training.exercises(), training.sessions(),
-                gamificationService);
+                gamificationService, bestTimesAdvisor);
         AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, ACCESS_PORT);
         try {
             accessServer.start();
@@ -197,11 +225,12 @@ public final class Main {
                         new PhotoStorage(DATA_DIR.resolve("photos")), session),
                 new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
                 new ChurnModule(churnService),
+                new AssistantModule(assistantChat),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
                 new AccessModule(accessService, attendanceService, memberService, subscriptionService,
-                        phoneAccess, phoneUrl),
+                        phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor),
                 new AnalyticsModule(analyticsService, memberService),
                 new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),

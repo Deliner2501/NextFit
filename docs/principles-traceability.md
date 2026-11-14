@@ -243,6 +243,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | Immutability | `ChurnFactor`, `ChurnRisk`, `MemberActivity` | Records that cannot change after they are created; the lists are copied. |
 | DIP | `ChurnService` | It depends on the `ChurnRule` interface and receives the rules, the services and the clock by constructor, so the tests choose the day. |
 | SRP | `ChurnModule` | It only shows what `ChurnService` calculates and decides who may open it. |
+| SRP | `OccupancyForecastService` | Only forecasts the people inside by hour; the current occupation stays in `OccupancyService`. |
+| Information Expert | `OccupancyForecast` | It owns the hours of the day, so it knows which are the quietest and the busiest. |
+| Information Expert | `OccupancyForecastService` | It reads the attendance and decides how a person counts between the entry and the exit. |
+| Protected Variations | `HourForecast`, `OccupancyLevel` | Screens use the percent and the level, so the way of forecasting can change without touching them. |
+| Low Coupling | `OccupancyForecastService` | It depends on `AttendanceService` and a clock only. |
 | SRP | `AiAssistant` | Only runs the question-and-tools loop; the service, the tools and the limit are other classes. |
 | OCP | `AiTool` | A new question the assistant can answer is a new tool class; the assistant does not change. |
 | DIP | `AiAssistant`, `AiClient` | The assistant depends on the `AiClient` interface, so Claude, another provider or a fake for tests are interchangeable. |
@@ -267,4 +272,16 @@ Each row links a principle or pattern to the class or method where it is applied
 | Pure Fabrication | `AiSetup`, `AssistantChat` | They do not exist in the gym domain; they were created to keep the screen and `Main` free of rules. |
 | Null Object | `AiSetup` (empty result) | Without a key the assistant is "off": the screen shows how to turn it on and the rest of NextFit works the same. |
 | Low Coupling | `AssistantModule` | The screen only knows `AssistantChat`; it does not know the service, the tools or the key. |
+| SRP | `BestTimesAdvisor` | Only decides which hours to recommend (today first, tomorrow when today has none); it does not calculate the forecast or draw it. |
+| DIP | `BestTimesAdvisor`, `MemberPortal` | The portal receives the advisor by constructor and a clock, so tests use a fixed day. |
+| Low Coupling | `PortalPage` | It only receives `PortalBestTimes` and does not know the forecast service or the attendance. |
+| Information Expert | `PortalBestTimes` | It owns the recommended hours and the day label that belong together. |
 
+## Face recognition screens
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `FaceEntryFlow`, `FaceSampleCollector` | One decides the steps to enter, the other collects the pictures to register; neither knows the camera or the screen |
+| DIP | `FacePane` | It receives `FaceAccessService` and `FaceEnrollmentService` from `Main` and reads the camera only through `FaceCamera` |
+| ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
+| Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |
