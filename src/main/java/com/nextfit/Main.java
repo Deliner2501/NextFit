@@ -62,7 +62,8 @@ import com.nextfit.ui.fx.OccupancyModule;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
 import com.nextfit.persistence.CsvAuditRepository;
 import com.nextfit.service.audit.AuditService;
-
+import com.nextfit.service.churn.ChurnService;
+import com.nextfit.ui.fx.ChurnModule;
 import java.nio.file.Path;
 import java.util.List;
 import com.nextfit.service.portal.MemberPortal;
@@ -156,6 +157,8 @@ public final class Main {
                 Clock.systemDefaultZone());
         AlertService alertService = AlertService.withStandardRules(subscriptionService, attendanceService,
                 memberService, Clock.systemDefaultZone());
+        ChurnService churnService = ChurnService.withStandardRules(attendanceService, subscriptionService,
+                memberService, Clock.systemDefaultZone());
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
@@ -182,6 +185,7 @@ public final class Main {
                 new MembersModule(memberService, healthService, attendanceService, gamificationService,
                         new PhotoStorage(DATA_DIR.resolve("photos")), session),
                 new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
+                new ChurnModule(churnService),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
