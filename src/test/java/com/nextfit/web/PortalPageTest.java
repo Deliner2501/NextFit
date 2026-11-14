@@ -121,4 +121,38 @@ class PortalPageTest {
     void anInvalidCodeGetsAFriendlyPage() {
         assertTrue(PortalPage.invalid().contains("Código no válido"));
     }
+        @Test
+    void theChatIsShownOnlyWhenTheAssistantIsOn() {
+        PortalSummary summary = summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
+
+        String on = PortalPage.render(summary, "ABCDEFGHJK", true);
+        String off = PortalPage.render(summary, "ABCDEFGHJK", false);
+        String defaultPage = PortalPage.render(summary, "ABCDEFGHJK");
+
+        assertTrue(on.contains("Pregúntale a tu gimnasio"));
+        assertTrue(on.contains("data-token=\"ABCDEFGHJK\""));
+        assertFalse(off.contains("chat-form"));
+        assertFalse(defaultPage.contains("chat-form"));
+    }
+
+    @Test
+    void theCodeInTheChatIsEscaped() {
+        PortalSummary summary = summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
+
+        String html = PortalPage.render(summary, "AB\"><script>x</script>", true);
+
+        assertFalse(html.contains("AB\"><script>x</script>"));
+        assertTrue(html.contains("data-token=\"AB&quot;&gt;&lt;script&gt;x&lt;/script&gt;\""));
+    }
+
+    @Test
+    void theAnswerOfTheAiIsWrittenAsTextAndNeverAsHtml() {
+        PortalSummary summary = summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
+
+        String html = PortalPage.render(summary, "ABCDEFGHJK", true);
+
+        assertTrue(html.contains("textContent"));
+        assertFalse(html.contains("innerHTML"));
+    }
+    
 }
