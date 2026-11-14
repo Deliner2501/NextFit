@@ -4,6 +4,9 @@ import com.nextfit.model.Member;
 import com.nextfit.service.gamification.Achievements;
 import com.nextfit.service.gamification.Badge;
 import com.nextfit.service.gamification.Streak;
+import com.nextfit.service.occupancy.HourForecast;
+import com.nextfit.service.occupancy.OccupancyLevel;
+import com.nextfit.service.portal.PortalBestTimes;
 import com.nextfit.service.portal.PortalExercise;
 import com.nextfit.service.portal.PortalMembership;
 import com.nextfit.service.portal.PortalSummary;
@@ -26,7 +29,7 @@ class PortalPageTest {
 
     private static PortalSummary summary(Member member, Optional<PortalMembership> membership,
                                          Optional<PortalWorkout> workout, Achievements achievements) {
-        return new PortalSummary(member, membership, workout, achievements);
+        return new PortalSummary(member, membership, workout, achievements, Optional.empty());
     }
 
     private static Achievements nothingYet() {
@@ -89,6 +92,29 @@ class PortalPageTest {
         assertFalse(html.contains("<b>Rutina</b>"));
         assertFalse(html.contains("<img src=x>"));
         assertTrue(html.contains("&lt;script&gt;"));
+    }
+
+    @Test
+    void showsTheBestHoursToTrain() {
+        PortalBestTimes times = new PortalBestTimes("Hoy", List.of(
+                new HourForecast(17, 0.0, 0, OccupancyLevel.QUIET),
+                new HourForecast(19, 40.0, 67, OccupancyLevel.BUSY)));
+
+        String html = PortalPage.render(new PortalSummary(member("Ana Gómez"), Optional.empty(),
+                Optional.empty(), nothingYet(), Optional.of(times)), "ABCDEFGHJK");
+
+        assertTrue(html.contains("Mejor hora para entrenar"));
+        assertTrue(html.contains("Hoy el gimnasio estará más tranquilo"));
+        assertTrue(html.contains("17:00 · Tranquilo"));
+        assertTrue(html.contains("19:00 · Concurrido"));
+    }
+
+    @Test
+    void saysSoWhenThereIsNotEnoughHistoryToAdvise() {
+        String html = PortalPage.render(summary(member("Ana Gómez"), Optional.empty(), Optional.empty(),
+                nothingYet()), "ABCDEFGHJK");
+
+        assertTrue(html.contains("Aún no hay suficientes visitas"));
     }
 
     @Test

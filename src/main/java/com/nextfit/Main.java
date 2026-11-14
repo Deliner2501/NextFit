@@ -82,6 +82,8 @@ import com.nextfit.exceptions.AiException;
 import com.nextfit.persistence.jdbc.DatabaseConfig;
 import com.nextfit.ui.fx.AssistantModule;
 import java.util.Optional;
+import com.nextfit.service.occupancy.OccupancyForecastService;
+import com.nextfit.service.portal.BestTimesAdvisor;
 
 /**
  * Application entry point. Repositories, services and screens are wired here
@@ -189,9 +191,12 @@ public final class Main {
                 Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
+        BestTimesAdvisor bestTimesAdvisor = new BestTimesAdvisor(
+                new OccupancyForecastService(attendanceService, Clock.systemDefaultZone()),
+                Clock.systemDefaultZone());
         MemberPortal memberPortal = new MemberPortal(phoneAccess, subscriptionService, planService,
                 training.assignments(), training.routines(), training.exercises(), training.sessions(),
-                gamificationService);
+                gamificationService, bestTimesAdvisor);
         AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, ACCESS_PORT);
         try {
             accessServer.start();

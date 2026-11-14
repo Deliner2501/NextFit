@@ -13,7 +13,9 @@ import java.util.Optional;
  * @param membership   the valid membership, or empty when there is none today
  * @param workout      the day of the routine to train next, or empty when there is no routine
  * @param achievements the training days, the streaks and the badges
+ * @param bestTimes    the quietest hours to train, or empty when there is not enough history
  */
 public record PortalSummary(Member member, Optional<PortalMembership> membership,
-                            Optional<PortalWorkout> workout, Achievements achievements) {
+                            Optional<PortalWorkout> workout, Achievements achievements,
+                            Optional<PortalBestTimes> bestTimes) {
 }
