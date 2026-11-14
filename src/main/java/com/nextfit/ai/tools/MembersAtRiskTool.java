@@ -71,8 +71,7 @@ public class MembersAtRiskTool implements AiTool {
 
     @Override
     public String run(Map<String, Object> input, AiUser user) {
-        RiskLevel minimum = minimumOf(input.get("level"));
-        int limit = limitOf(input.get("limit"));
+        RiskLevel minimum = minimumOf(input.get("level"));int limit = ToolInput.limit(input.get("limit"), DEFAULT_LIMIT, MAX_LIMIT);
         List<ChurnRisk> risks = churn.findAtLeast(minimum);
         if (risks.isEmpty()) {
             return "Ningún socio tiene riesgo " + minimum.getLabel().toLowerCase() + " o mayor en este momento.";
@@ -102,15 +101,5 @@ public class MembersAtRiskTool implements AiTool {
             case "alto" -> RiskLevel.HIGH;
             default -> throw new InvalidDataException("nivel", "debe ser \"medio\" o \"alto\"");
         };
-    }
-
-    private static int limitOf(Object value) {
-        if (value == null) {
-            return DEFAULT_LIMIT;
-        }
-        if (!(value instanceof Number number)) {
-            throw new InvalidDataException("límite", "debe ser un número");
-        }
-        return Math.max(1, Math.min(MAX_LIMIT, number.intValue()));
     }
 }
