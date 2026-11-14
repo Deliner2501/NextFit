@@ -276,3 +276,12 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP | `BestTimesAdvisor`, `MemberPortal` | The portal receives the advisor by constructor and a clock, so tests use a fixed day. |
 | Low Coupling | `PortalPage` | It only receives `PortalBestTimes` and does not know the forecast service or the attendance. |
 | Information Expert | `PortalBestTimes` | It owns the recommended hours and the day label that belong together. |
+
+## Face recognition screens
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `FaceEntryFlow`, `FaceSampleCollector` | One decides the steps to enter, the other collects the pictures to register; neither knows the camera or the screen |
+| DIP | `FacePane` | It receives `FaceAccessService` and `FaceEnrollmentService` from `Main` and reads the camera only through `FaceCamera` |
+| ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
+| Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |

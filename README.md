@@ -46,7 +46,7 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 > This repository is the course project of *Programación III*.
 >
-> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, analytics, TV screen, reports and cash close, alerts, users, audit log and backup. The last step will be moving the storage from CSV files to a database.
+> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, entry with the face (camera, offline), analytics, TV screen, reports and cash close, alerts, users, audit log and backup. The last step will be moving the storage from CSV files to a database.
 
 ---
 
