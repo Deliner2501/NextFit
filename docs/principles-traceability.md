@@ -281,3 +281,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low Coupling | `MemberSummaryLookup` | The member tools depend on a one-method interface, not on the portal service nor on the CSV files. |
 | Protected Variations | `MyMembershipTool`, `MyNextWorkoutTool`, `BestHoursTool` | The tools take no arguments, so the model cannot ask for the data of another member; the member comes from the carnet code. |
 | Dependency Inversion | `AccessServer` | Receives the chat as a `PortalChatEndpoint` that can be null, so the portal works the same with the assistant off. |
+
+## Face recognition screens
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `FaceEntryFlow`, `FaceSampleCollector` | One decides the steps to enter, the other collects the pictures to register; neither knows the camera or the screen |
+| DIP | `FacePane` | It receives `FaceAccessService` and `FaceEnrollmentService` from `Main` and reads the camera only through `FaceCamera` |
+| ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
+| Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |
+

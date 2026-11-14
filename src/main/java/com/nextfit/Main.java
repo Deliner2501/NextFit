@@ -10,7 +10,12 @@ import com.nextfit.persistence.CsvMeasurementRepository;
 import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
 import com.nextfit.persistence.CsvPaymentRepository;
+import com.nextfit.persistence.CsvFaceTemplateRepository;
+import com.nextfit.persistence.FaceTemplateRepository;
 import com.nextfit.service.AccessService;
+import com.nextfit.service.face.FaceAccessService;
+import com.nextfit.service.face.FaceEnrollmentService;
+import com.nextfit.service.face.MemberLookup;
 import com.nextfit.service.AccessTokens;
 import com.nextfit.service.AnalyticsService;
 import com.nextfit.service.AttendanceService;
@@ -163,6 +168,13 @@ public final class Main {
         PhoneAccess phoneAccess = new PhoneAccess(memberService, accessService,
                 new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))),
                 Clock.systemDefaultZone());
+        // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
+        FaceTemplateRepository faceTemplates = new CsvFaceTemplateRepository(DATA_DIR.resolve("face_templates.csv"));
+        FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
+        FaceAccessService faceAccess = new FaceAccessService(faceTemplates, MemberLookup.of(memberService),
+                accessService::processMember, accessService::deny, Clock.systemDefaultZone());
+        // Faces of members who left are deleted automatically.
+        faceEnrollment.purgeInactive(memberService.findAll());
         CashCloseService cashCloseService = new CashCloseService(paymentService, memberService);
         ReportService reportService = new ReportService(cashCloseService, memberService, subscriptionService,
                 attendanceService);
@@ -239,7 +251,7 @@ public final class Main {
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
                 new AccessModule(accessService, attendanceService, memberService, subscriptionService,
-                        phoneAccess, phoneUrl),
+                        phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor),
                 new AnalyticsModule(analyticsService, memberService),
                 new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),

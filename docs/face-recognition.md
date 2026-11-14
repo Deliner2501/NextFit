@@ -20,6 +20,16 @@ Members can enter by looking at the camera of the reception laptop. The QR and t
 | service | `FaceCamera`, `FaceFrame`, `FaceModels` | What the rest of the application knows about the camera |
 | vision | `OpenCvFaceCamera` | The only class that knows OpenCV |
 
+## Screens
+
+Access control has a third tab, **Rostro** (administrator and reception):
+
+- **Entrada con el rostro**: starts the camera. The member looks at the camera (recognized in 3 frames in a row), turns the head to both sides, looks forward again and is confirmed; only then the usual access rules apply (`FaceAccessService.finish`). Unknown faces are denied after a few frames. After each result the screen waits 8 seconds (`FaceEntryFlow`).
+- **Registrar el rostro**: choose an active member, the consent text is shown, then three clear frontal pictures are taken (`FaceSampleCollector`) and stored as numbers (`FaceEnrollmentService`).
+- **Eliminar rostro**: deletes the stored face of the selected member.
+
+The camera runs in its own thread; the screen and the services are only used from the JavaFX thread. If the model files are missing, the tab shows where to copy them.
+
 ## Model files
 
 The two model files are not in the repository (about 37 MB). Each computer that uses the camera needs them in `data/models/`:
@@ -38,10 +48,10 @@ Run `com.nextfit.vision.FaceLab` (its `main` method) from the IDE with the proje
 The face is sensitive personal data (Ley 1581 de 2012, Colombia):
 
 - It is stored only after the member accepts it on screen.
-- It can be deleted from the member file at any time, and it is deleted automatically when the member is deactivated.
+- It can be deleted from the "Rostro" tab at any time, and it is deleted automatically when the member is deactivated.
 - Registration and deletion are written to the audit log (`FACE_ENROLLED`, `FACE_REMOVED`).
 - No picture is stored, only numbers, and nothing leaves the computer.
 
 ## Known limit
 
-A printed photo could fool the recognizer. The registration and the entry screen ask the person to turn the head to both sides (`HeadTurnChallenge`), which a still photo cannot do. A video recording could still pass: this is declared as future work.
+A printed photo could fool the recognizer. The entry screen asks the person to turn the head to both sides (`HeadTurnChallenge`), which a still photo cannot do. A video recording could still pass: this is declared as future work.
