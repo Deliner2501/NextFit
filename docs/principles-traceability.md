@@ -262,4 +262,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low Coupling | `RevenueSummaryTool` | It depends on `PaymentService` and a clock only. |
 | SRP | `ToolInput` | Only reads the arguments that the AI sends, so every tool validates them the same way. |
 | OCP | `GymAlertsTool` | The alerts became available to the assistant as a new class; the assistant and the other tools did not change. |
+| SRP | `AssistantChat` | Only keeps the conversation and starts a new one when the user changes; the screen only draws. |
+| SRP | `AiSetup` | The only place that joins the key, the limit and the tools, so `Main` and the screens carry no AI logic. |
+| Pure Fabrication | `AiSetup`, `AssistantChat` | They do not exist in the gym domain; they were created to keep the screen and `Main` free of rules. |
+| Null Object | `AiSetup` (empty result) | Without a key the assistant is "off": the screen shows how to turn it on and the rest of NextFit works the same. |
+| Low Coupling | `AssistantModule` | The screen only knows `AssistantChat`; it does not know the service, the tools or the key. |
 
