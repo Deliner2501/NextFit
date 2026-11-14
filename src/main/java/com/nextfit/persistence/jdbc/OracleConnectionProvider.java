@@ -10,7 +10,7 @@ import java.sql.SQLException;
  * Opens connections to the Oracle database. It is the only class that knows
  * how to reach Oracle, so the repositories only receive a connection.
  */
-public final class OracleConnectionProvider {
+public final class OracleConnectionProvider implements ConnectionSource {
 
     private final DatabaseConfig config;
 
