@@ -133,9 +133,14 @@ class PortalPageTest {
         String defaultPage = PortalPage.render(summary, "ABCDEFGHJK");
 
         assertTrue(on.contains("Pregúntale a tu gimnasio"));
+        assertTrue(on.contains("id=\"chat-form\""));
         assertTrue(on.contains("data-token=\"ABCDEFGHJK\""));
-        assertFalse(off.contains("chat-form"));
-        assertFalse(defaultPage.contains("chat-form"));
+        // EXPLICACIÓN: "chat-form" también es una clase del CSS que siempre está en la página; por eso se
+        // busca el título de la tarjeta y el id del formulario, que solo existen cuando el chat está encendido
+        assertFalse(off.contains("Pregúntale a tu gimnasio"));
+        assertFalse(off.contains("id=\"chat-form\""));
+        assertFalse(defaultPage.contains("Pregúntale a tu gimnasio"));
+        assertFalse(defaultPage.contains("id=\"chat-form\""));
     }
 
     @Test
