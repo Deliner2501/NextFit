@@ -252,4 +252,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `AiConversation` | It owns the messages of a chat, so it can leave them as they were when a question fails. |
 | Low Coupling | `AiUser`, `AiAudience` | Tools decide what to answer from these two values, without knowing the screens or the session. |
 | SRP | `Json` | Only reads and writes JSON, so no library is needed and the AI code does not depend on one. |
-
+| SRP | `AiConfig` | Only reads the AI settings from the local file, and hides the key when printed. |
+| SRP | `ClaudeClient` | Only translates between the assistant's values and the Claude HTTPS API. |
+| Liskov | `ClaudeClient` | It can replace any other `AiClient`, such as the fake of the tests, without the assistant noticing. |
+| Protected Variations | `ClaudeClient` | The details of the provider (address, headers, JSON) stay in this class. |
