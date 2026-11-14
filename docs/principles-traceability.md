@@ -272,4 +272,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | Pure Fabrication | `AiSetup`, `AssistantChat` | They do not exist in the gym domain; they were created to keep the screen and `Main` free of rules. |
 | Null Object | `AiSetup` (empty result) | Without a key the assistant is "off": the screen shows how to turn it on and the rest of NextFit works the same. |
 | Low Coupling | `AssistantModule` | The screen only knows `AssistantChat`; it does not know the service, the tools or the key. |
-
+| SRP | `BestTimesAdvisor` | Only decides which hours to recommend (today first, tomorrow when today has none); it does not calculate the forecast or draw it. |
+| DIP | `BestTimesAdvisor`, `MemberPortal` | The portal receives the advisor by constructor and a clock, so tests use a fixed day. |
+| Low Coupling | `PortalPage` | It only receives `PortalBestTimes` and does not know the forecast service or the attendance. |
+| Information Expert | `PortalBestTimes` | It owns the recommended hours and the day label that belong together. |
