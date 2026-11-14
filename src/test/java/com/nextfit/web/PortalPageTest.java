@@ -32,6 +32,10 @@ class PortalPageTest {
         return new PortalSummary(member, membership, workout, achievements, Optional.empty());
     }
 
+    private static PortalSummary summaryWithoutData() {
+        return summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
+    }
+
     private static Achievements nothingYet() {
         return new Achievements(member("Ana Gómez"), 0, new Streak(0, 0), List.of());
     }
@@ -72,8 +76,7 @@ class PortalPageTest {
 
     @Test
     void explainsWhatIsMissingInsteadOfLeavingEmptySections() {
-        String html = PortalPage.render(summary(member("Ana Gómez"), Optional.empty(), Optional.empty(),
-                nothingYet()), "ABCDEFGHJK");
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK");
 
         assertTrue(html.contains("No tienes una membresía vigente"));
         assertTrue(html.contains("Todavía no tienes una rutina asignada"));
@@ -95,6 +98,11 @@ class PortalPageTest {
     }
 
     @Test
+    void anInvalidCodeGetsAFriendlyPage() {
+        assertTrue(PortalPage.invalid().contains("Código no válido"));
+    }
+
+    @Test
     void showsTheBestHoursToTrain() {
         PortalBestTimes times = new PortalBestTimes("Hoy", List.of(
                 new HourForecast(17, 0.0, 0, OccupancyLevel.QUIET),
@@ -111,19 +119,14 @@ class PortalPageTest {
 
     @Test
     void saysSoWhenThereIsNotEnoughHistoryToAdvise() {
-        String html = PortalPage.render(summary(member("Ana Gómez"), Optional.empty(), Optional.empty(),
-                nothingYet()), "ABCDEFGHJK");
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK");
 
         assertTrue(html.contains("Aún no hay suficientes visitas"));
     }
 
     @Test
-    void anInvalidCodeGetsAFriendlyPage() {
-        assertTrue(PortalPage.invalid().contains("Código no válido"));
-    }
-        @Test
     void theChatIsShownOnlyWhenTheAssistantIsOn() {
-        PortalSummary summary = summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
+        PortalSummary summary = summaryWithoutData();
 
         String on = PortalPage.render(summary, "ABCDEFGHJK", true);
         String off = PortalPage.render(summary, "ABCDEFGHJK", false);
@@ -137,9 +140,7 @@ class PortalPageTest {
 
     @Test
     void theCodeInTheChatIsEscaped() {
-        PortalSummary summary = summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
-
-        String html = PortalPage.render(summary, "AB\"><script>x</script>", true);
+        String html = PortalPage.render(summaryWithoutData(), "AB\"><script>x</script>", true);
 
         assertFalse(html.contains("AB\"><script>x</script>"));
         assertTrue(html.contains("data-token=\"AB&quot;&gt;&lt;script&gt;x&lt;/script&gt;\""));
@@ -147,12 +148,9 @@ class PortalPageTest {
 
     @Test
     void theAnswerOfTheAiIsWrittenAsTextAndNeverAsHtml() {
-        PortalSummary summary = summary(member("Ana Gómez"), Optional.empty(), Optional.empty(), nothingYet());
-
-        String html = PortalPage.render(summary, "ABCDEFGHJK", true);
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK", true);
 
         assertTrue(html.contains("textContent"));
         assertFalse(html.contains("innerHTML"));
     }
-    
 }
