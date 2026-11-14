@@ -7,6 +7,7 @@ import com.nextfit.model.AuditAction;
 import com.nextfit.model.AuditEntry;
 import com.nextfit.model.Difficulty;
 import com.nextfit.model.Exercise;
+import com.nextfit.model.FaceTemplate;
 import com.nextfit.model.HealthProfile;
 import com.nextfit.model.Measurement;
 import com.nextfit.model.Member;
@@ -27,7 +28,9 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -145,6 +148,25 @@ public final class JdbcRepositoriesCheck {
         cleanup.push(new String[]{"training_sessions", "id", String.valueOf(session.getId())});
         check("sessions.findByMemberId", sessions.findByMemberId(memberId).size() == 1);
         check("sessions.findById", sessions.findById(session.getId()).isPresent());
+
+        JdbcFaceTemplateRepository faces = new JdbcFaceTemplateRepository(db);
+        float[] first = new float[128];
+        float[] second = new float[128];
+        for (int i = 0; i < 128; i++) {
+            first[i] = i / 10f;
+            second[i] = -i / 7f;
+        }
+        faces.replace(memberId, List.of(first, second));
+        check("faces.replace guarda 2 vectores de 128 numeros",
+                faces.findAll().stream().filter(t -> t.memberId() == memberId).count() == 2);
+        check("faces.findAll devuelve el mismo vector", faces.findAll().stream()
+                .anyMatch(t -> t.memberId() == memberId && Arrays.equals(t.vector(), first)));
+        check("faces.has", faces.has(memberId));
+        faces.replace(memberId, List.of(first));
+        check("faces.replace reemplaza (queda 1)",
+                faces.findAll().stream().filter(t -> t.memberId() == memberId).count() == 1);
+        faces.delete(memberId);
+        check("faces.delete", !faces.has(memberId));
 
         JdbcAuditRepository audit = new JdbcAuditRepository(db);
         AuditEntry entry = audit.append(new AuditEntry(0, LocalDateTime.now(), "test" + unique,
