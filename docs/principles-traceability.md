@@ -243,4 +243,9 @@ Each row links a principle or pattern to the class or method where it is applied
 | Immutability | `ChurnFactor`, `ChurnRisk`, `MemberActivity` | Records that cannot change after they are created; the lists are copied. |
 | DIP | `ChurnService` | It depends on the `ChurnRule` interface and receives the rules, the services and the clock by constructor, so the tests choose the day. |
 | SRP | `ChurnModule` | It only shows what `ChurnService` calculates and decides who may open it. |
+| SRP | `OccupancyForecastService` | Only forecasts the people inside by hour; the current occupation stays in `OccupancyService`. |
+| Information Expert | `OccupancyForecast` | It owns the hours of the day, so it knows which are the quietest and the busiest. |
+| Information Expert | `OccupancyForecastService` | It reads the attendance and decides how a person counts between the entry and the exit. |
+| Protected Variations | `HourForecast`, `OccupancyLevel` | Screens use the percent and the level, so the way of forecasting can change without touching them. |
+| Low Coupling | `OccupancyForecastService` | It depends on `AttendanceService` and a clock only. |
 
