@@ -170,6 +170,17 @@ public final class Main {
                 memberService, Clock.systemDefaultZone());
         ChurnService churnService = ChurnService.withStandardRules(attendanceService, subscriptionService,
                 memberService, Clock.systemDefaultZone());
+
+        // The AI assistant. Without an ai.apiKey line in nextfit.properties it stays off and NextFit works as always.
+        List<AiTool> aiTools = List.of(
+                new MembersAtRiskTool(churnService),
+                new RevenueSummaryTool(paymentService, Clock.systemDefaultZone()),
+                new GymAlertsTool(alertService));
+        Optional<AssistantChat> assistantChat = AiSetup
+                .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone())
+                .map(assistant -> new AssistantChat(assistant, () -> session.getCurrentUser()
+                        .map(user -> AiUser.staff(user.getRole(), user.getUsername()))
+                        .orElseThrow(() -> new AiException("No hay una sesión iniciada"))));
         // The suggestion service and its rules are wired here (composition root).
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
@@ -197,6 +208,7 @@ public final class Main {
                         new PhotoStorage(DATA_DIR.resolve("photos")), session),
                 new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
                 new ChurnModule(churnService),
+                new AssistantModule(assistantChat),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
