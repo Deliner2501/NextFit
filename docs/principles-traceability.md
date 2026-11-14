@@ -256,3 +256,8 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `ClaudeClient` | Only translates between the assistant's values and the Claude HTTPS API. |
 | Liskov | `ClaudeClient` | It can replace any other `AiClient`, such as the fake of the tests, without the assistant noticing. |
 | Protected Variations | `ClaudeClient` | The details of the provider (address, headers, JSON) stay in this class. |
+| OCP | `MembersAtRiskTool` | A new question for the assistant is a new tool class that implements `AiTool`; nothing existing changes. |
+| Information Expert | `MembersAtRiskTool` | It reuses `ChurnService`, which owns the risk, instead of recalculating it. |
+| Protected Variations | `RevenueSummaryTool` | Money is limited to the administrator by the tool itself, so no screen has to remember the rule. |
+| Low Coupling | `RevenueSummaryTool` | It depends on `PaymentService` and a clock only. |
+
