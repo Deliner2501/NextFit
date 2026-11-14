@@ -291,3 +291,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
 | Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |
 
+## Dynamic QR
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `AccessTokens` | Only builds and checks codes: the fixed one of the carnet and the short-lived one that depends on the time |
+| Information Expert | `PhoneAccess` | It knows who used which code and when, so it decides if a code was already used |
+| OCP | `AccessService.processMember` | The rules to let in did not change: only the way the member is identified did |
+| Low Coupling | `QrSvg`, `AccessServer` | The web part draws the QR from `QrMatrix` and does not know the screen or the carnet PDF |
+| Testability | `AccessTokensTest`, `PhoneAccessTest` | A hand-moved clock tests the 30 seconds window and the one-use rule |
+

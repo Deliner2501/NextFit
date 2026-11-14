@@ -52,7 +52,7 @@ exercises with sets, repetitions and rest), **Asignación** (give a routine to a
 - **Control de acceso**: write the document or scan the carnet QR and press Enter. The first reading registers the entry,
   the next one the exit. A full-screen answer says *entrada*, *salida* or *denegado* and why. On the right you see who is
   inside now.
-- With a phone: scan the QR of the carnet with the camera (same Wi-Fi as the computer). The address to test the
+- With a phone: the member scans the QR of the carnet once with their camera (same Wi-Fi as the computer) and opens the **digital carnet**, which shows a QR that changes every 30 seconds. Reception scans that QR to register the entry or the exit; a screenshot of it stops working in less than a minute and can be used only once. The QR of the printed carnet does not let in by itself. The address to test the
   connection is shown on the screen ([details](phone-qr-access.md)).
 - **Carnets**: choose a member to see the carnet. **Guardar carnet como imagen** saves a PNG, **Guardar carnet en PDF** saves the front and back at credit-card size, and **PDF de todos los socios activos** makes one file with every active member (four per A4 page) to print and cut.
 - **Rostro**: enter with the face, without carnet ([details](face-recognition.md)). To register a member choose them on the right, press **Registrar rostro**, read the consent aloud and accept; the camera takes three pictures looking forward. To let someone in press **Iniciar entrada con rostro**: the member looks at the camera, turns the head to the left and to the right, looks forward and the entry is registered. **Eliminar rostro** deletes the stored face. The first time the model files must be copied to `data/models`.

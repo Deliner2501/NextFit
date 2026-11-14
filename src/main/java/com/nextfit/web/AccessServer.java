@@ -20,13 +20,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Small web server of the reception computer, built into the JDK. A phone that
- * scans the QR of a carnet opens {@code /a/CODE}; the server registers the entry
- * or the exit and answers with {@link AccessPage}. It only serves the local
- * network and has these routes: {@code /a/CODE}, {@code /m/CODE} (the portal of the member, only
- * when a {@link MemberPortal} was given), {@code POST /m/CODE/chat} (the questions of the chat of the
- * portal, only when a {@link PortalChatEndpoint} was given), {@code /photo/CODE} and {@code /ping}
- * (to check the connection from a phone).
+ * Small web server of the reception computer, built into the JDK. The QR of a carnet opens the
+ * digital carnet {@code /c/CODE}, which shows a QR that changes every few seconds; scanning that QR
+ * opens {@code /a/CODE}, and the server registers the entry or the exit and answers with
+ * {@link AccessPage}. It only serves the local network and has these routes: {@code /c/CODE} (the
+ * digital carnet), {@code /q/CODE} (the picture of its QR), {@code /a/CODE} (the short-lived code that
+ * lets in), {@code /m/CODE} (the portal of the member, only when a {@link MemberPortal} was given),
+ * {@code POST /m/CODE/chat} (the questions of the chat of the portal, only when a
+ * {@link PortalChatEndpoint} was given), {@code /photo/CODE} and {@code /ping} (to check the
+ * connection from a phone).
  */
 public final class AccessServer {
 
@@ -138,9 +140,15 @@ public final class AccessServer {
             } else if (path.equals("/") || path.equals("/ping")) {
                 sendHtml(exchange, 200, AccessPage.ping());
             } else if (path.startsWith("/a/")) {
-                String token = path.substring(3);
-                AccessResult result = phone.scan(token);
-                sendHtml(exchange, 200, AccessPage.render(result, token));
+                AccessResult result = phone.scan(path.substring(3));
+                // The result page links to the photo and the portal with the fixed code of the carnet,
+                // because the short-lived one used to enter expires in seconds.
+                String fixed = result.member() == null ? "" : phone.tokenOf(result.member());
+                sendHtml(exchange, 200, AccessPage.render(result, fixed));
+            } else if (path.startsWith("/c/")) {
+                sendCard(exchange, path.substring(3));
+            } else if (path.startsWith("/q/")) {
+                sendLiveQr(exchange, path.substring(3));
             } else if (path.startsWith("/m/") && portal != null) {
                 sendPortal(exchange, path.substring(3));
             } else if (path.equals("/logo.png")) {
@@ -155,6 +163,28 @@ public final class AccessServer {
         } finally {
             exchange.close();
         }
+    }
+
+    private void sendCard(HttpExchange exchange, String token) throws IOException {
+        Optional<Member> member = phone.findMember(token);
+        if (member.isEmpty() || !member.get().isActive()) {
+            sendHtml(exchange, 404, AccessPage.invalidCard());
+            return;
+        }
+        sendHtml(exchange, 200, AccessPage.card(member.get(), token));
+    }
+
+    /** Draws the QR with the code of this moment; the digital carnet asks for it again every few seconds. */
+    private void sendLiveQr(HttpExchange exchange, String token) throws IOException {
+        Optional<Member> member = phone.findMember(token);
+        if (member.isEmpty() || !member.get().isActive()) {
+            send(exchange, 404, "text/plain; charset=utf-8", new byte[0]);
+            return;
+        }
+        String host = exchange.getRequestHeaders().getFirst("Host");
+        String base = "http://" + (host == null ? "localhost:" + port() : host);
+        String svg = QrSvg.of(base + "/a/" + phone.liveTokenOf(member.get()));
+        send(exchange, 200, "image/svg+xml", svg.getBytes(StandardCharsets.UTF_8));
     }
 
     // EXPLICACIÓN: la ruta del chat es /m/CODIGO/chat; el código es lo que queda en el medio

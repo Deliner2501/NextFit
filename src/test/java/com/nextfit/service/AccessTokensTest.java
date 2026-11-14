@@ -2,6 +2,7 @@ package com.nextfit.service;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,5 +55,31 @@ class AccessTokensTest {
     @Test
     void shortKeysAreRejected() {
         assertThrows(IllegalArgumentException.class, () -> new AccessTokens(new byte[8]));
+    }
+
+    @Test
+    void liveCodeChangesEveryWindowAndDiffersFromTheFixedOne() {
+        AccessTokens tokens = new AccessTokens(key(7));
+        Instant start = Instant.parse("2026-11-14T15:00:00Z");
+
+        String first = tokens.liveTokenFor("1065123456", start);
+
+        assertEquals(first, tokens.liveTokenFor("1065123456", start.plusSeconds(AccessTokens.WINDOW_SECONDS - 1)));
+        assertFalse(first.equals(tokens.liveTokenFor("1065123456", start.plusSeconds(AccessTokens.WINDOW_SECONDS))));
+        assertFalse(first.equals(tokens.tokenFor("1065123456")));
+    }
+
+    @Test
+    void liveCodeIsAcceptedForTheCurrentAndThePreviousWindowOnly() {
+        AccessTokens tokens = new AccessTokens(key(7));
+        Instant start = Instant.parse("2026-11-14T15:00:00Z");
+        String code = tokens.liveTokenFor("1065123456", start);
+
+        assertTrue(tokens.matchesLive("1065123456", code, start));
+        assertTrue(tokens.matchesLive("1065123456", code, start.plusSeconds(AccessTokens.WINDOW_SECONDS)));
+        assertFalse(tokens.matchesLive("1065123456", code, start.plusSeconds(2L * AccessTokens.WINDOW_SECONDS)));
+        assertFalse(tokens.matchesLive("1065123457", code, start));
+        assertFalse(tokens.matchesLive("1065123456", tokens.tokenFor("1065123456"), start));
+        assertFalse(tokens.matchesLive("1065123456", null, start));
     }
 }
