@@ -2,9 +2,11 @@ package com.nextfit.web;
 
 import com.nextfit.model.Member;
 import com.nextfit.service.AccessResult;
+import com.nextfit.service.portal.VisitSummary;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * The page a phone shows after scanning a carnet: a NextFit branded card with a green (entry),
@@ -27,6 +29,18 @@ public final class AccessPage {
      * @return the HTML page
      */
     public static String render(AccessResult result, String token) {
+        return render(result, token, Optional.empty());
+    }
+
+    /**
+     * Draws the page that follows a scan, with the summary of the visit under the answer.
+     *
+     * @param result  the result of the access
+     * @param token   the fixed code of the carnet, used to ask the server for the photo and the portal
+     * @param summary "your day" (entry) or "your summary" (exit); empty when there is nothing to add
+     * @return the HTML page
+     */
+    public static String render(AccessResult result, String token, Optional<VisitSummary> summary) {
         String color;
         String verdict;
         String icon;
@@ -71,6 +85,7 @@ public final class AccessPage {
             body.append("</div>");
         }
         if (result.granted() && member != null) {
+            summary.ifPresent(visit -> body.append(VisitSummaryHtml.render(visit)));
             body.append("<a class=\"portal\" href=\"/m/").append(esc(token)).append("\">Ver mi rutina y mi progreso</a>");
         }
         return page(color, body.toString());

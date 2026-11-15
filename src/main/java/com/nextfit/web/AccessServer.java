@@ -5,6 +5,8 @@ import com.nextfit.service.AccessResult;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.portal.MemberPortal;
 import com.nextfit.service.portal.PortalSummary;
+import com.nextfit.service.portal.VisitSummary;
+import com.nextfit.service.portal.VisitSummaryService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -39,6 +41,7 @@ public final class AccessServer {
     private final PhoneAccess phone;
     private final MemberPortal portal;
     private final PortalChatEndpoint chat;
+    private final VisitSummaryService visits;
     private final int preferredPort;
     private HttpServer server;
     private ExecutorService executor;
@@ -73,9 +76,24 @@ public final class AccessServer {
      * @param preferredPort the port to try first; 0 lets the system choose a free one
      */
     public AccessServer(PhoneAccess phone, MemberPortal portal, PortalChatEndpoint chat, int preferredPort) {
+        this(phone, portal, chat, null, preferredPort);
+    }
+
+    /**
+     * Creates the server with the portal, the chat and the summary of the visit, without starting it.
+     *
+     * @param phone         the service that registers the scans
+     * @param portal        the service that gathers what the member sees; null leaves the portal off
+     * @param chat          the door of the chat of the portal; null leaves the chat off
+     * @param visits        builds "your day" and "your summary" after a scan; null leaves them off
+     * @param preferredPort the port to try first; 0 lets the system choose a free one
+     */
+    public AccessServer(PhoneAccess phone, MemberPortal portal, PortalChatEndpoint chat,
+                        VisitSummaryService visits, int preferredPort) {
         this.phone = phone;
         this.portal = portal;
         this.chat = chat;
+        this.visits = visits;
         this.preferredPort = preferredPort;
     }
 
@@ -144,7 +162,8 @@ public final class AccessServer {
                 // The result page links to the photo and the portal with the fixed code of the carnet,
                 // because the short-lived one used to enter expires in seconds.
                 String fixed = result.member() == null ? "" : phone.tokenOf(result.member());
-                sendHtml(exchange, 200, AccessPage.render(result, fixed));
+                Optional<VisitSummary> summary = visits == null ? Optional.empty() : visits.of(result);
+                sendHtml(exchange, 200, AccessPage.render(result, fixed, summary));
             } else if (path.startsWith("/c/")) {
                 sendCard(exchange, path.substring(3));
             } else if (path.startsWith("/q/")) {

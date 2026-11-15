@@ -74,6 +74,7 @@ import java.nio.file.Path;
 import java.util.List;
 import com.nextfit.service.portal.BestTimesAdvisor;
 import com.nextfit.service.portal.MemberPortal;
+import com.nextfit.service.portal.VisitSummaryService;
 import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
 import com.nextfit.web.PortalChatEndpoint;
@@ -230,7 +231,9 @@ public final class Main {
                 .map(service -> new PortalChatEndpoint(service::ask))
                 .orElse(null);
 
-        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat, ACCESS_PORT);
+        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat,
+                new VisitSummaryService(member -> memberPortal.summaryFor(phoneAccess.tokenOf(member)),
+                        attendanceService), ACCESS_PORT);
         try {
             accessServer.start();
         } catch (IOException e) {
