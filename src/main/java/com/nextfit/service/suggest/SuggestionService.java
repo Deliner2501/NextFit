@@ -99,6 +99,18 @@ public class SuggestionService {
         return new SuggestedRoutine(routine, new ArrayList<>(warnings));
     }
 
+    /**
+     * Works out the limits that apply to a request: the settings of the level and the goal, changed by
+     * every rule (body mass index, medical conditions). Anyone who proposes a routine, for example
+     * the AI, must stay inside these limits.
+     *
+     * @param request what the trainer asked for
+     * @return the settings after all the rules were applied
+     */
+    public SuggestionSettings settingsFor(SuggestionRequest request) {
+        return adjust(request);
+    }
+
     private SuggestionSettings adjust(SuggestionRequest request) {
         SuggestionSettings settings = SuggestionSettings.from(request);
         for (SuggestionRule rule : rules) {
