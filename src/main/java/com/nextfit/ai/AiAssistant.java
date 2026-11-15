@@ -19,7 +19,7 @@ import java.util.Locale;
  * token limit, rounds and size of every call) and the privacy (each person is offered only the
  * tools of his audience, and a tool that was not offered is never run).
  */
-public class AiAssistant {
+public class AiAssistant implements TextCompleter {
 
     /** Most calls to the AI for one question; stops a loop where the AI asks for tools forever. */
     static final int MAX_ROUNDS = 5;
@@ -35,6 +35,9 @@ public class AiAssistant {
 
     /** Most characters of a question. */
     static final int MAX_QUESTION_CHARS = 1000;
+
+    /** Most tokens that a feature may ask the AI to write in one {@link #complete} call. */
+    static final int MAX_COMPLETION_TOKENS = 4096;
 
     private static final DateTimeFormatter TODAY_FORMAT =
             DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-CO"));
@@ -91,6 +94,39 @@ public class AiAssistant {
             conversation.rollbackTo(mark);
             throw e;
         }
+    }
+
+    /**
+     * Asks the AI for one text, with no chat and no tools. It uses the same client and the same daily
+     * limit of tokens as the questions, so the cost stays protected.
+     *
+     * @param system    the instructions for the AI
+     * @param prompt    what is asked
+     * @param maxTokens the most tokens the AI may write, from 1 to {@value #MAX_COMPLETION_TOKENS}
+     * @return the text that the AI wrote
+     * @throws InvalidDataException when the prompt is empty or the limit of tokens is not valid
+     * @throws AiException          when the AI cannot answer, the answer is empty or cut, or the daily limit was reached
+     */
+    @Override
+    public String complete(String system, String prompt, int maxTokens) {
+        if (prompt == null || prompt.isBlank()) {
+            throw new InvalidDataException("petición", "no puede estar vacía");
+        }
+        if (maxTokens < 1 || maxTokens > MAX_COMPLETION_TOKENS) {
+            throw new InvalidDataException("límite de respuesta", "debe estar entre 1 y " + MAX_COMPLETION_TOKENS);
+        }
+        budget.ensureAvailable();
+        AiReply reply = client.send(new AiRequest(system, List.of(AiMessage.user(prompt)), List.of(), maxTokens));
+        budget.record(reply.inputTokens(), reply.outputTokens());
+        // EXPLICACIÓN: un texto cortado a la mitad no sirve (por ejemplo un JSON sin cerrar), así que se rechaza
+        if (AiReply.MAX_TOKENS.equals(reply.stopReason())) {
+            throw new AiException("La respuesta de la IA quedó cortada. Intenta de nuevo");
+        }
+        String text = reply.text();
+        if (text.isEmpty()) {
+            throw new AiException("La IA no devolvió respuesta. Intenta de nuevo");
+        }
+        return text;
     }
 
     private String converse(AiUser user, AiConversation conversation, String question) {

@@ -37,6 +37,7 @@ import com.nextfit.service.alert.WhatsAppLink;
 import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.service.suggest.BmiRule;
 import com.nextfit.service.suggest.MedicalConditionRule;
+import com.nextfit.service.suggest.RoutineDraftChecker;
 import com.nextfit.service.suggest.SuggestionRule;
 import com.nextfit.service.suggest.SuggestionService;
 import com.nextfit.validation.HealthValidator;
@@ -78,13 +79,14 @@ import java.nio.file.Path;
 import java.util.List;
 import com.nextfit.service.portal.BestTimesAdvisor;
 import com.nextfit.service.portal.MemberPortal;
-import com.nextfit.service.portal.VisitSummaryService;
+import com.nextfit.service.portal.ProgressReportService;
 import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
 import com.nextfit.web.PortalChatEndpoint;
 import java.io.IOException;
 import java.util.function.Supplier;
 import com.nextfit.ai.AiAssistant;
+import com.nextfit.ai.AiRoutineService;
 import com.nextfit.ai.AiSetup;
 import com.nextfit.ai.AiTool;
 import com.nextfit.ai.AiUser;
@@ -170,9 +172,8 @@ public final class Main {
         AccessService accessService = new AccessService(memberService, attendanceService,
                 memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
                 Clock.systemDefaultZone());
-        PhoneAccess phoneAccess = new PhoneAccess(memberService, accessService,
-                new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))),
-                Clock.systemDefaultZone());
+        PhoneAccess phoneAccess = new PhoneAccess(memberService,
+                new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))));
         // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
         FaceTemplateRepository faceTemplates = new CsvFaceTemplateRepository(DATA_DIR.resolve("face_templates.csv"));
         FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
@@ -237,14 +238,18 @@ public final class Main {
                 .map(ai -> new AssistantChat(ai, () -> session.getCurrentUser()
                         .map(user -> AiUser.staff(user.getRole(), user.getUsername()))
                         .orElseThrow(() -> new AiException("No hay una sesión iniciada"))));
+        // EXPLICACIÓN: las rutinas con IA usan el mismo asistente (mismo límite diario); sin clave no existen y el botón no aparece
+        Optional<AiRoutineService> aiRoutines = assistant
+                .map(ai -> new AiRoutineService(ai, suggestionService, training.exercises(),
+                        new RoutineDraftChecker(Clock.systemDefaultZone())));
         PortalChatEndpoint portalChat = assistant
                 .map(ai -> new PortalChatService(ai, phoneAccess::findMember, Clock.systemDefaultZone()))
                 .map(service -> new PortalChatEndpoint(service::ask))
                 .orElse(null);
 
         AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat,
-                new VisitSummaryService(member -> memberPortal.summaryFor(phoneAccess.tokenOf(member)),
-                        attendanceService), ACCESS_PORT);
+                new ProgressReportService(training.assignments(), training.routines(), training.sessions(),
+                        attendanceService, healthService), ACCESS_PORT);
         try {
             accessServer.start();
         } catch (IOException e) {
@@ -263,7 +268,7 @@ public final class Main {
                 new AssistantModule(assistantChat),
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
-                        DATA_DIR.resolve("images").resolve("exercises")),
+                        DATA_DIR.resolve("images").resolve("exercises"), aiRoutines),
                 new AccessModule(accessService, attendanceService, memberService, subscriptionService,
                         phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
                         selfAccess, memberPasswords),

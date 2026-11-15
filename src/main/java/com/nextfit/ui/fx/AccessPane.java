@@ -68,7 +68,7 @@ final class AccessPane extends HBox {
 
     /** Reloads the list of members inside and gives the focus back to the scan box. */
     void refresh() {
-        phoneInfo.setText("Con el celular: escanea el QR del carnet con la cámara (misma red Wi-Fi). Prueba la conexión en "
+        phoneInfo.setText("Con el celular: el socio escanea el QR del carnet y ve su portal con su progreso (misma red Wi-Fi). Prueba la conexión en "
                 + phoneUrl.get() + "/ping");
         reloadInside();
         Platform.runLater(scan::requestFocus);
@@ -77,11 +77,12 @@ final class AccessPane extends HBox {
     private VBox buildScanBox() {
         Label title = new Label("Control de acceso");
         title.getStyleClass().add("nf-section-title");
-        Label hint = new Label("Escanea el carnet o escribe el documento y presiona Enter. "
-                + "La primera lectura registra la entrada; la siguiente, la salida.");
+        Label hint = new Label("Escribe el documento del socio y presiona Enter. "
+                + "La primera vez registra la entrada; la siguiente, la salida. "
+                + "El socio también puede usar su rostro o su contraseña.");
         hint.getStyleClass().add("nf-muted-small");
         hint.setWrapText(true);
-        scan.setPromptText("Código del carnet o número de documento");
+        scan.setPromptText("Número de documento");
         scan.getStyleClass().add("nf-input");
         scan.setPrefHeight(52);
         scan.setOnAction(e -> submit());
@@ -209,9 +210,9 @@ final class AccessPane extends HBox {
         result.getStyleClass().add("nf-access-idle");
         result.getChildren().clear();
         result.getChildren().add(FxIcons.of(FxIcons.ACCESS, 72));
-        Label waiting = new Label("Listo para escanear");
+        Label waiting = new Label("Listo para registrar");
         waiting.getStyleClass().add("nf-access-verdict");
-        Label help = new Label("Acerca el código QR del carnet al lector");
+        Label help = new Label("Escribe el documento del socio");
         help.getStyleClass().add("nf-access-message");
         result.getChildren().addAll(waiting, help);
     }

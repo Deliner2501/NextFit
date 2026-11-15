@@ -331,4 +331,25 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `OccupancyView` | The forecast is a new card; the rest of the screen did not change, and it adds no CSS because it reuses the `nf-level-*` classes |
 | Testability | `OccupancyForecastOnTvTest` | The clock is fixed by hand and a fake attendance repository gives the history |
 
+## Routines of the AI
+
+| Principle | Where | How |
+|---|---|---|
+| Protected Variations | `RoutineDraftChecker` | The AI is never trusted: every exercise must exist and pass the same limits as the rules, and a draft that cannot be fixed is refused. |
+| SRP | `RoutineDraftChecker` | Only checks a proposed routine and builds the final one; it knows nothing about the AI nor the screen. |
+| DIP | `TextCompleter` | The routine service depends on a one-method interface, so it is tested with a lambda and any AI service can be used. |
+| Pure Fabrication | `AiRoutineService` | Coordinates the prompt, the AI and the checker; it is not a concept of the gym but it keeps the screen and the AI client simple. |
+| OCP | `SuggestionService.settingsFor` | New medical or body rules change the limits for the rules and for the AI without touching either of them. |
+| Testability | `RoutineDraftCheckerTest`, `AiRoutineServiceTest`, `AiAssistantCompleteTest` | A fake AI and a hand-fixed clock test the checker and the service without a key and without internet. |
+
+## QR as read-only portal
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `PhoneAccess` | Only links a carnet code with its member; it no longer registers entries, so the QR cannot let anybody in. |
+| Protected Variations | `AccessServer` | There is no route that registers an access; the only way in is face, password or staff. |
+| Information Expert | `ProgressReportService` | Reads each service that owns the data (routines, sessions, attendance, health) and builds the report. |
+| Low Coupling | `ProgressReport`, `PortalPage` | The report is a plain value; the page only draws it and the portal of Santiago (`MemberPortal`) is untouched. |
+| OCP | `PortalPage.render(..., Optional<ProgressReport>)` | A new overload adds the sections; the old one keeps working. |
+| Testability | `ProgressReportServiceTest`, `PortalPageTest`, `PhoneAccessTest` | CSV files in a temporary folder and a plain value for the page; no network. |
 
