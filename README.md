@@ -167,7 +167,7 @@ The sidebar only shows the modules that the logged-in role can use.
 | Members | ✅ edit | ✅ edit | 👁️ read only |
 | Billing (plans, sales, payments) | ✅ | ✅ | ❌ |
 | Training (exercises, routines, assignments) | ✅ | ❌ | ✅ |
-| Access control (kiosk, carnets) | ✅ | ✅ | ❌ |
+| Access control (inside now, carnets, face, password) | ✅ | ✅ | ❌ |
 | Analytics | ✅ | ✅ | ❌ |
 | Alerts | ✅ | ✅ | ❌ |
 | TV screen | ✅ | ✅ | ❌ |
