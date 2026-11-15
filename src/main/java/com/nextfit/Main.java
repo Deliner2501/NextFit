@@ -233,7 +233,7 @@ public final class Main {
                 new MyNextWorkoutTool(memberSummaries),
                 new BestHoursTool(memberSummaries));
         Optional<AiAssistant> assistant = AiSetup
-                .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone());
+                .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone(), auditService);
         Optional<AssistantChat> assistantChat = assistant
                 .map(ai -> new AssistantChat(ai, () -> session.getCurrentUser()
                         .map(user -> AiUser.staff(user.getRole(), user.getUsername()))

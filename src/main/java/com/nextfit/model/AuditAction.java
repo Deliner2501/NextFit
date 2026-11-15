@@ -22,7 +22,8 @@ public enum AuditAction {
     MEMBER_PASSWORD_CREATED("Contraseña de socio creada"),
     MEMBER_PASSWORD_RESET("Contraseña de socio restablecida"),
     MEMBER_LOGIN_FAILED("Entrada de socio fallida"),
-    MEMBER_LOCKOUT("Socio bloqueado por intentos");
+    MEMBER_LOCKOUT("Socio bloqueado por intentos"),
+    AI_QUESTION("Pregunta al asistente");
 
     private final String label;
 
