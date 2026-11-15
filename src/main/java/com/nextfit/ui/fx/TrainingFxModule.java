@@ -1,6 +1,7 @@
 package com.nextfit.ui.fx;
 
 import com.nextfit.TrainingModule;
+import com.nextfit.ai.AiRoutineService;
 import com.nextfit.model.Role;
 import com.nextfit.service.suggest.SuggestionService;
 import javafx.geometry.Insets;
@@ -11,6 +12,7 @@ import javafx.scene.layout.StackPane;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Training module in JavaFX. It groups its screens in tabs: exercises, routines,
@@ -27,14 +29,27 @@ public final class TrainingFxModule implements FxModule {
     private final TrainersPane trainers;
 
     /**
+     * Creates the module without the routines of the AI.
+     *
      * @param training     the object that builds and holds the training services
      * @param suggestions  the service that builds suggested routines
      * @param imagesFolder folder where the exercise pictures are stored
      */
     public TrainingFxModule(TrainingModule training, SuggestionService suggestions, Path imagesFolder) {
+        this(training, suggestions, imagesFolder, Optional.empty());
+    }
+
+    /**
+     * @param training     the object that builds and holds the training services
+     * @param suggestions  the service that builds suggested routines
+     * @param imagesFolder folder where the exercise pictures are stored
+     * @param aiRoutines   the service that asks the AI for a routine; empty when the assistant is off
+     */
+    public TrainingFxModule(TrainingModule training, SuggestionService suggestions, Path imagesFolder,
+                            Optional<AiRoutineService> aiRoutines) {
         this.exercises = new ExercisesPane(training.exercises(), imagesFolder);
         this.routines = new RoutinesPane(training.routines(), training.trainers(), training.exercises(),
-                training.members(), suggestions);
+                training.members(), suggestions, aiRoutines);
         this.assignments = new AssignmentPane(training.assignments(), training.routines(), training.members());
         this.sessions = new SessionsPane(training.sessions(), training.assignments(), training.routines(),
                 training.members());
