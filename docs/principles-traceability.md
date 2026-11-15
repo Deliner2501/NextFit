@@ -57,13 +57,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP and ISP | `MembershipExpiry` | The access service asks a one-method interface when the membership ends, so it does not know the membership module and is tested with a lambda |
 | GRASP Controller (use case) | `AccessService.process` | One operation turns a scan into an entry or an exit and reuses `AttendanceService` for the rules instead of repeating them |
 | GRASP Protected Variations | `CarnetCode.decode` | The scanner format (prefix, case, spaces, typed document) is normalized in one place, so a different reader does not change the service |
-| GRASP Low coupling | `AccessResult` | The screens show a record with the outcome and the message; they never catch rule exceptions themselves |
-| GRASP Pure Fabrication | `QrImage`, `MemberAvatar` | Small helpers that draw the QR and the photo, shared by the carnet screen and the member avatars |
+| GRASP Low coupling | `AccessResult` | The kiosk shows a record with the outcome and the message; it never catches rule exceptions itself |
+| GRASP Pure Fabrication | `QrImage`, `MemberAvatar` | Small helpers that draw the QR and the photo, shared by the kiosk and the carnet screen |
 | Testability | `AccessServiceTest` | Entry, exit, denial, unknown code and the last day of the membership are tested with a fixed clock |
 | SRP | `AccessTokens`, `AccessKeyStore` | One class signs and checks the access code; the other only keeps the secret key in a file |
 | GRASP Protected Variations | `AccessTokens` | The code is derived from the document with a secret key, so the Member model and the CSV files do not change and a leaked carnet is revoked by changing the key |
 | GRASP Controller (use case) | `PhoneAccess.scan` | One operation turns a phone scan into an entry or exit, and returns the previous answer when the same code arrives twice in 10 seconds |
-| OCP and Observer | `AccessService.addListener` | Whoever needs the result of an access can subscribe, so a new way to enter needs no change in the service |
+| OCP and Observer | `AccessService.addListener` | The screens can subscribe to results, so a new way to scan (phone, reader, typed) needs no change in the screen |
 | SRP and Pure Fabrication | `AccessPage` | A pure function from a result to the phone page, tested without a server and with the member text escaped |
 | DIP | `AccessServer` | The web server depends on `PhoneAccess`, not on members, attendance or files; the port and the clock are injected |
 | Testability | `PhoneAccessTest`, `AccessServerTest`, `AccessPageTest`, `AccessTokensTest`, `AccessKeyStoreTest` | The server is tested for real on a free port with an HTTP client, like a phone would call it |
@@ -290,6 +290,26 @@ Each row links a principle or pattern to the class or method where it is applied
 | ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
 | Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |
 
+## Dynamic QR
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `AccessTokens` | Only builds and checks codes: the fixed one of the carnet and the short-lived one that depends on the time |
+| Information Expert | `PhoneAccess` | It knows who used which code and when, so it decides if a code was already used |
+| OCP | `AccessService.processMember` | The rules to let in did not change: only the way the member is identified did |
+| Low Coupling | `QrSvg`, `AccessServer` | The web part draws the QR from `QrMatrix` and does not know the screen or the carnet PDF |
+| Testability | `AccessTokensTest`, `PhoneAccessTest` | A hand-moved clock tests the 30 seconds window and the one-use rule |
+
+## Entry and exit summary
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `VisitSummaryService` | Only decides what to show after an entry or an exit; it does not draw it nor read the CSV files |
+| DRY / Low Coupling | `VisitSummaryService` | It reuses what `MemberPortal` already gathers through a one-method function, so the portal and the summary never disagree |
+| SRP | `VisitSummaryHtml` | Only draws the block; the text of the trainer is escaped |
+| OCP | `AccessServer` | The summary is a new optional collaborator: without it the server works as before |
+| Testability | `VisitSummaryServiceTest`, `VisitSummaryHtmlTest` | The portal is replaced by a lambda and a hand-moved clock gives the time inside |
+
 ## Entry with a password
 
 | Principle | Where | How |
@@ -352,3 +372,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `InsidePane` | Only lists who is inside and lets the staff close a forgotten visit; the entry is done by `FacePane` and `PasswordPane`. |
 | Protected Variations | `InsidePane.closeVisit` | The exit rule stays in `AttendanceService.checkOut`; the screen asks for confirmation and shows any rule error. |
 | Low Coupling | `AccessModule` | It no longer needs `AccessService`; each tab receives only the services it uses. |
+
+## Labels of how each member enters
+
+| Principle | Where | How |
+|---|---|---|
+| OCP | `MemberPicker` | A new constructor receives the function that gives the labels; the old one keeps working, so the other screens did not change. |
+| Low Coupling | `AccessModule` | It builds the function from `FaceEnrollmentService` and `MemberPasswordService`; `MemberPicker` only draws the text it receives. |
+| SRP | `MemberPicker.refreshTags` | Only draws the labels again; the panes call it after they register or delete a face or a password. |

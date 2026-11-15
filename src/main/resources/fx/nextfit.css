@@ -55,6 +55,7 @@
 }
 .nf-kpi-value { -fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
 .nf-badge { -fx-background-color: -nf-accent-soft; -fx-background-radius: 12; }
+.nf-tag { -fx-background-color: -nf-accent-soft; -fx-background-radius: 10; -fx-text-fill: -nf-accent-text; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; }
 .nf-badge .nf-icon { -fx-background-color: -nf-accent-text; }
 
 /* ---------- Iconos ---------- */

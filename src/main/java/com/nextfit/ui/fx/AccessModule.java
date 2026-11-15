@@ -1,5 +1,6 @@
 package com.nextfit.ui.fx;
 
+import com.nextfit.model.Member;
 import com.nextfit.model.Role;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.MemberPasswordService;
@@ -16,7 +17,9 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -51,10 +54,21 @@ public final class AccessModule implements FxModule {
                         FaceAccessService faceAccess, FaceEnrollmentService faceEnrollment,
                         Path dataDir, Supplier<String> actor,
                         SelfAccessService selfAccess, MemberPasswordService memberPasswords) {
+        // How each member enters, shown as labels in the lists of the face and password tabs.
+        Function<Member, List<String>> tags = member -> {
+            List<String> found = new ArrayList<>();
+            if (faceEnrollment.isEnrolled(member.getId())) {
+                found.add("Rostro");
+            }
+            if (memberPasswords.hasPassword(member.getId())) {
+                found.add("Contraseña");
+            }
+            return found;
+        };
         this.inside = new InsidePane(attendanceService, memberService);
         this.carnets = new CarnetPane(memberService, subscriptions, phone, phoneUrl);
-        this.face = new FacePane(faceAccess, faceEnrollment, memberService, dataDir, actor);
-        this.password = new PasswordPane(selfAccess, memberPasswords, memberService, actor);
+        this.face = new FacePane(faceAccess, faceEnrollment, memberService, dataDir, actor, tags);
+        this.password = new PasswordPane(selfAccess, memberPasswords, memberService, actor, tags);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
         tabs.getTabs().addAll(tab("Dentro ahora", inside), tab("Carnets", carnets), tab("Rostro", face), tab("Contraseña", password));

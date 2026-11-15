@@ -17,6 +17,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -39,12 +41,12 @@ final class PasswordPane extends HBox {
     private final MemberPicker picker;
 
     PasswordPane(SelfAccessService selfAccess, MemberPasswordService passwords, MemberService members,
-                 Supplier<String> actor) {
+                 Supplier<String> actor, Function<Member, List<String>> tags) {
         super(24);
         this.selfAccess = selfAccess;
         this.passwords = passwords;
         this.actor = actor;
-        this.picker = new MemberPicker("Contraseña de un socio", members, m -> updateStatus());
+        this.picker = new MemberPicker("Contraseña de un socio", members, m -> updateStatus(), tags);
         setPadding(new Insets(0, 4, 4, 4));
         clearOutcome.setOnFinished(e -> outcome.setText(""));
         getChildren().addAll(buildEntryColumn(), buildStaffColumn());
@@ -157,6 +159,7 @@ final class PasswordPane extends HBox {
         if (picker == null) {
             return;
         }
+        picker.refreshTags();
         Member member = picker.selected();
         boolean has = member != null && passwords.hasPassword(member.getId());
         status.setText(member == null ? "Elige un socio"
