@@ -353,3 +353,14 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `PortalPage.render(..., Optional<ProgressReport>)` | A new overload adds the sections; the old one keeps working. |
 | Testability | `ProgressReportServiceTest`, `PortalPageTest`, `PhoneAccessTest` | CSV files in a temporary folder and a plain value for the page; no network. |
 
+## Polish of the AI
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `AiAssistant.writeAudit` | Only counts and writes how the assistant was used (who, tools, tokens); it never keeps the text of the question or of the answer |
+| DIP | `AiAssistant`, `AuditLog` | The assistant depends on the small `AuditLog` interface, not on the CSV file or the audit screen |
+| Null Object | `AuditLog.NONE` | The old constructor and the tests that do not audit use an audit log that writes nothing |
+| OCP | `AuditAction.AI_QUESTION`, `AiSetup` | A new kind of event and a new overload were added; the existing code and the audit screen filter did not change |
+| Protected Variations | `AiAssistant.writeAudit` | If the audit fails, the person still gets the answer: a storage problem does not break the assistant |
+| Testability | `AiAssistantAuditTest` | A recording lambda replaces the audit log and a fake AI client gives the replies |
+
