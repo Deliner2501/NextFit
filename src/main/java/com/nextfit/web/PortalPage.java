@@ -10,9 +10,12 @@ import com.nextfit.service.portal.PortalExercise;
 import com.nextfit.service.portal.PortalMembership;
 import com.nextfit.service.portal.PortalSummary;
 import com.nextfit.service.portal.PortalWorkout;
+import com.nextfit.service.portal.ProgressReport;
 
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * The page a member opens on the phone to see the membership, the routine of the day, the best
@@ -49,15 +52,34 @@ public final class PortalPage {
      * @return the HTML page
      */
     public static String render(PortalSummary summary, String token, boolean chatEnabled) {
+        return render(summary, token, chatEnabled, Optional.empty());
+    }
+
+    /**
+     * Draws the complete portal of a member: his day, the next days, the last visits and the body progress.
+     *
+     * @param summary     what the member sees
+     * @param token       the access code, used to ask the server for the member photo and for the chat
+     * @param chatEnabled true when the assistant is on and the chat must be shown
+     * @param report      the next days, the last visits and the body progress; empty leaves them out
+     * @return the HTML page
+     */
+    public static String render(PortalSummary summary, String token, boolean chatEnabled,
+                                Optional<ProgressReport> report) {
         StringBuilder body = new StringBuilder();
         header(body, summary.member(), token);
         membership(body, summary);
         workout(body, summary);
+        report.ifPresent(data -> upcoming(body, data));
         bestTimes(body, summary);
         if (chatEnabled) {
             chat(body, token);
         }
         progress(body, summary.achievements());
+        report.ifPresent(data -> {
+            visits(body, data);
+            bodyProgress(body, data);
+        });
         return page(body.toString());
     }
 
@@ -181,6 +203,66 @@ public final class PortalPage {
             body.append("</div>");
         }
         body.append("</section>");
+    }
+
+    private static void upcoming(StringBuilder body, ProgressReport report) {
+        if (report.upcoming().isEmpty()) {
+            return;
+        }
+        body.append("<section class=\"card\"><h2>Tus próximos días</h2><ol class=\"exercises\">");
+        for (ProgressReport.UpcomingDay day : report.upcoming()) {
+            // The name of a day often starts with "Día N": do not repeat the number in that case.
+            String number = day.name().toLowerCase(java.util.Locale.ROOT).startsWith("día") ? "" : "Día " + day.dayNumber() + " · ";
+            body.append("<li><b>").append(esc(day.name())).append("</b><span>").append(number)
+                    .append(day.exerciseCount())
+                    .append(day.exerciseCount() == 1 ? " ejercicio" : " ejercicios").append("</span></li>");
+        }
+        body.append("</ol><p class=\"muted\">Se avanza de día cada vez que entrenas.</p></section>");
+    }
+
+    private static void visits(StringBuilder body, ProgressReport report) {
+        body.append("<section class=\"card\"><h2>Tus últimas visitas</h2>");
+        if (report.visits().isEmpty()) {
+            body.append("<p class=\"muted\">Todavía no tienes visitas registradas.</p>");
+        } else {
+            body.append("<ol class=\"exercises\">");
+            for (ProgressReport.RecentVisit visit : report.visits()) {
+                body.append("<li><b>").append(visit.date().format(DAY)).append("</b><span>Entraste a las ")
+                        .append(String.format("%02d:%02d", visit.start().getHour(), visit.start().getMinute()))
+                        .append(visit.stay().map(stay -> " · estuviste " + duration(stay))
+                                .orElse(" · sigues dentro")).append("</span></li>");
+            }
+            body.append("</ol>");
+        }
+        body.append("</section>");
+    }
+
+    private static void bodyProgress(StringBuilder body, ProgressReport report) {
+        if (report.body().isEmpty()) {
+            return;
+        }
+        ProgressReport.BodyProgress data = report.body().get();
+        body.append("<section class=\"card\"><h2>Tu cuerpo</h2><p class=\"big\">")
+                .append(String.format(Locale.forLanguageTag("es-CO"), "%.1f kg", data.latestWeightKg())).append("</p>");
+        if (data.measures() > 1) {
+            double change = data.latestWeightKg() - data.firstWeightKg();
+            body.append("<p class=\"muted\">")
+                    .append(String.format(Locale.forLanguageTag("es-CO"), "%+.1f kg", change))
+                    .append(" desde el ").append(data.since().format(DAY)).append("</p>");
+        } else {
+            body.append("<p class=\"muted\">Medida del ").append(data.since().format(DAY)).append("</p>");
+        }
+        data.bmi().ifPresent(bmi -> body.append("<div class=\"chips\"><span class=\"chip\">IMC ")
+                .append(String.format(Locale.forLanguageTag("es-CO"), "%.1f", bmi)).append("</span></div>"));
+        body.append("</section>");
+    }
+
+    private static String duration(Duration stay) {
+        long minutes = stay.toMinutes();
+        if (minutes < 1) {
+            return "menos de 1 min";
+        }
+        return minutes < 60 ? minutes + " min" : (minutes / 60) + " h " + (minutes % 60) + " min";
     }
 
     private static String stat(long value, String label) {
