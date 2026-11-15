@@ -7,6 +7,14 @@ import com.nextfit.model.AuditAction;
 import com.nextfit.model.AuditEntry;
 import com.nextfit.model.Difficulty;
 import com.nextfit.model.Exercise;
+import com.nextfit.model.RoutineExercise;
+import com.nextfit.model.RoutineDay;
+import com.nextfit.model.Routine;
+import com.nextfit.model.PercentageDiscount;
+import com.nextfit.model.PaymentMethod;
+import com.nextfit.model.Payment;
+import com.nextfit.model.NoDiscount;
+import com.nextfit.model.FixedDiscount;
 import com.nextfit.model.FaceTemplate;
 import com.nextfit.model.HealthProfile;
 import com.nextfit.model.Measurement;
@@ -168,6 +176,52 @@ public final class JdbcRepositoriesCheck {
         faces.delete(memberId);
         check("faces.delete", !faces.has(memberId));
 
+        JdbcPaymentRepository payments = new JdbcPaymentRepository(db);
+        LocalDateTime paidAt = LocalDateTime.now().withNano(0);
+        Payment percentPayment = payments.save(new Payment(0, subscription.getId(), memberId, paidAt,
+                PaymentMethod.values()[0], 50000L, new PercentageDiscount(10), "test" + unique));
+        cleanup.push(new String[]{"payments", "id", String.valueOf(percentPayment.getId())});
+        Payment fixedPayment = payments.save(new Payment(0, subscription.getId(), memberId, paidAt,
+                PaymentMethod.values()[0], 50000L, new FixedDiscount(5000L), "test" + unique));
+        cleanup.push(new String[]{"payments", "id", String.valueOf(fixedPayment.getId())});
+        Payment plainPayment = payments.save(new Payment(0, subscription.getId(), memberId, paidAt,
+                PaymentMethod.values()[0], 50000L, new NoDiscount(), "test" + unique));
+        cleanup.push(new String[]{"payments", "id", String.valueOf(plainPayment.getId())});
+        check("payments descuento en porcentaje", payments.findById(percentPayment.getId())
+                .map(p -> p.getDiscount().getType() + ":" + p.getDiscount().getValue()).orElse("").equals("PERCENT:10"));
+        check("payments descuento fijo", payments.findById(fixedPayment.getId())
+                .map(p -> p.getDiscount().getType() + ":" + p.getDiscount().getValue()).orElse("").equals("FIXED:5000"));
+        check("payments sin descuento", payments.findById(plainPayment.getId())
+                .map(p -> p.getDiscount().getType()).orElse("").equals("NONE"));
+        check("payments.findByMemberId", payments.findByMemberId(memberId).size() == 3);
+        check("payments.findAll", payments.findAll().stream().anyMatch(p -> p.getId() == fixedPayment.getId()));
+
+        JdbcRoutineRepository routines = new JdbcRoutineRepository(db);
+        Routine routine = routines.save(new Routine(0, "Rutina JDBC " + unique, "objetivo", trainer.getId(),
+                LocalDate.now(), List.of(
+                new RoutineDay("Lunes", List.of(new RoutineExercise(exercise.getId(), 3, 12, 60),
+                        new RoutineExercise(exercise.getId(), 4, 10, 90))),
+                new RoutineDay("Martes", List.of(new RoutineExercise(exercise.getId(), 5, 5, 120))))));
+        cleanup.push(new String[]{"routines", "id", String.valueOf(routine.getId())});
+        cleanup.push(new String[]{"routine_lines", "routine_id", String.valueOf(routine.getId())});
+        Routine readBack = routines.findById(routine.getId()).orElseThrow();
+        check("routines.findById (2 dias y 3 ejercicios)", readBack.getDays().size() == 2
+                && readBack.getDays().get(0).getExercises().size() == 2
+                && readBack.getDays().get(1).getExercises().get(0).getSets() == 5);
+        check("routines.findByTrainerId", routines.findByTrainerId(trainer.getId()).stream()
+                .anyMatch(r -> r.getId() == routine.getId()));
+        routines.save(new Routine(routine.getId(), "Rutina JDBC " + unique, "objetivo", trainer.getId(),
+                LocalDate.now(), List.of(new RoutineDay("Lunes",
+                List.of(new RoutineExercise(exercise.getId(), 2, 15, 45))))));
+        Routine edited = routines.findById(routine.getId()).orElseThrow();
+        check("routines.save reemplaza las lineas (queda 1 dia)", edited.getDays().size() == 1
+                && edited.getDays().get(0).getExercises().size() == 1
+                && edited.getDays().get(0).getExercises().get(0).getSets() == 2);
+        Routine withoutTrainer = routines.save(new Routine(0, "Sin entrenador " + unique, "", 0,
+                LocalDate.now(), List.of()));
+        cleanup.push(new String[]{"routines", "id", String.valueOf(withoutTrainer.getId())});
+        check("routines sin entrenador (0 se guarda como NULL)",
+                routines.findById(withoutTrainer.getId()).map(Routine::getTrainerId).orElse(-1L) == 0L);
         JdbcAuditRepository audit = new JdbcAuditRepository(db);
         AuditEntry entry = audit.append(new AuditEntry(0, LocalDateTime.now(), "test" + unique,
                 AuditAction.values()[0], "detalle"));

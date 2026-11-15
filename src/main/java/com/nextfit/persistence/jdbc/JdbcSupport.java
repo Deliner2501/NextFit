@@ -74,13 +74,30 @@ final class JdbcSupport {
      */
     static long save(ConnectionSource connections, String table, long id, String[] columns, StatementBinder binder) {
         try (Connection connection = connections.open()) {
-            if (id != 0 && update(connection, table, id, columns, binder) > 0) {
-                return id;
-            }
-            return insert(connection, table, id, columns, binder);
+            return save(connection, table, id, columns, binder);
         } catch (SQLException e) {
             throw new PersistenceException("No se pudo guardar en la tabla " + table, e);
         }
+    }
+
+    /**
+     * Same as the version above, but on a connection the caller already has, so
+     * several writes can share one transaction (a routine and its lines).
+     *
+     * @param connection the open connection
+     * @param table      the table
+     * @param id         the identifier, 0 for a new row
+     * @param columns    the data columns, without the id
+     * @param binder     sets the values of the columns, from parameter 1
+     * @return the identifier of the stored row
+     * @throws SQLException when the database refuses the write
+     */
+    static long save(Connection connection, String table, long id, String[] columns, StatementBinder binder)
+            throws SQLException {
+        if (id != 0 && update(connection, table, id, columns, binder) > 0) {
+            return id;
+        }
+        return insert(connection, table, id, columns, binder);
     }
 
     /**
