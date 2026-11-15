@@ -3,7 +3,6 @@ package com.nextfit.service;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -14,17 +13,13 @@ import javax.crypto.spec.SecretKeySpec;
  * anywhere and it does not reveal the document. Changing the key invalidates
  * every carnet printed before.
  * <p>
- * There are two kinds. The fixed code only opens the digital carnet of the member (it is what the
- * printed carnet carries); the short-lived code, which also depends on the time, is the one that lets
- * the member in, so copying a picture of it is useless.
+ * The code only identifies the member to open his portal. It never registers an entry or an exit, so a
+ * copy of it gives nobody access to the gym.
  */
 public final class AccessTokens {
 
     /** Length of a code, in characters. */
     public static final int LENGTH = 10;
-
-    /** Seconds in which a short-lived code stays the same. */
-    public static final int WINDOW_SECONDS = 30;
 
     // 32 letters and digits without the easily confused 0, 1, I and O.
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -52,46 +47,6 @@ public final class AccessTokens {
      */
     public String tokenFor(String documentNumber) {
         return code("nextfit-carnet:" + documentNumber.trim());
-    }
-
-    /**
-     * Returns the short-lived access code of a member. It changes every {@value #WINDOW_SECONDS} seconds,
-     * so a screenshot or a forwarded picture of it stops working almost at once.
-     *
-     * @param documentNumber the document number of the member
-     * @param at             the moment the code is shown
-     * @return the code, {@value #LENGTH} characters long
-     */
-    public String liveTokenFor(String documentNumber, Instant at) {
-        return code("nextfit-live:" + documentNumber.trim() + ":" + window(at));
-    }
-
-    /**
-     * Tells whether a received text is a valid short-lived code of the given document. The code of the
-     * window that just ended is accepted too, so a scan made while the code changes does not fail.
-     *
-     * @param documentNumber the document number to check
-     * @param received       the text received from a scan
-     * @param now            the moment of the scan
-     * @return true when it is the current or the previous code
-     */
-    public boolean matchesLive(String documentNumber, String received, Instant now) {
-        Optional<String> clean = normalize(received);
-        if (clean.isEmpty()) {
-            return false;
-        }
-        byte[] wanted = clean.get().getBytes(StandardCharsets.UTF_8);
-        for (long back = 0; back <= 1; back++) {
-            String expected = code("nextfit-live:" + documentNumber.trim() + ":" + (window(now) - back));
-            if (MessageDigest.isEqual(expected.getBytes(StandardCharsets.UTF_8), wanted)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static long window(Instant at) {
-        return at.getEpochSecond() / WINDOW_SECONDS;
     }
 
     private String code(String message) {
