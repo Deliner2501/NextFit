@@ -3,7 +3,9 @@ package com.nextfit.ui.fx;
 import com.nextfit.model.Role;
 import com.nextfit.service.AccessService;
 import com.nextfit.service.AttendanceService;
+import com.nextfit.service.MemberPasswordService;
 import com.nextfit.service.MemberService;
+import com.nextfit.service.SelfAccessService;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.face.FaceAccessService;
@@ -29,6 +31,7 @@ public final class AccessModule implements FxModule {
     private final AccessPane kiosk;
     private final CarnetPane carnets;
     private final FacePane face;
+    private final PasswordPane password;
 
     /**
      * @param accessService     turns a scanned code into an entry or an exit
@@ -41,18 +44,22 @@ public final class AccessModule implements FxModule {
      * @param faceEnrollment    registers and deletes faces
      * @param dataDir           the data folder (the face models are inside)
      * @param actor             the user signed in now, for the audit log
+     * @param selfAccess        lets a member in with the document and the password
+     * @param memberPasswords   creates and resets the passwords of the members
      */
     public AccessModule(AccessService accessService, AttendanceService attendanceService,
                         MemberService memberService, SubscriptionService subscriptions,
                         PhoneAccess phone, Supplier<String> phoneUrl,
                         FaceAccessService faceAccess, FaceEnrollmentService faceEnrollment,
-                        Path dataDir, Supplier<String> actor) {
+                        Path dataDir, Supplier<String> actor,
+                        SelfAccessService selfAccess, MemberPasswordService memberPasswords) {
         this.kiosk = new AccessPane(accessService, attendanceService, memberService, phoneUrl);
         this.carnets = new CarnetPane(memberService, subscriptions, phone, phoneUrl);
         this.face = new FacePane(faceAccess, faceEnrollment, memberService, dataDir, actor);
+        this.password = new PasswordPane(selfAccess, memberPasswords, memberService, actor);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
-        tabs.getTabs().addAll(tab("Control de acceso", kiosk), tab("Carnets", carnets), tab("Rostro", face));
+        tabs.getTabs().addAll(tab("Control de acceso", kiosk), tab("Carnets", carnets), tab("Rostro", face), tab("Contraseña", password));
         tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> refreshTabs());
     }
 
@@ -63,7 +70,7 @@ public final class AccessModule implements FxModule {
 
     @Override
     public List<String> keywords() {
-        return List.of("entrada", "ingreso", "qr", "escanear", "asistencia", "carnet", "rostro", "cara", "facial", "camara");
+        return List.of("entrada", "ingreso", "qr", "escanear", "asistencia", "carnet", "rostro", "cara", "facial", "camara", "contraseña", "clave");
     }
 
     @Override
@@ -96,6 +103,7 @@ public final class AccessModule implements FxModule {
         kiosk.refresh();
         carnets.refresh();
         face.refresh();
+        password.refresh();
     }
 
     private static Tab tab(String title, Node content) {
