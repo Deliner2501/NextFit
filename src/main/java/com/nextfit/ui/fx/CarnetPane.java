@@ -63,7 +63,7 @@ final class CarnetPane extends HBox {
 
         Label title = new Label("Carnet del socio");
         title.getStyleClass().add("nf-section-title");
-        Label hint = new Label("Elige un socio para ver su carnet. Al escanear el QR con la cámara del celular se registra su entrada o salida; el código solo existe dentro del QR.");
+        Label hint = new Label("Elige un socio para ver su carnet. El QR abre en el celular su portal personal: su rutina, sus próximos días y su progreso. No registra la entrada ni la salida.");
         hint.getStyleClass().add("nf-muted-small");
         hint.setWrapText(true);
         save.getStyleClass().add("nf-primary");
@@ -128,12 +128,12 @@ final class CarnetPane extends HBox {
         VBox identity = new VBox(14, MemberAvatar.of(member, 120), data);
         identity.setAlignment(Pos.TOP_LEFT);
 
-        ImageView qr = new ImageView(QrImage.of(phoneUrl.get() + "/c/" + phone.tokenOf(member), 6));
+        ImageView qr = new ImageView(QrImage.of(phoneUrl.get() + "/m/" + phone.tokenOf(member), 6));
         qr.setFitWidth(170);
         qr.setFitHeight(170);
         qr.setSmooth(false);
         qr.setPreserveRatio(true);
-        Label scanHint = new Label("Escanea con la cámara del celular");
+        Label scanHint = new Label("Escanea para ver tu progreso");
         scanHint.getStyleClass().add("nf-carnet-text");
         VBox qrBox = new VBox(8, qr, scanHint);
         qrBox.setAlignment(Pos.CENTER);
@@ -206,7 +206,7 @@ final class CarnetPane extends HBox {
                 .orElse("Sin membresía vigente");
         String photo = member.getPhotoPath();
         return new CarnetPdf.Card(member.getFullName(), member.getDocumentNumber(), validity,
-                QrMatrix.of(phoneUrl.get() + "/c/" + phone.tokenOf(member)),
+                QrMatrix.of(phoneUrl.get() + "/m/" + phone.tokenOf(member)),
                 photo == null || photo.isBlank() ? null : Path.of(photo));
     }
 }

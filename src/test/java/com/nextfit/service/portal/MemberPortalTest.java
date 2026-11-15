@@ -17,7 +17,6 @@ import com.nextfit.persistence.CsvAttendanceRepository;
 import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
-import com.nextfit.service.AccessService;
 import com.nextfit.service.AccessTokens;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.MemberService;
@@ -69,10 +68,9 @@ class MemberPortalTest {
                 new CsvSubscriptionRepository(folder.resolve("subscriptions.csv")), plans, members, CLOCK);
         AttendanceService attendance = new AttendanceService(members,
                 new CsvAttendanceRepository(folder.resolve("attendance.csv")), subscriptions, CLOCK);
-        AccessService access = new AccessService(members, attendance, id -> Optional.empty(), CLOCK);
         byte[] key = new byte[32];
         Arrays.fill(key, (byte) 7);
-        phone = new PhoneAccess(members, access, new AccessTokens(key), CLOCK);
+        phone = new PhoneAccess(members, new AccessTokens(key));
         training = new TrainingModule(folder, members, subscriptions);
         portal = new MemberPortal(phone, subscriptions, plans, training.assignments(), training.routines(),
                 training.exercises(), training.sessions(), new GamificationService(members, attendance, CLOCK),

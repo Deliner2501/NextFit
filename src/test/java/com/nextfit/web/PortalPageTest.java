@@ -9,6 +9,7 @@ import com.nextfit.service.occupancy.OccupancyLevel;
 import com.nextfit.service.portal.PortalBestTimes;
 import com.nextfit.service.portal.PortalExercise;
 import com.nextfit.service.portal.PortalMembership;
+import com.nextfit.service.portal.ProgressReport;
 import com.nextfit.service.portal.PortalSummary;
 import com.nextfit.service.portal.PortalWorkout;
 import org.junit.jupiter.api.Test;
@@ -157,5 +158,68 @@ class PortalPageTest {
 
         assertTrue(html.contains("textContent"));
         assertFalse(html.contains("innerHTML"));
+    }
+
+    @Test
+    void showsTheUpcomingDaysTheLastVisitsAndTheBodyProgress() {
+        ProgressReport report = new ProgressReport(
+                List.of(new ProgressReport.UpcomingDay(2, "Pecho", 5)),
+                List.of(new ProgressReport.RecentVisit(java.time.LocalDate.of(2026, 11, 10),
+                        java.time.LocalTime.of(18, 30), Optional.of(java.time.Duration.ofMinutes(75))),
+                        new ProgressReport.RecentVisit(java.time.LocalDate.of(2026, 11, 12),
+                                java.time.LocalTime.of(7, 5), Optional.empty())),
+                Optional.of(new ProgressReport.BodyProgress(java.time.LocalDate.of(2026, 9, 1), 80, 74, 3,
+                        Optional.of(24.5))));
+
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK", false, Optional.of(report));
+
+        assertTrue(html.contains("Tus próximos días"));
+        assertTrue(html.contains("Pecho"));
+        assertTrue(html.contains("Tus últimas visitas"));
+        assertTrue(html.contains("1 h 15 min"));
+        assertTrue(html.contains("Tu cuerpo"));
+        assertTrue(html.contains("74"));
+    }
+
+    @Test
+    void withoutAReportThePortalDoesNotShowTheExtraSections() {
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK", false, Optional.empty());
+
+        assertFalse(html.contains("Tus próximos días"));
+        assertFalse(html.contains("Tus últimas visitas"));
+        assertFalse(html.contains("Tu cuerpo"));
+    }
+
+    @Test
+    void textOfTheDaysIsEscaped() {
+        ProgressReport report = new ProgressReport(
+                List.of(new ProgressReport.UpcomingDay(2, "<script>x</script>", 1)), List.of(), Optional.empty());
+
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK", false, Optional.of(report));
+
+        assertFalse(html.contains("<script>x</script>"));
+    }
+
+    @Test
+    void theNumberOfTheDayIsNotRepeatedWhenTheNameAlreadyHasIt() {
+        ProgressReport report = new ProgressReport(
+                List.of(new ProgressReport.UpcomingDay(3, "Día 3 - Piernas", 3)), List.of(), Optional.empty());
+
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK", false, Optional.of(report));
+
+        assertTrue(html.contains("<span>3 ejercicios</span>"));
+        assertFalse(html.contains("Día 3 · 3"));
+    }
+
+    @Test
+    void aVisitUnderOneMinuteSaysSo() {
+        ProgressReport report = new ProgressReport(List.of(),
+                List.of(new ProgressReport.RecentVisit(java.time.LocalDate.of(2026, 11, 14),
+                        java.time.LocalTime.of(9, 40), Optional.of(java.time.Duration.ofSeconds(20)))),
+                Optional.empty());
+
+        String html = PortalPage.render(summaryWithoutData(), "ABCDEFGHJK", false, Optional.of(report));
+
+        assertTrue(html.contains("menos de 1 min"));
     }
 }

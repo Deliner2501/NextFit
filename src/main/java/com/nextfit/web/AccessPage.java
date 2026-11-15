@@ -1,132 +1,13 @@
 package com.nextfit.web;
 
-import com.nextfit.model.Member;
-import com.nextfit.service.AccessResult;
-import com.nextfit.service.portal.VisitSummary;
-
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
-import java.util.Optional;
-
 /**
- * The page a phone shows after scanning a carnet: a NextFit branded card with a green (entry),
- * blue (exit) or red (denied) status, the member photo and the membership. It is a
- * pure function from a result to text, so it is tested without a server.
+ * The simple pages of the phone server that are not the portal: the connection test and the page of an
+ * address that does not exist. They share the NextFit look of the portal. Pure functions from nothing
+ * to text, so they are tested without a server.
  */
 public final class AccessPage {
 
-    private static final DateTimeFormatter DAY =
-            DateTimeFormatter.ofPattern("d 'de' MMMM yyyy", Locale.forLanguageTag("es-CO"));
-
     private AccessPage() {
-    }
-
-    /**
-     * Draws the answer of a scan.
-     *
-     * @param result the result of the access
-     * @param token  the scanned code, used to ask the server for the member photo
-     * @return the HTML page
-     */
-    public static String render(AccessResult result, String token) {
-        return render(result, token, Optional.empty());
-    }
-
-    /**
-     * Draws the page that follows a scan, with the summary of the visit under the answer.
-     *
-     * @param result  the result of the access
-     * @param token   the fixed code of the carnet, used to ask the server for the photo and the portal
-     * @param summary "your day" (entry) or "your summary" (exit); empty when there is nothing to add
-     * @return the HTML page
-     */
-    public static String render(AccessResult result, String token, Optional<VisitSummary> summary) {
-        String color;
-        String verdict;
-        String icon;
-        switch (result.outcome()) {
-            case ENTRY -> {
-                color = "#1FAE74";
-                verdict = "ENTRADA REGISTRADA";
-                icon = CHECK;
-            }
-            case EXIT -> {
-                color = "#2F7DE1";
-                verdict = "SALIDA REGISTRADA";
-                icon = EXIT_ICON;
-            }
-            default -> {
-                color = "#E5484D";
-                verdict = "ACCESO DENEGADO";
-                icon = CROSS;
-            }
-        }
-        StringBuilder body = new StringBuilder();
-        body.append("<div class=\"badge\">").append(icon).append("</div>");
-        Member member = result.member();
-        if (member != null) {
-            body.append("<div class=\"avatar\"><span>").append(esc(initials(member.getFullName()))).append("</span>");
-            if (member.getPhotoPath() != null && !member.getPhotoPath().isBlank()) {
-                body.append("<img src=\"/photo/").append(esc(token)).append("\" alt=\"\" onerror=\"this.remove()\">");
-            }
-            body.append("</div>");
-            body.append("<h2>").append(esc(member.getFullName())).append("</h2>");
-        }
-        body.append("<h1>").append(verdict).append("</h1>");
-        body.append("<p class=\"msg\">").append(esc(result.message())).append("</p>");
-        if (result.granted() && result.validUntil() != null) {
-            body.append("<div class=\"chips\"><span class=\"chip\">Hasta el ")
-                    .append(result.validUntil().format(DAY)).append("</span>");
-            if (result.daysLeft() == 0) {
-                body.append("<span class=\"chip warn\">Vence hoy</span>");
-            } else if (result.daysLeft() > 0 && result.daysLeft() <= 7) {
-                body.append("<span class=\"chip warn\">Quedan ").append(days(result.daysLeft())).append("</span>");
-            }
-            body.append("</div>");
-        }
-        if (result.granted() && member != null) {
-            summary.ifPresent(visit -> body.append(VisitSummaryHtml.render(visit)));
-            body.append("<a class=\"portal\" href=\"/m/").append(esc(token)).append("\">Ver mi rutina y mi progreso</a>");
-        }
-        return page(color, body.toString());
-    }
-
-    /**
-     * Draws the digital carnet: the name, the code that changes by itself and the link to the portal. The
-     * page asks the server for a new picture of the code every few seconds.
-     *
-     * @param member the owner of the carnet
-     * @param token  the fixed code of the carnet, which only opens this page
-     * @return the HTML page
-     */
-    public static String card(Member member, String token) {
-        StringBuilder body = new StringBuilder();
-        body.append("<style>.qr{width:260px;height:260px;margin:14px auto 6px;border-radius:18px;background:#fff;")
-                .append("padding:8px}.qr img{width:100%;height:100%;display:block}.hint{font-size:14px;color:#BDB3D6;")
-                .append("margin:10px 0 0}.live{display:inline-block;margin-top:6px;font-size:13px;color:#A7F626}</style>");
-        body.append("<h2>").append(esc(member.getFullName())).append("</h2>");
-        body.append("<h1>CARNET DIGITAL</h1>");
-        body.append("<div class=\"qr\"><img id=\"qr\" src=\"/q/").append(esc(token)).append("\" alt=\"Código de entrada\"></div>");
-        body.append("<span class=\"live\" id=\"live\">Se actualiza solo</span>");
-        body.append("<p class=\"hint\">Muestra este código en la entrada. Una captura de pantalla no sirve: "
-                + "el código cambia cada 30 segundos.</p>");
-        body.append("<a class=\"portal\" href=\"/m/").append(esc(token)).append("\">Ver mi rutina y mi progreso</a>");
-        body.append("<script>var img=document.getElementById('qr'),live=document.getElementById('live');")
-                .append("function r(){img.src='/q/").append(esc(token)).append("?t='+Date.now()}")
-                .append("img.onerror=function(){live.textContent='Sin conexión con el gimnasio'};")
-                .append("img.onload=function(){live.textContent='Se actualiza solo'};")
-                .append("setInterval(r,10000);</script>");
-        return page("#7A35E8", body.toString());
-    }
-
-    /**
-     * Draws the page of a carnet code that is not valid.
-     *
-     * @return the HTML page
-     */
-    public static String invalidCard() {
-        return page("#E5484D", "<div class=\"badge\">" + CROSS + "</div><h1>CARNET NO VÁLIDO</h1>"
-                + "<p class=\"msg\">Este carnet no existe o fue reemplazado. Pide uno nuevo en recepción.</p>");
     }
 
     /**
@@ -136,7 +17,7 @@ public final class AccessPage {
      */
     public static String ping() {
         return page("#2F7DE1", "<div class=\"badge\">" + CHECK + "</div><h1>NextFit responde</h1>"
-                + "<p class=\"msg\">Este celular llega al computador. Escanea el QR de un carnet.</p>");
+                + "<p class=\"msg\">Este celular llega al computador. Escanea el QR de tu carnet para ver tu progreso.</p>");
     }
 
     /**
@@ -146,15 +27,12 @@ public final class AccessPage {
      */
     public static String notFound() {
         return page("#6B7280", "<div class=\"badge\">" + QUESTION + "</div><h1>Dirección no válida</h1>"
-                + "<p class=\"msg\">Escanea el QR de un carnet de NextFit.</p>");
+                + "<p class=\"msg\">Escanea el QR de tu carnet de NextFit para ver tu progreso.</p>");
     }
 
     private static final String SVG_OPEN = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fff\" stroke-width=\"3\" "
             + "stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\">";
     private static final String CHECK = SVG_OPEN + "<path class=\"draw\" d=\"M5 12.5l4.5 4.5L19 7.5\"/></svg>";
-    private static final String CROSS = SVG_OPEN + "<path class=\"draw\" d=\"M6 6l12 12\"/><path class=\"draw\" d=\"M18 6L6 18\"/></svg>";
-    private static final String EXIT_ICON = SVG_OPEN + "<path class=\"draw\" d=\"M10 5H5v14h5\"/>"
-            + "<path class=\"draw\" d=\"M16 8l4 4-4 4\"/><path class=\"draw\" d=\"M20 12H9\"/></svg>";
     private static final String QUESTION = SVG_OPEN + "<path class=\"draw\" d=\"M9.5 9a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8\"/>"
             + "<path d=\"M12 17.5h.01\"/></svg>";
 
@@ -206,24 +84,5 @@ public final class AccessPage {
                 + "<div class=\"brand\"><img src=\"/logo.png\" alt=\"\" onerror=\"this.remove()\"><b>NextFit</b></div>"
                 + "<main>" + body + "</main>"
                 + "<footer><span></span>ENTRENA. MEJORA. SUPERA TUS LÍMITES.</footer></body></html>";
-    }
-
-    private static String days(long days) {
-        return days == 1 ? "1 día" : days + " días";
-    }
-
-    private static String initials(String fullName) {
-        StringBuilder result = new StringBuilder();
-        for (String part : fullName.trim().split("\\s+")) {
-            if (!part.isEmpty() && result.length() < 2) {
-                result.append(Character.toUpperCase(part.charAt(0)));
-            }
-        }
-        return result.toString();
-    }
-
-    private static String esc(String text) {
-        return text == null ? "" : text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&#39;");
     }
 }
