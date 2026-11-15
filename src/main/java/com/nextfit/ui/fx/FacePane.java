@@ -33,6 +33,7 @@ import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -70,13 +71,13 @@ final class FacePane extends HBox {
     private Thread worker;
 
     FacePane(FaceAccessService access, FaceEnrollmentService enrollment, MemberService members,
-             Path dataDir, Supplier<String> actor) {
+             Path dataDir, Supplier<String> actor, Function<Member, List<String>> tags) {
         super(24);
         this.access = access;
         this.enrollment = enrollment;
         this.dataDir = dataDir;
         this.actor = actor;
-        this.picker = new MemberPicker("Registrar el rostro de un socio", members, m -> updateStatus());
+        this.picker = new MemberPicker("Registrar el rostro de un socio", members, m -> updateStatus(), tags);
         setPadding(new Insets(0, 4, 4, 4));
         getChildren().addAll(buildCameraColumn(), buildEnrollColumn());
         // The tab content leaves the scene when another tab or module is shown: the camera must stop.
@@ -172,6 +173,7 @@ final class FacePane extends HBox {
         if (picker == null) {
             return;
         }
+        picker.refreshTags();
         Member member = picker.selected();
         boolean has = member != null;
         boolean enrolled = has && enrollment.isEnrolled(member.getId());
