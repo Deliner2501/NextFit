@@ -89,8 +89,8 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line, in millions of pesos). They animate when the screen opens.
 
 ### 🚪 Access control
-- Check-in and check-out by scanning the **carnet QR**, typing the document, or with a USB reader. The result is shown full screen (entry, exit or denied, with the reason).
-- **Phone access**: a member can scan the QR of the carnet with the phone camera; the reception computer serves a small NextFit-branded web page (animated status, photo, membership end date) and registers the entry ([details](docs/phone-qr-access.md)).
+- Check-in and check-out with the **face**, with the **document and a password**, or typing the document at reception. The result is shown full screen (entry, exit or denied, with the reason).
+- **Personal portal**: the QR of the carnet opens on the phone the portal of the member (day to train, next days, last visits, body progress, membership). The QR is read-only and never registers an entry or an exit ([details](docs/phone-qr-access.md)).
 - List of people inside the gym.
 - **Carnets**: each member has a credit-card sized carnet (front and back) that can be saved as an image or as a **PDF**; one more button makes a single PDF with every active member, four carnets per A4 page, ready to print and cut. The QR is drawn as vectors so it scans at any size.
 
@@ -464,7 +464,7 @@ Some examples:
 | [Audit log and security](docs/audit-and-security.md) | Lockout, inactivity and what is recorded |
 | [Backup and restore](docs/backup-restore.md) | How the backups work and how to recover the data |
 | [Reports and cash close](docs/reports-cash-close.md) | The cash close and the PDF and Excel reports |
-| [Phone QR access](docs/phone-qr-access.md) | Entry with the phone camera |
+| [Phone QR access](docs/phone-qr-access.md) | QR of the carnet: personal portal |
 | [Layers diagram](docs/layers-diagram.md) | Package diagram by layers |
 | [Domain class diagram](docs/domain-class-diagram.md) | Business classes, inheritance and relations |
 | [Integrated class diagram](docs/integrated-class-diagram.md) | All the classes, split by module |

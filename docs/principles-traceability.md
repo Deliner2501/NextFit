@@ -333,4 +333,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `SuggestionService.settingsFor` | New medical or body rules change the limits for the rules and for the AI without touching either of them. |
 | Testability | `RoutineDraftCheckerTest`, `AiRoutineServiceTest`, `AiAssistantCompleteTest` | A fake AI and a hand-fixed clock test the checker and the service without a key and without internet. |
 
+## QR as read-only portal
 
+| Principle | Where | How |
+|---|---|---|
+| SRP | `PhoneAccess` | Only links a carnet code with its member; it no longer registers entries, so the QR cannot let anybody in. |
+| Protected Variations | `AccessServer` | There is no route that registers an access; the only way in is face, password or staff. |
+| Information Expert | `ProgressReportService` | Reads each service that owns the data (routines, sessions, attendance, health) and builds the report. |
+| Low Coupling | `ProgressReport`, `PortalPage` | The report is a plain value; the page only draws it and the portal of Santiago (`MemberPortal`) is untouched. |
+| OCP | `PortalPage.render(..., Optional<ProgressReport>)` | A new overload adds the sections; the old one keeps working. |
+| Testability | `ProgressReportServiceTest`, `PortalPageTest`, `PhoneAccessTest` | CSV files in a temporary folder and a plain value for the page; no network. |
