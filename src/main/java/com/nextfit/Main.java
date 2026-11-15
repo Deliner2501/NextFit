@@ -4,13 +4,7 @@ import com.nextfit.ui.fx.BackupModule;
 import com.nextfit.ui.fx.AuditModule;
 import com.nextfit.service.BackupService;
 import com.nextfit.persistence.AccessKeyStore;
-import com.nextfit.persistence.CsvAttendanceRepository;
-import com.nextfit.persistence.CsvHealthProfileRepository;
-import com.nextfit.persistence.CsvMeasurementRepository;
-import com.nextfit.persistence.CsvMembershipPlanRepository;
-import com.nextfit.persistence.CsvSubscriptionRepository;
-import com.nextfit.persistence.CsvPaymentRepository;
-import com.nextfit.persistence.CsvFaceTemplateRepository;
+import com.nextfit.persistence.Storage;
 import com.nextfit.persistence.CsvMemberCredentialRepository;
 import com.nextfit.persistence.MemberCredentialRepository;
 import com.nextfit.persistence.FaceTemplateRepository;
@@ -46,7 +40,6 @@ import com.nextfit.validation.PaymentValidator;
 import com.nextfit.validation.UserValidator;
 import java.time.Clock;
 import com.nextfit.persistence.MemberRepository;
-import com.nextfit.persistence.CsvUserRepository;
 import com.nextfit.persistence.UserRepository;
 import com.nextfit.service.AuthService;
 import com.nextfit.service.CashCloseService;
@@ -63,7 +56,6 @@ import com.nextfit.ui.fx.MembersModule;
 import com.nextfit.ui.fx.ReportsModule;
 import com.nextfit.ui.fx.TrainingFxModule;
 import com.nextfit.ui.fx.UsersModule;
-import com.nextfit.persistence.CsvMemberRepository;
 import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
 import com.nextfit.util.PhotoStorage;
@@ -71,7 +63,6 @@ import com.nextfit.service.occupancy.OccupancyForecastService;
 import com.nextfit.service.occupancy.OccupancyService;
 import com.nextfit.ui.fx.OccupancyModule;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
-import com.nextfit.persistence.CsvAuditRepository;
 import com.nextfit.service.audit.AuditService;
 import com.nextfit.service.churn.ChurnService;
 import com.nextfit.ui.fx.ChurnModule;
@@ -127,12 +118,16 @@ public final class Main {
         // First run only: fills an empty installation with example data.
         DemoData.seedIfEmpty(DATA_DIR);
 
-        // Storage. To use a database, replace these repositories only.
-        UserRepository users = new CsvUserRepository(DATA_DIR.resolve("users.csv"));
+        // Storage: Oracle when nextfit.properties says db.enabled=true and the database answers; CSV files otherwise.
+        Storage storage = StorageSetup.create(DATA_DIR, Path.of(DatabaseConfig.FILE_NAME));
+        System.out.println("Almacenamiento: " + storage.description());
+
+        // Repositories come from the storage chosen at the start (CSV files or Oracle).
+        UserRepository users = storage.users();
 
         // Services
         AuditService auditService = new AuditService(
-                new CsvAuditRepository(DATA_DIR.resolve("audit.csv")), Clock.systemDefaultZone());
+                storage.audit(), Clock.systemDefaultZone());
         AuthService auth = new AuthService(users, new InMemoryAttemptLimiter(), auditService);
         auth.ensureDefaultAdmin();
         Session session = new Session();
@@ -149,25 +144,25 @@ public final class Main {
         }
 
         // Members module
-        MemberRepository memberRepository = new CsvMemberRepository(DATA_DIR.resolve("members.csv"));
+        MemberRepository memberRepository = storage.members();
         MemberService memberService = new MemberService(memberRepository, new MemberValidator());
 
         // Health, memberships and attendance (used by the member record)
         HealthService healthService = new HealthService(memberService,
-                new CsvHealthProfileRepository(DATA_DIR.resolve("health_profiles.csv")),
-                new CsvMeasurementRepository(DATA_DIR.resolve("measurements.csv")),
+                storage.healthProfiles(),
+                storage.measurements(),
                 new HealthValidator());
         MembershipPlanService planService = new MembershipPlanService(
-                new CsvMembershipPlanRepository(DATA_DIR.resolve("plans.csv")),
+                storage.plans(),
                 new MembershipPlanValidator());
         SubscriptionService subscriptionService = new SubscriptionService(
-                new CsvSubscriptionRepository(DATA_DIR.resolve("subscriptions.csv")),
+                storage.subscriptions(),
                 planService, memberService, Clock.systemDefaultZone());
         PaymentService paymentService = new PaymentService(
-                new CsvPaymentRepository(DATA_DIR.resolve("payments.csv")),
+                storage.payments(),
                 subscriptionService, planService, new PaymentValidator(), Clock.systemDefaultZone());
         AttendanceService attendanceService = new AttendanceService(memberService,
-                new CsvAttendanceRepository(DATA_DIR.resolve("attendance.csv")),
+                storage.attendance(),
                 subscriptionService);
         AccessService accessService = new AccessService(memberService, attendanceService,
                 memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
@@ -175,7 +170,7 @@ public final class Main {
         PhoneAccess phoneAccess = new PhoneAccess(memberService,
                 new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))));
         // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
-        FaceTemplateRepository faceTemplates = new CsvFaceTemplateRepository(DATA_DIR.resolve("face_templates.csv"));
+        FaceTemplateRepository faceTemplates = storage.faceTemplates();
         FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
         FaceAccessService faceAccess = new FaceAccessService(faceTemplates, MemberLookup.of(memberService),
                 accessService::processMember, accessService::deny, Clock.systemDefaultZone());
@@ -197,7 +192,7 @@ public final class Main {
                 subscriptionService, paymentService, attendanceService, Clock.systemDefaultZone());
 
         // Training module (exercises, routines, assignments and sessions)
-        TrainingModule training = new TrainingModule(DATA_DIR, memberService, subscriptionService);
+        TrainingModule training = new TrainingModule(storage, memberService, subscriptionService);
         GamificationService gamificationService = new GamificationService(memberService, attendanceService,
                 Clock.systemDefaultZone());
         AlertService alertService = AlertService.withStandardRules(subscriptionService, attendanceService,

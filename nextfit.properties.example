@@ -3,3 +3,7 @@
 db.url=jdbc:oracle:thin:@nextfit_tp?TNS_ADMIN=C:/Users/Ronal/oracle-wallet/NEXTFIT
 db.user=NEXTFIT_APP
 db.password=PON_AQUI_LA_CLAVE_DE_NEXTFIT_APP
+
+# true = use the Oracle database (needs the db.* lines above and the tables from OracleSchemaInstaller).
+# false or missing = NextFit works with the CSV files.
+db.enabled=false
