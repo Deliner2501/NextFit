@@ -322,3 +322,15 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `MemberService.findByDocumentNumber` | The service that owns the members finds one by document |
 | Testability | `SelfAccessServiceTest`, `MemberPasswordServiceTest` | A hand-moved clock tests the block and its end; in-memory fakes replace the files |
 
+## Routines of the AI
+
+| Principle | Where | How |
+|---|---|---|
+| Protected Variations | `RoutineDraftChecker` | The AI is never trusted: every exercise must exist and pass the same limits as the rules, and a draft that cannot be fixed is refused. |
+| SRP | `RoutineDraftChecker` | Only checks a proposed routine and builds the final one; it knows nothing about the AI nor the screen. |
+| DIP | `TextCompleter` | The routine service depends on a one-method interface, so it is tested with a lambda and any AI service can be used. |
+| Pure Fabrication | `AiRoutineService` | Coordinates the prompt, the AI and the checker; it is not a concept of the gym but it keeps the screen and the AI client simple. |
+| OCP | `SuggestionService.settingsFor` | New medical or body rules change the limits for the rules and for the AI without touching either of them. |
+| Testability | `RoutineDraftCheckerTest`, `AiRoutineServiceTest`, `AiAssistantCompleteTest` | A fake AI and a hand-fixed clock test the checker and the service without a key and without internet. |
+
+
