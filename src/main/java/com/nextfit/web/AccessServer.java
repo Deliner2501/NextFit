@@ -1,12 +1,11 @@
 package com.nextfit.web;
 
 import com.nextfit.model.Member;
-import com.nextfit.service.AccessResult;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.portal.MemberPortal;
 import com.nextfit.service.portal.PortalSummary;
-import com.nextfit.service.portal.VisitSummary;
-import com.nextfit.service.portal.VisitSummaryService;
+import com.nextfit.service.portal.ProgressReport;
+import com.nextfit.service.portal.ProgressReportService;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -22,15 +21,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Small web server of the reception computer, built into the JDK. The QR of a carnet opens the
- * digital carnet {@code /c/CODE}, which shows a QR that changes every few seconds; scanning that QR
- * opens {@code /a/CODE}, and the server registers the entry or the exit and answers with
- * {@link AccessPage}. It only serves the local network and has these routes: {@code /c/CODE} (the
- * digital carnet), {@code /q/CODE} (the picture of its QR), {@code /a/CODE} (the short-lived code that
- * lets in), {@code /m/CODE} (the portal of the member, only when a {@link MemberPortal} was given),
- * {@code POST /m/CODE/chat} (the questions of the chat of the portal, only when a
- * {@link PortalChatEndpoint} was given), {@code /photo/CODE} and {@code /ping} (to check the
- * connection from a phone).
+ * Small web server of the reception computer, built into the JDK. The QR of a carnet opens the personal
+ * portal of the member, which is read only: it shows his progress and never registers an entry or an
+ * exit. It only serves the local network and has these routes: {@code /m/CODE} (the portal of the
+ * member, only when a {@link MemberPortal} was given), {@code POST /m/CODE/chat} (the questions of the
+ * chat of the portal, only when a {@link PortalChatEndpoint} was given), {@code /photo/CODE} and
+ * {@code /ping} (to check the connection from a phone).
  */
 public final class AccessServer {
 
@@ -41,7 +37,7 @@ public final class AccessServer {
     private final PhoneAccess phone;
     private final MemberPortal portal;
     private final PortalChatEndpoint chat;
-    private final VisitSummaryService visits;
+    private final ProgressReportService progress;
     private final int preferredPort;
     private HttpServer server;
     private ExecutorService executor;
@@ -80,20 +76,21 @@ public final class AccessServer {
     }
 
     /**
-     * Creates the server with the portal, the chat and the summary of the visit, without starting it.
+     * Creates the server with the portal, the chat and the progress report, without starting it.
      *
      * @param phone         the service that registers the scans
      * @param portal        the service that gathers what the member sees; null leaves the portal off
      * @param chat          the door of the chat of the portal; null leaves the chat off
-     * @param visits        builds "your day" and "your summary" after a scan; null leaves them off
+     * @param progress      builds the next days, the last visits and the body progress shown in the portal;
+     *                      null leaves them out
      * @param preferredPort the port to try first; 0 lets the system choose a free one
      */
     public AccessServer(PhoneAccess phone, MemberPortal portal, PortalChatEndpoint chat,
-                        VisitSummaryService visits, int preferredPort) {
+                        ProgressReportService progress, int preferredPort) {
         this.phone = phone;
         this.portal = portal;
         this.chat = chat;
-        this.visits = visits;
+        this.progress = progress;
         this.preferredPort = preferredPort;
     }
 
@@ -157,17 +154,6 @@ public final class AccessServer {
                 send(exchange, 405, "text/plain; charset=utf-8", "Método no permitido".getBytes(StandardCharsets.UTF_8));
             } else if (path.equals("/") || path.equals("/ping")) {
                 sendHtml(exchange, 200, AccessPage.ping());
-            } else if (path.startsWith("/a/")) {
-                AccessResult result = phone.scan(path.substring(3));
-                // The result page links to the photo and the portal with the fixed code of the carnet,
-                // because the short-lived one used to enter expires in seconds.
-                String fixed = result.member() == null ? "" : phone.tokenOf(result.member());
-                Optional<VisitSummary> summary = visits == null ? Optional.empty() : visits.of(result);
-                sendHtml(exchange, 200, AccessPage.render(result, fixed, summary));
-            } else if (path.startsWith("/c/")) {
-                sendCard(exchange, path.substring(3));
-            } else if (path.startsWith("/q/")) {
-                sendLiveQr(exchange, path.substring(3));
             } else if (path.startsWith("/m/") && portal != null) {
                 sendPortal(exchange, path.substring(3));
             } else if (path.equals("/logo.png")) {
@@ -184,35 +170,13 @@ public final class AccessServer {
         }
     }
 
-    private void sendCard(HttpExchange exchange, String token) throws IOException {
-        Optional<Member> member = phone.findMember(token);
-        if (member.isEmpty() || !member.get().isActive()) {
-            sendHtml(exchange, 404, AccessPage.invalidCard());
-            return;
-        }
-        sendHtml(exchange, 200, AccessPage.card(member.get(), token));
-    }
-
-    /** Draws the QR with the code of this moment; the digital carnet asks for it again every few seconds. */
-    private void sendLiveQr(HttpExchange exchange, String token) throws IOException {
-        Optional<Member> member = phone.findMember(token);
-        if (member.isEmpty() || !member.get().isActive()) {
-            send(exchange, 404, "text/plain; charset=utf-8", new byte[0]);
-            return;
-        }
-        String host = exchange.getRequestHeaders().getFirst("Host");
-        String base = "http://" + (host == null ? "localhost:" + port() : host);
-        String svg = QrSvg.of(base + "/a/" + phone.liveTokenOf(member.get()));
-        send(exchange, 200, "image/svg+xml", svg.getBytes(StandardCharsets.UTF_8));
-    }
-
-    // EXPLICACIÓN: la ruta del chat es /m/CODIGO/chat; el código es lo que queda en el medio
+    /** The chat route is /m/CODE/chat; the code is what stays in the middle. */
     private static boolean isChatPath(String path) {
         return path.startsWith("/m/") && path.endsWith(CHAT_SUFFIX) && path.length() > 3 + CHAT_SUFFIX.length();
     }
 
     private void sendChat(HttpExchange exchange, String token) throws IOException {
-        // EXPLICACIÓN: se leen como mucho MAX+1 bytes; si llega más, el endpoint lo rechaza sin cargar todo en memoria
+        // At most MAX+1 bytes are read; the endpoint rejects bigger bodies without loading them all.
         byte[] raw = exchange.getRequestBody().readNBytes(PortalChatEndpoint.MAX_BODY_CHARS + 1);
         String body = new String(raw, StandardCharsets.UTF_8);
         PortalChatEndpoint.Response response = chat.post(token,
@@ -227,7 +191,9 @@ public final class AccessServer {
             sendHtml(exchange, 404, PortalPage.invalid());
             return;
         }
-        sendHtml(exchange, 200, PortalPage.render(summary.get(), token, chat != null));
+        Optional<ProgressReport> report = progress == null ? Optional.empty()
+                : Optional.of(progress.of(summary.get().member()));
+        sendHtml(exchange, 200, PortalPage.render(summary.get(), token, chat != null, report));
     }
 
     private void sendLogo(HttpExchange exchange) throws IOException {

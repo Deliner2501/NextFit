@@ -79,7 +79,7 @@ import java.nio.file.Path;
 import java.util.List;
 import com.nextfit.service.portal.BestTimesAdvisor;
 import com.nextfit.service.portal.MemberPortal;
-import com.nextfit.service.portal.VisitSummaryService;
+import com.nextfit.service.portal.ProgressReportService;
 import com.nextfit.web.AccessServer;
 import com.nextfit.web.LanAddress;
 import com.nextfit.web.PortalChatEndpoint;
@@ -172,9 +172,8 @@ public final class Main {
         AccessService accessService = new AccessService(memberService, attendanceService,
                 memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
                 Clock.systemDefaultZone());
-        PhoneAccess phoneAccess = new PhoneAccess(memberService, accessService,
-                new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))),
-                Clock.systemDefaultZone());
+        PhoneAccess phoneAccess = new PhoneAccess(memberService,
+                new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))));
         // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
         FaceTemplateRepository faceTemplates = new CsvFaceTemplateRepository(DATA_DIR.resolve("face_templates.csv"));
         FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
@@ -249,8 +248,8 @@ public final class Main {
                 .orElse(null);
 
         AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat,
-                new VisitSummaryService(member -> memberPortal.summaryFor(phoneAccess.tokenOf(member)),
-                        attendanceService), ACCESS_PORT);
+                new ProgressReportService(training.assignments(), training.routines(), training.sessions(),
+                        attendanceService, healthService), ACCESS_PORT);
         try {
             accessServer.start();
         } catch (IOException e) {
