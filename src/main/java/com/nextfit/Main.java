@@ -264,7 +264,7 @@ public final class Main {
                 new BillingModule(planService, subscriptionService, paymentService, memberService, session),
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises"), aiRoutines),
-                new AccessModule(accessService, attendanceService, memberService, subscriptionService,
+                new AccessModule(attendanceService, memberService, subscriptionService,
                         phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
                         selfAccess, memberPasswords),
                 new AnalyticsModule(analyticsService, memberService),

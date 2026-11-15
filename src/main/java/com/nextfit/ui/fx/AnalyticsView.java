@@ -141,7 +141,7 @@ final class AnalyticsView extends VBox {
             }
         }
         Label caption = new Label(map.total() == 0
-                ? "Todavía no hay entradas para dibujar. Registra visitas en Control de acceso."
+                ? "Todavía no hay entradas para dibujar. Los socios registran sus visitas con el rostro o con su contraseña."
                 : "Entradas por día y hora (últimas " + AnalyticsService.HEATMAP_WEEKS
                         + " semanas). Violeta es poca gente y verde es mucha.");
         caption.getStyleClass().add("nf-muted-small");
