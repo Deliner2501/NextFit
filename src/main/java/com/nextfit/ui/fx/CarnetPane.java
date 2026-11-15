@@ -46,6 +46,7 @@ final class CarnetPane extends HBox {
     private final Supplier<String> phoneUrl;
     private final MemberPicker picker;
     private final StackPane previewHolder = new StackPane();
+    private final Label phoneInfo = new Label();
     private final Button save = new Button("Guardar carnet como imagen");
     private final Button savePdf = new Button("Guardar carnet en PDF");
     private final Button saveAllPdf = new Button("PDF de todos los socios activos");
@@ -78,7 +79,9 @@ final class CarnetPane extends HBox {
         previewHolder.setAlignment(Pos.TOP_LEFT);
 
         HBox actions = new HBox(10, save, savePdf, saveAllPdf);
-        VBox right = new VBox(12, title, hint, previewHolder, actions);
+        phoneInfo.getStyleClass().add("nf-muted-small");
+        phoneInfo.setWrapText(true);
+        VBox right = new VBox(12, title, hint, phoneInfo, previewHolder, actions);
         HBox.setHgrow(right, Priority.ALWAYS);
         getChildren().addAll(picker, right);
         select(null);
@@ -86,6 +89,7 @@ final class CarnetPane extends HBox {
 
     void refresh() {
         picker.reload();
+        phoneInfo.setText("Para probar la conexión del celular (misma red Wi-Fi) abre " + phoneUrl.get() + "/ping");
         // The address of this computer may have changed, so the QR is drawn again.
         if (current != null) {
             select(current);
