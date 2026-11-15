@@ -7,6 +7,7 @@ import com.nextfit.persistence.MemberRepository;
 import com.nextfit.validation.MemberValidator;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Rules of the gym members: who can be registered, changed or deactivated.
@@ -48,6 +49,16 @@ public class MemberService {
     public Member findById(long id) {
         return members.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("socio", String.valueOf(id)));
+    }
+
+    /**
+     * Looks a member up by document number.
+     *
+     * @param documentNumber the document number, spaces around it are ignored
+     * @return the member, or empty when nobody has that document
+     */
+    public Optional<Member> findByDocumentNumber(String documentNumber) {
+        return members.findByDocumentNumber(documentNumber.trim());
     }
 
     /**

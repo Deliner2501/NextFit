@@ -18,7 +18,11 @@ public enum AuditAction {
     BACKUP_CREATED("Respaldo creado"),
     BACKUP_RESTORED("Respaldo restaurado"),
     FACE_ENROLLED("Rostro registrado"),
-    FACE_REMOVED("Rostro eliminado");
+    FACE_REMOVED("Rostro eliminado"),
+    MEMBER_PASSWORD_CREATED("Contraseña de socio creada"),
+    MEMBER_PASSWORD_RESET("Contraseña de socio restablecida"),
+    MEMBER_LOGIN_FAILED("Entrada de socio fallida"),
+    MEMBER_LOCKOUT("Socio bloqueado por intentos");
 
     private final String label;
 

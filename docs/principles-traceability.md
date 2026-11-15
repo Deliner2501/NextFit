@@ -311,3 +311,14 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `AccessServer` | The summary is a new optional collaborator: without it the server works as before |
 | Testability | `VisitSummaryServiceTest`, `VisitSummaryHtmlTest` | The portal is replaced by a lambda and a hand-moved clock gives the time inside |
 
+## Entry with a password
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `MemberPasswordService`, `SelfAccessService` | One keeps and checks the passwords, the other turns a document and a password into an access |
+| DIP | `SelfAccessService` | It receives functions (find the member, admit, deny) and interfaces (`AttemptLimiter`, `AuditLog`), not the screens nor the files |
+| Reuse | `PasswordHasher`, `InMemoryAttemptLimiter`, `AuditLog` | The hashing, the block by attempts and the audit of the staff sign-in are used again |
+| OCP | `AccessService.processMember` | The rules to let in do not change: a new way to identify the member was added |
+| Information Expert | `MemberService.findByDocumentNumber` | The service that owns the members finds one by document |
+| Testability | `SelfAccessServiceTest`, `MemberPasswordServiceTest` | A hand-moved clock tests the block and its end; in-memory fakes replace the files |
+

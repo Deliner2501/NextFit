@@ -11,8 +11,12 @@ import com.nextfit.persistence.CsvMembershipPlanRepository;
 import com.nextfit.persistence.CsvSubscriptionRepository;
 import com.nextfit.persistence.CsvPaymentRepository;
 import com.nextfit.persistence.CsvFaceTemplateRepository;
+import com.nextfit.persistence.CsvMemberCredentialRepository;
+import com.nextfit.persistence.MemberCredentialRepository;
 import com.nextfit.persistence.FaceTemplateRepository;
 import com.nextfit.service.AccessService;
+import com.nextfit.service.MemberPasswordService;
+import com.nextfit.service.SelfAccessService;
 import com.nextfit.service.face.FaceAccessService;
 import com.nextfit.service.face.FaceEnrollmentService;
 import com.nextfit.service.face.MemberLookup;
@@ -174,6 +178,13 @@ public final class Main {
         FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
         FaceAccessService faceAccess = new FaceAccessService(faceTemplates, MemberLookup.of(memberService),
                 accessService::processMember, accessService::deny, Clock.systemDefaultZone());
+        // Members can also enter with the document and a password they create themselves
+        MemberCredentialRepository memberCredentials =
+                new CsvMemberCredentialRepository(DATA_DIR.resolve("member_credentials.csv"));
+        InMemoryAttemptLimiter memberLimiter = new InMemoryAttemptLimiter();
+        MemberPasswordService memberPasswords = new MemberPasswordService(memberCredentials, memberLimiter, auditService);
+        SelfAccessService selfAccess = new SelfAccessService(memberService::findByDocumentNumber, memberPasswords,
+                memberLimiter, auditService, accessService::processMember, accessService::deny);
         // Faces of members who left are deleted automatically.
         faceEnrollment.purgeInactive(memberService.findAll());
         CashCloseService cashCloseService = new CashCloseService(paymentService, memberService);
@@ -254,7 +265,8 @@ public final class Main {
                 new TrainingFxModule(training, suggestionService,
                         DATA_DIR.resolve("images").resolve("exercises")),
                 new AccessModule(accessService, attendanceService, memberService, subscriptionService,
-                        phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor),
+                        phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
+                        selfAccess, memberPasswords),
                 new AnalyticsModule(analyticsService, memberService),
                 new OccupancyModule(occupancyService),
                 new ReportsModule(cashCloseService, reportService),
