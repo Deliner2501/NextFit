@@ -27,6 +27,15 @@ Why: a fixed QR can be photographed or forwarded and works forever. A screenshot
 | `/logo.png` | NextFit logo for the result page |
 | `/photo/FIXED` | Photo of the member for the result page, only when the code is valid |
 
+## Your day and your summary
+
+After a granted scan the result page adds a block under the answer (`VisitSummaryService`, drawn by `VisitSummaryHtml`):
+
+- **Entry, "Tu día"**: the day of the routine to train with its exercises, the membership and its days left, and the quietest hours to train.
+- **Exit, "Tu resumen"**: how long the member stayed (from the attendance record), the days trained, the streak in weeks, the day of the routine that comes next and the membership.
+
+Nothing is shown when the access is denied. The data comes from the member portal (`MemberPortal`), so the portal and the summary never disagree.
+
 ## Requirements
 
 - The phone and the computer must be in the same Wi-Fi network. If the network isolates devices, turn on the hotspot of the phone and connect the computer to it.

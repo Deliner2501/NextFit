@@ -301,3 +301,13 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low Coupling | `QrSvg`, `AccessServer` | The web part draws the QR from `QrMatrix` and does not know the screen or the carnet PDF |
 | Testability | `AccessTokensTest`, `PhoneAccessTest` | A hand-moved clock tests the 30 seconds window and the one-use rule |
 
+## Entry and exit summary
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `VisitSummaryService` | Only decides what to show after an entry or an exit; it does not draw it nor read the CSV files |
+| DRY / Low Coupling | `VisitSummaryService` | It reuses what `MemberPortal` already gathers through a one-method function, so the portal and the summary never disagree |
+| SRP | `VisitSummaryHtml` | Only draws the block; the text of the trainer is escaped |
+| OCP | `AccessServer` | The summary is a new optional collaborator: without it the server works as before |
+| Testability | `VisitSummaryServiceTest`, `VisitSummaryHtmlTest` | The portal is replaced by a lambda and a hand-moved clock gives the time inside |
+
