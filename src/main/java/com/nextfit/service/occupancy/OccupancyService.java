@@ -5,10 +5,8 @@ import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.AttendanceRecord;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.MemberService;
-import com.nextfit.service.OccupancyHeatmap;
 
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +27,7 @@ public class OccupancyService {
     public static final int OPEN_HOUR = 5;
     /** Hour when the gym closes (the last hour offered is the one before). */
     public static final int CLOSE_HOUR = 22;
-    /** Weeks of history used to find the emptiest hour. */
+    /** Weeks of history used to forecast the day. */
     public static final int HISTORY_WEEKS = 8;
 
     private static final String UNKNOWN_NAME = "Socio";
@@ -38,6 +36,7 @@ public class OccupancyService {
     private final MemberService members;
     private final int capacity;
     private final Clock clock;
+    private final OccupancyForecastService forecasts;
 
     /**
      * Creates the service with the default capacity.
@@ -67,21 +66,26 @@ public class OccupancyService {
         this.members = members;
         this.capacity = capacity;
         this.clock = clock;
+        // EXPLICACIÓN: el pronóstico se crea aquí con el mismo aforo y reloj, así la "mejor hora"
+        // y las horas del pronóstico salen de una sola regla y nunca se contradicen en la pantalla.
+        this.forecasts = new OccupancyForecastService(attendance, capacity, clock);
     }
 
     /**
      * Takes a picture of the gym at this moment.
      *
-     * @return the occupancy, who is inside, the entries of today and the best hour to come
+     * @return the occupancy, who is inside, the entries of today, the best hour to come
+     *         and the forecast of the day
      */
     public OccupancySnapshot snapshot() {
         LocalDateTime now = LocalDateTime.now(clock);
         List<AttendanceRecord> records = attendance.findAll();
         List<AttendanceRecord> inside = insideAt(records, now);
         int percent = (int) Math.min(100, Math.round(inside.size() * 100.0 / capacity));
+        OccupancyForecast today = forecasts.forecastFor(now.toLocalDate());
         return new OccupancySnapshot(inside.size(), capacity, percent, OccupancyLevel.of(percent),
                 visitorsOf(inside, now), entriesToday(records, now.toLocalDate()),
-                quietestHour(records, now), now);
+                quietestHour(today, now), forecastOf(today), now);
     }
 
     // EXPLICACIÓN: una entrada abierta de un día anterior es una salida olvidada, no una persona
@@ -122,26 +126,17 @@ public class OccupancyService {
         return IntStream.of(counts).boxed().toList();
     }
 
-    // La hora más vacía que queda hoy, según los mismos días de la semana de las últimas semanas.
+    // La hora más vacía que queda hoy, según el pronóstico del día.
     // Devuelve -1 si no hay historial o si ya no quedan horas abiertas.
-    private static int quietestHour(List<AttendanceRecord> records, LocalDateTime now) {
-        LocalDate today = now.toLocalDate();
-        LocalDate from = today.minusWeeks(HISTORY_WEEKS);
-        List<AttendanceRecord> history = records.stream()
-                .filter(r -> !r.getCheckIn().toLocalDate().isBefore(from)
-                        && r.getCheckIn().toLocalDate().isBefore(today))
-                .toList();
-        OccupancyHeatmap heatmap = OccupancyHeatmap.of(history);
-        if (heatmap.total() == 0) {
-            return -1;
-        }
-        DayOfWeek day = now.getDayOfWeek();
-        int best = -1;
-        for (int hour = Math.max(OPEN_HOUR, now.getHour() + 1); hour < CLOSE_HOUR; hour++) {
-            if (best < 0 || heatmap.count(day, hour) < heatmap.count(day, best)) {
-                best = hour;
-            }
-        }
-        return best;
+    private static int quietestHour(OccupancyForecast today, LocalDateTime now) {
+        return today.bestHours(Math.max(OPEN_HOUR, now.getHour() + 1), 1).stream()
+                .findFirst()
+                .map(HourForecast::hour)
+                .orElse(-1);
+    }
+
+    // Sin historial no se muestra pronóstico: todo en cero parecería "gimnasio vacío todo el día".
+    private static List<HourForecast> forecastOf(OccupancyForecast today) {
+        return today.hasHistory() ? today.hours() : List.of();
     }
 }

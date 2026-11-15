@@ -1,6 +1,7 @@
 package com.nextfit.ui.fx;
 
 import com.nextfit.exceptions.NextFitException;
+import com.nextfit.service.occupancy.HourForecast;
 import com.nextfit.service.occupancy.OccupancyLevel;
 import com.nextfit.service.occupancy.OccupancyService;
 import com.nextfit.service.occupancy.OccupancySnapshot;
@@ -16,6 +17,7 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -27,8 +29,9 @@ import java.util.List;
 
 /**
  * Live picture of the gym for the TV: how many people are inside, how full it is, who is
- * inside, the entries of today by hour and the best hour to come. It refreshes itself every
- * few seconds while it is on screen. It only shows what {@link OccupancyService} calculates.
+ * inside, the forecast of the day, the entries of today by hour and the best hour to come.
+ * It refreshes itself every few seconds while it is on screen. It only shows what
+ * {@link OccupancyService} calculates.
  */
 final class OccupancyView extends VBox {
 
@@ -43,6 +46,7 @@ final class OccupancyView extends VBox {
             "Según las últimas 8 semanas", FxIcons.CALENDAR, KpiCard.Kind.VIOLET);
     private final Label percentLabel = new Label();
     private final ProgressBar bar = new ProgressBar(0);
+    private final FlowPane forecastCells = new FlowPane(14, 12);
     private final Label insideTitle = new Label("Quiénes están dentro");
     private final VBox visitorRows = new VBox(10);
     private final NumberAxis yAxis = new NumberAxis();
@@ -64,7 +68,7 @@ final class OccupancyView extends VBox {
         }
         HBox bottom = new HBox(18, buildInsideCard(), buildChartCard());
         VBox.setVgrow(bottom, Priority.ALWAYS);
-        getChildren().addAll(top, buildPercentCard(), bottom);
+        getChildren().addAll(top, buildPercentCard(), buildForecastCard(), bottom);
         refresh();
     }
 
@@ -94,6 +98,17 @@ final class OccupancyView extends VBox {
         bar.setMaxWidth(Double.MAX_VALUE);
         bar.setPrefHeight(22);
         VBox card = new VBox(10, percentLabel, bar);
+        card.getStyleClass().add("nf-card");
+        card.setPadding(new Insets(20));
+        return card;
+    }
+
+    // EXPLICACIÓN: el pronóstico reutiliza la barra de ocupación y sus clases de nivel de la hoja de
+    // estilos (nf-level-*), así los colores son los mismos que los de la barra grande y no hay CSS nuevo.
+    private Node buildForecastCard() {
+        Label title = new Label("Pronóstico de hoy");
+        title.getStyleClass().add("nf-card-title");
+        VBox card = new VBox(12, title, forecastCells);
         card.getStyleClass().add("nf-card");
         card.setPadding(new Insets(20));
         return card;
@@ -158,6 +173,7 @@ final class OccupancyView extends VBox {
         bar.setProgress(snapshot.percent() / 100.0);
         showLevel(snapshot.level());
         showVisitors(snapshot);
+        showForecast(snapshot);
         showChart(snapshot);
     }
 
@@ -186,6 +202,43 @@ final class OccupancyView extends VBox {
             HBox.setHgrow(spacer, Priority.ALWAYS);
             visitorRows.getChildren().add(new HBox(8, name, spacer, minutes));
         }
+    }
+
+    // Una columna por hora: la hora, una barra del color de su nivel y el porcentaje esperado.
+    // Las horas que ya pasaron se ven apagadas y la mejor hora que queda lleva una marca.
+    private void showForecast(OccupancySnapshot snapshot) {
+        forecastCells.getChildren().clear();
+        if (snapshot.forecast().isEmpty()) {
+            Label none = new Label("Aún no hay historial suficiente para pronosticar el día.");
+            none.getStyleClass().add("nf-muted");
+            forecastCells.getChildren().add(none);
+            return;
+        }
+        int current = snapshot.updatedAt().getHour();
+        for (HourForecast hour : snapshot.forecast()) {
+            forecastCells.getChildren().add(forecastCell(hour, current, snapshot.quietestHour()));
+        }
+    }
+
+    private static Node forecastCell(HourForecast forecast, int currentHour, int bestHour) {
+        Label hour = new Label(forecast.hour() + "h");
+        hour.getStyleClass().add(forecast.hour() == currentHour ? "nf-list-name" : "nf-muted");
+        ProgressBar level = new ProgressBar(forecast.percent() / 100.0);
+        level.getStyleClass().addAll("nf-occupancy-bar", "nf-level-" + forecast.level().name().toLowerCase());
+        level.setPrefWidth(70);
+        level.setPrefHeight(12);
+        Label percent = new Label(forecast.percent() + " %");
+        percent.getStyleClass().add("nf-muted");
+        VBox cell = new VBox(4, hour, level, percent);
+        if (forecast.hour() == bestHour) {
+            Label best = new Label("Mejor hora");
+            best.getStyleClass().add("nf-list-name");
+            cell.getChildren().add(best);
+        }
+        if (forecast.hour() < currentHour) {
+            cell.setOpacity(0.45);
+        }
+        return cell;
     }
 
     private void showChart(OccupancySnapshot snapshot) {

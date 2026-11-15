@@ -210,8 +210,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `OccupancyLevel` | Each level knows the percentage where it starts, so nobody else repeats those limits. |
 | Pure Fabrication | `OccupancySnapshot` | An immutable picture of the gym with no drawing logic, created so the TV screen only reads data. |
 | DIP | `OccupancyService` | It depends on `AttendanceService` and `MemberService`, and receives the capacity and the `Clock` by constructor, so tests can fix the time. |
-| Low Coupling | `OccupancyService` | It reuses `OccupancyHeatmap` from the analytics instead of counting entries by weekday and hour again. |
-| SRP | `OccupancyView`, `OccupancyModule` | The view only draws the picture it receives and refreshes itself; the module only hosts it and opens the full-screen window. The numbers come from `OccupancyService`. |
+| Low Coupling | `OccupancyService` | It reuses `OccupancyForecastService` to get the best hour and the forecast of the day, so the TV and the member portal use the same rule and never disagree. | SRP | `OccupancyView`, `OccupancyModule` | The view only draws the picture it receives and refreshes itself; the module only hosts it and opens the full-screen window. The numbers come from `OccupancyService`. |
 | DIP | `OccupancyView` | It depends on `OccupancyService`, not on the attendance files, so the data source can change without touching the screen. |
 | Protected Variations | `nextfit.css` (`nf-level-*`) | The color of the occupancy bar changes with the level by a style class, so no color is written in code and the light and dark modes work without changes. |
 | SRP | `CashCloseService`, `ReportService` | The first one only gathers the payments of a day into a close; the second only builds report tables. Neither one draws or writes files. |
@@ -322,6 +321,16 @@ Each row links a principle or pattern to the class or method where it is applied
 | Information Expert | `MemberService.findByDocumentNumber` | The service that owns the members finds one by document |
 | Testability | `SelfAccessServiceTest`, `MemberPasswordServiceTest` | A hand-moved clock tests the block and its end; in-memory fakes replace the files |
 
+## Forecast on the TV screen
+
+| Principle | Where | How |
+|---|---|---|
+| Information Expert | `OccupancyForecastService` | The forecast rule (same weekday of the last 8 weeks) lives in one place; the TV and the portal ask it instead of repeating it |
+| Low Coupling | `OccupancyService` | It builds the forecast with its own capacity and clock, so the "best hour" and the forecast cannot disagree |
+| SRP | `OccupancySnapshot` | It only carries the forecast as data; it does not calculate it nor draw it |
+| OCP | `OccupancyView` | The forecast is a new card; the rest of the screen did not change, and it adds no CSS because it reuses the `nf-level-*` classes |
+| Testability | `OccupancyForecastOnTvTest` | The clock is fixed by hand and a fake attendance repository gives the history |
+
 ## Routines of the AI
 
 | Principle | Where | How |
@@ -343,3 +352,4 @@ Each row links a principle or pattern to the class or method where it is applied
 | Low Coupling | `ProgressReport`, `PortalPage` | The report is a plain value; the page only draws it and the portal of Santiago (`MemberPortal`) is untouched. |
 | OCP | `PortalPage.render(..., Optional<ProgressReport>)` | A new overload adds the sections; the old one keeps working. |
 | Testability | `ProgressReportServiceTest`, `PortalPageTest`, `PhoneAccessTest` | CSV files in a temporary folder and a plain value for the page; no network. |
+

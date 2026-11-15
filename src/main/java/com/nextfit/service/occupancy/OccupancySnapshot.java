@@ -5,8 +5,8 @@ import java.util.List;
 
 /**
  * A picture of the gym at one moment: how many people are inside, how full it is, who is
- * inside, the entries of today by hour and the best hour to come. It is immutable and has
- * no logic of drawing: the screen only reads it.
+ * inside, the entries of today by hour, the forecast of the day and the best hour to come.
+ * It is immutable and has no logic of drawing: the screen only reads it.
  *
  * @param inside        people inside right now
  * @param capacity      maximum people the gym admits
@@ -15,11 +15,12 @@ import java.util.List;
  * @param visitors      the people inside, the one who entered first at the top
  * @param entriesByHour entries registered today, 24 values, one per hour
  * @param quietestHour  the emptiest hour left today according to the history, or -1 when unknown
+ * @param forecast      the expected occupation of every open hour of today, empty when there is no history
  * @param updatedAt     the moment this picture was taken
  */
 public record OccupancySnapshot(int inside, int capacity, int percent, OccupancyLevel level,
                                 List<Visitor> visitors, List<Integer> entriesByHour,
-                                int quietestHour, LocalDateTime updatedAt) {
+                                int quietestHour, List<HourForecast> forecast, LocalDateTime updatedAt) {
 
     /**
      * A person inside the gym. Only the first name is kept, so a public screen does not
@@ -35,5 +36,6 @@ public record OccupancySnapshot(int inside, int capacity, int percent, Occupancy
     public OccupancySnapshot {
         visitors = List.copyOf(visitors);
         entriesByHour = List.copyOf(entriesByHour);
+        forecast = List.copyOf(forecast);
     }
 }
