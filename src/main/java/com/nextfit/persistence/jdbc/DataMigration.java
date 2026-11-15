@@ -5,6 +5,7 @@ import com.nextfit.model.FaceTemplate;
 import com.nextfit.model.HealthProfile;
 import com.nextfit.model.Measurement;
 import com.nextfit.model.Member;
+import com.nextfit.model.User;
 import com.nextfit.persistence.Storage;
 
 import java.util.ArrayList;
@@ -105,7 +106,7 @@ public final class DataMigration {
         List<EntityResult> results = new ArrayList<>();
         List<Member> members = source.members().findAll();
 
-        results.add(copy("users", source.users().findAll(), target.users()::save));
+        results.add(copyUsers());
         results.add(copy("members", members, target.members()::save));
         results.add(copy("membership_plans", source.plans().findAll(), target.plans()::save));
         results.add(copy("subscriptions", source.subscriptions().findAll(), target.subscriptions()::save));
@@ -162,6 +163,29 @@ public final class DataMigration {
             }
         }
         return new EntityResult(name, items.size(), written, errors);
+    }
+
+    /**
+     * Users are matched by name. NextFit creates its default administrator by itself the first
+     * time it starts on Oracle, with its own identifier, and two users cannot share a name, so
+     * a user the target already has is updated with the data of the source and keeps its identifier.
+     * Nothing in the database points to a user by identifier, so this changes no other row.
+     */
+    private EntityResult copyUsers() {
+        List<User> users = source.users().findAll();
+        int written = 0;
+        List<String> errors = new ArrayList<>();
+        for (User user : users) {
+            try {
+                long id = target.users().findByUsername(user.getUsername()).map(User::getId).orElse(user.getId());
+                target.users().save(new User(id, user.getUsername(), user.getFullName(), user.getPasswordHash(),
+                        user.getRole(), user.isActive()));
+                written++;
+            } catch (RuntimeException e) {
+                errors.add(user.getUsername() + ": " + reasonOf(e));
+            }
+        }
+        return new EntityResult("users", users.size(), written, errors);
     }
 
     /** The faces of a member are replaced as a whole, so running again does not repeat them. */
