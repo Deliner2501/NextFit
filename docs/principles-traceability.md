@@ -63,7 +63,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP | `AccessTokens`, `AccessKeyStore` | One class signs and checks the access code; the other only keeps the secret key in a file |
 | GRASP Protected Variations | `AccessTokens` | The code is derived from the document with a secret key, so the Member model and the CSV files do not change and a leaked carnet is revoked by changing the key |
 | GRASP Controller (use case) | `PhoneAccess.scan` | One operation turns a phone scan into an entry or exit, and returns the previous answer when the same code arrives twice in 10 seconds |
-| OCP and Observer | `AccessService.addListener` | The kiosk screen subscribes to results, so a new way to scan (phone, reader, typed) needs no change in the screen |
+| OCP and Observer | `AccessService.addListener` | The screens can subscribe to results, so a new way to scan (phone, reader, typed) needs no change in the screen |
 | SRP and Pure Fabrication | `AccessPage` | A pure function from a result to the phone page, tested without a server and with the member text escaped |
 | DIP | `AccessServer` | The web server depends on `PhoneAccess`, not on members, attendance or files; the port and the clock are injected |
 | Testability | `PhoneAccessTest`, `AccessServerTest`, `AccessPageTest`, `AccessTokensTest`, `AccessKeyStoreTest` | The server is tested for real on a free port with an HTTP client, like a phone would call it |
@@ -364,3 +364,11 @@ Each row links a principle or pattern to the class or method where it is applied
 | Protected Variations | `AiAssistant.writeAudit` | If the audit fails, the person still gets the answer: a storage problem does not break the assistant |
 | Testability | `AiAssistantAuditTest` | A recording lambda replaces the audit log and a fake AI client gives the replies |
 
+
+## Access screen simplified
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `InsidePane` | Only lists who is inside and lets the staff close a forgotten visit; the entry is done by `FacePane` and `PasswordPane`. |
+| Protected Variations | `InsidePane.closeVisit` | The exit rule stays in `AttendanceService.checkOut`; the screen asks for confirmation and shows any rule error. |
+| Low Coupling | `AccessModule` | It no longer needs `AccessService`; each tab receives only the services it uses. |

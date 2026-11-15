@@ -89,9 +89,9 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line, in millions of pesos). They animate when the screen opens.
 
 ### 🚪 Access control
-- Check-in and check-out with the **face**, with the **document and a password**, or typing the document at reception. The result is shown full screen (entry, exit or denied, with the reason).
+- Check-in and check-out are done by the member alone, with the **face** or with the **document and a password**.
 - **Personal portal**: the QR of the carnet opens on the phone the portal of the member (day to train, next days, last visits, body progress, membership). The QR is read-only and never registers an entry or an exit ([details](docs/phone-qr-access.md)).
-- List of people inside the gym.
+- **Dentro ahora**: list of the people inside the gym; the staff can close the visit of a member who forgot to mark the exit.
 - **Carnets**: each member has a credit-card sized carnet (front and back) that can be saved as an image or as a **PDF**; one more button makes a single PDF with every active member, four carnets per A4 page, ready to print and cut. The QR is drawn as vectors so it scans at any size.
 
 ### 📈 Analytics and TV screen
