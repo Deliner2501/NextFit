@@ -171,3 +171,10 @@ CREATE TABLE IF NOT EXISTS face_templates (
 
 CREATE INDEX IF NOT EXISTS idx_face_templates_member ON face_templates (member_id);
 
+
+-- Passwords that the members create to enter by themselves. Only the hash is stored, never the password.
+CREATE TABLE IF NOT EXISTS member_credentials (
+    member_id     NUMBER(19) PRIMARY KEY REFERENCES members (id) ON DELETE CASCADE,
+    password_hash VARCHAR2(200) NOT NULL
+);
+
