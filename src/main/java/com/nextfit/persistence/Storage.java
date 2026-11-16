@@ -52,6 +52,9 @@ public interface Storage {
     /** @return the repository of training sessions */
     TrainingSessionRepository trainingSessions();
 
+    /** @return the repository of the passwords that members create to enter by themselves */
+    MemberCredentialRepository memberCredentials();
+
     /** @return a short text that says which storage is in use, to show in the console */
     String description();
 }

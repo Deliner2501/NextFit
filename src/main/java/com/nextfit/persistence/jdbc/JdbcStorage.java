@@ -15,6 +15,7 @@ import com.nextfit.persistence.SubscriptionRepository;
 import com.nextfit.persistence.TrainerRepository;
 import com.nextfit.persistence.TrainingSessionRepository;
 import com.nextfit.persistence.UserRepository;
+import com.nextfit.persistence.MemberCredentialRepository;
 import com.nextfit.persistence.Storage;
 
 /** The storage of the Oracle database: every repository works on the same connections. */
@@ -29,6 +30,7 @@ public final class JdbcStorage implements Storage {
     private final PaymentRepository payments;
     private final AttendanceRepository attendance;
     private final FaceTemplateRepository faceTemplates;
+    private final MemberCredentialRepository memberCredentials;
     private final AuditRepository audit;
     private final TrainerRepository trainers;
     private final ExerciseRepository exercises;
@@ -51,6 +53,7 @@ public final class JdbcStorage implements Storage {
         payments = new JdbcPaymentRepository(connections);
         attendance = new JdbcAttendanceRepository(connections);
         faceTemplates = new JdbcFaceTemplateRepository(connections);
+        memberCredentials = new JdbcMemberCredentialRepository(connections);
         audit = new JdbcAuditRepository(connections);
         trainers = new JdbcTrainerRepository(connections);
         exercises = new JdbcExerciseRepository(connections);
@@ -97,6 +100,11 @@ public final class JdbcStorage implements Storage {
     @Override
     public AttendanceRepository attendance() {
         return attendance;
+    }
+
+    @Override
+    public MemberCredentialRepository memberCredentials() {
+        return memberCredentials;
     }
 
     @Override

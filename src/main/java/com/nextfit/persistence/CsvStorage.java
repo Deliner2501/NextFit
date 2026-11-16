@@ -14,6 +14,7 @@ public final class CsvStorage implements Storage {
     private final PaymentRepository payments;
     private final AttendanceRepository attendance;
     private final FaceTemplateRepository faceTemplates;
+    private final MemberCredentialRepository memberCredentials;
     private final AuditRepository audit;
     private final TrainerRepository trainers;
     private final ExerciseRepository exercises;
@@ -36,6 +37,7 @@ public final class CsvStorage implements Storage {
         payments = new CsvPaymentRepository(dataDir.resolve("payments.csv"));
         attendance = new CsvAttendanceRepository(dataDir.resolve("attendance.csv"));
         faceTemplates = new CsvFaceTemplateRepository(dataDir.resolve("face_templates.csv"));
+        memberCredentials = new CsvMemberCredentialRepository(dataDir.resolve("member_credentials.csv"));
         audit = new CsvAuditRepository(dataDir.resolve("audit.csv"));
         trainers = new CsvTrainerRepository(dataDir.resolve("trainers.csv"));
         exercises = new CsvExerciseRepository(dataDir.resolve("exercises.csv"));
@@ -82,6 +84,11 @@ public final class CsvStorage implements Storage {
     @Override
     public AttendanceRepository attendance() {
         return attendance;
+    }
+
+    @Override
+    public MemberCredentialRepository memberCredentials() {
+        return memberCredentials;
     }
 
     @Override
