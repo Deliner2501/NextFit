@@ -7,6 +7,7 @@ import com.nextfit.model.AuditAction;
 import com.nextfit.model.AuditEntry;
 import com.nextfit.model.Difficulty;
 import com.nextfit.model.Exercise;
+import com.nextfit.model.MemberCredential;
 import com.nextfit.model.RoutineExercise;
 import com.nextfit.model.RoutineDay;
 import com.nextfit.model.Routine;
@@ -222,6 +223,18 @@ public final class JdbcRepositoriesCheck {
         cleanup.push(new String[]{"routines", "id", String.valueOf(withoutTrainer.getId())});
         check("routines sin entrenador (0 se guarda como NULL)",
                 routines.findById(withoutTrainer.getId()).map(Routine::getTrainerId).orElse(-1L) == 0L);
+        JdbcMemberCredentialRepository credentials = new JdbcMemberCredentialRepository(db);
+        check("credentials.find sin contrasena", credentials.find(memberId).isEmpty());
+        credentials.save(new MemberCredential(memberId, "PBKDF2$1000$salt$first"));
+        check("credentials.save y find", credentials.find(memberId).map(MemberCredential::passwordHash)
+                .orElse("").equals("PBKDF2$1000$salt$first"));
+        credentials.save(new MemberCredential(memberId, "PBKDF2$1000$salt$second"));
+        check("credentials.save reemplaza la anterior", credentials.find(memberId)
+                .map(MemberCredential::passwordHash).orElse("").equals("PBKDF2$1000$salt$second"));
+        credentials.delete(memberId);
+        credentials.delete(memberId);
+        check("credentials.delete (y borrar otra vez no falla)", credentials.find(memberId).isEmpty());
+
         JdbcAuditRepository audit = new JdbcAuditRepository(db);
         AuditEntry entry = audit.append(new AuditEntry(0, LocalDateTime.now(), "test" + unique,
                 AuditAction.values()[0], "detalle"));

@@ -5,7 +5,6 @@ import com.nextfit.ui.fx.AuditModule;
 import com.nextfit.service.BackupService;
 import com.nextfit.persistence.AccessKeyStore;
 import com.nextfit.persistence.Storage;
-import com.nextfit.persistence.CsvMemberCredentialRepository;
 import com.nextfit.persistence.MemberCredentialRepository;
 import com.nextfit.persistence.FaceTemplateRepository;
 import com.nextfit.service.AccessService;
@@ -176,7 +175,7 @@ public final class Main {
                 accessService::processMember, accessService::deny, Clock.systemDefaultZone());
         // Members can also enter with the document and a password they create themselves
         MemberCredentialRepository memberCredentials =
-                new CsvMemberCredentialRepository(DATA_DIR.resolve("member_credentials.csv"));
+                storage.memberCredentials();
         InMemoryAttemptLimiter memberLimiter = new InMemoryAttemptLimiter();
         MemberPasswordService memberPasswords = new MemberPasswordService(memberCredentials, memberLimiter, auditService);
         SelfAccessService selfAccess = new SelfAccessService(memberService::findByDocumentNumber, memberPasswords,

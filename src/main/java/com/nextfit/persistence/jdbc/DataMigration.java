@@ -5,6 +5,7 @@ import com.nextfit.model.FaceTemplate;
 import com.nextfit.model.HealthProfile;
 import com.nextfit.model.Measurement;
 import com.nextfit.model.Member;
+import com.nextfit.model.MemberCredential;
 import com.nextfit.model.User;
 import com.nextfit.persistence.Storage;
 
@@ -108,6 +109,7 @@ public final class DataMigration {
 
         results.add(copyUsers());
         results.add(copy("members", members, target.members()::save));
+        results.add(copy("member_credentials", credentialsOf(source, members), target.memberCredentials()::save));
         results.add(copy("membership_plans", source.plans().findAll(), target.plans()::save));
         results.add(copy("subscriptions", source.subscriptions().findAll(), target.subscriptions()::save));
         results.add(copy("payments", source.payments().findAll(), target.payments()::save));
@@ -135,6 +137,7 @@ public final class DataMigration {
         Map<String, Integer> counts = new LinkedHashMap<>();
         counts.put("users", storage.users().findAll().size());
         counts.put("members", members.size());
+        counts.put("member_credentials", credentialsOf(storage, members).size());
         counts.put("membership_plans", storage.plans().findAll().size());
         counts.put("subscriptions", storage.subscriptions().findAll().size());
         counts.put("payments", storage.payments().findAll().size());
@@ -186,6 +189,15 @@ public final class DataMigration {
             }
         }
         return new EntityResult("users", users.size(), written, errors);
+    }
+
+    /** The password hashes of the members; a member that has not created a password is skipped. */
+    private static List<MemberCredential> credentialsOf(Storage storage, List<Member> members) {
+        List<MemberCredential> credentials = new ArrayList<>();
+        for (Member member : members) {
+            storage.memberCredentials().find(member.getId()).ifPresent(credentials::add);
+        }
+        return credentials;
     }
 
     /** The faces of a member are replaced as a whole, so running again does not repeat them. */
