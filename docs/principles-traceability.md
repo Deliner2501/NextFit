@@ -380,3 +380,25 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP | `MemberPicker` | A new constructor receives the function that gives the labels; the old one keeps working, so the other screens did not change. |
 | Low Coupling | `AccessModule` | It builds the function from `FaceEnrollmentService` and `MemberPasswordService`; `MemberPicker` only draws the text it receives. |
 | SRP | `MemberPicker.refreshTags` | Only draws the labels again; the panes call it after they register or delete a face or a password. |
+
+## Ronald: Oracle database
+
+| Principle or pattern | Class or method | Justification |
+|---|---|---|
+| DIP | `Storage`, `CsvStorage`, `JdbcStorage`, the 15 `Jdbc...Repository` classes | The services depend on the repository interfaces. Oracle is one more implementation, so the services did not change when the database arrived. |
+| GRASP Protected Variations | `Storage`, `StorageSetup` | The point that changes (CSV files or Oracle) is behind one interface and chosen in one place; nothing else knows which storage is in use. |
+| OCP and polymorphism | `CsvStorage` and `JdbcStorage` implement `Storage` | A new kind of storage is a new class that implements `Storage`; the services, the screens and `Main` do not change. |
+| Liskov substitution | `JdbcMemberRepository`, `JdbcRoutineRepository` and the other repositories | Each one keeps the contract of its interface: `save` with id 0 assigns an identifier, `findBy...` returns empty or an empty list, so it can replace the CSV one. |
+| Data access pattern (DAO) | `Jdbc...Repository` | Each class is the only one that knows the SQL of its table and turns rows into objects and objects into rows. |
+| SRP | `DatabaseConfig`, `OracleConnectionProvider`, `PooledConnectionSource`, `JdbcSupport`, `StorageSetup` | One reason to change each: the settings file, how to reach Oracle, how connections are reused, the shared SQL helpers, and the choice of storage. |
+| GRASP Pure Fabrication | `JdbcSupport`, `PooledConnectionSource`, `StorageSetup` | They are not gym concepts; they exist so the repositories stay short and the application keeps low coupling. |
+| GRASP Low coupling | `ConnectionSource` and the `Jdbc...Repository` classes | The repositories receive a one-method contract that gives a connection; they do not know Oracle, the pool or the settings. |
+| ISP | `ConnectionSource` | A one-method interface: the repositories only depend on what they use. |
+| Dependency injection | constructors of the `Jdbc...Repository` classes and of `PooledConnectionSource` | The connections are received from outside, so the tests give them fake connections and the application gives them the pool. |
+| GRASP Creator | `CsvStorage`, `JdbcStorage`, `StorageSetup` | Each storage creates the repositories it contains, and `StorageSetup` creates the storage, so `Main` does not repeat that list. |
+| GRASP High cohesion | `DataMigration` and `CsvToOracleMigration` | One class knows what to copy and in which order; the other only runs it, shows the result and lines up the identity counters. |
+| Transaction (all or nothing) | `JdbcRoutineRepository.save`, `JdbcFaceTemplateRepository.replace` | A routine and its lines, or the faces of a member, are written in one transaction: if one write fails nothing is kept. |
+| GRASP Information Expert | `JdbcPaymentRepository.discountOf` | The discount is stored as the type and value that the `Discount` classes give, and rebuilt with those same classes, so the rule of each discount stays in its own class. |
+| Exception handling | `PersistenceException` in every `Jdbc...Repository`, `JdbcSupport` | Every `SQLException` is wrapped in the exception of the persistence layer with a message in Spanish, so the screens never see SQL errors. |
+| Fault tolerance | `StorageSetup` | If Oracle is not enabled, does not answer in 10 seconds or has no tables, NextFit keeps working with the CSV files and says why. |
+| Testability | `PooledConnectionSourceTest`, `StorageSetupTest`, `CsvStorageTest`, `JdbcRepositoriesCheck` | The pool and the choice of storage are tested with fake connections and temporary folders; `JdbcRepositoriesCheck` runs every repository against the real database and deletes its test data. |
