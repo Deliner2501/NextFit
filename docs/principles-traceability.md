@@ -402,3 +402,5 @@ Each row links a principle or pattern to the class or method where it is applied
 | Exception handling | `PersistenceException` in every `Jdbc...Repository`, `JdbcSupport` | Every `SQLException` is wrapped in the exception of the persistence layer with a message in Spanish, so the screens never see SQL errors. |
 | Fault tolerance | `StorageSetup` | If Oracle is not enabled, does not answer in 10 seconds or has no tables, NextFit keeps working with the CSV files and says why. |
 | Testability | `PooledConnectionSourceTest`, `StorageSetupTest`, `CsvStorageTest`, `JdbcRepositoriesCheck` | The pool and the choice of storage are tested with fake connections and temporary folders; `JdbcRepositoriesCheck` runs every repository against the real database and deletes its test data. |
+| SRP | `LoginView` | The sign-in screen only collects the credentials and shows the result; the rules stay in `AuthService`. |
+| Open/Closed (styles) | `.nf-login` and `.nf-table` in `nextfit.css` | The look of the sign-in screen and of the tables changes in the style sheet, with no change in the classes that use them. |
