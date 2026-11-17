@@ -131,6 +131,60 @@
 .nf-hero-title { -fx-text-fill: white; -fx-font-size: 28px; -fx-font-weight: bold; }
 .nf-hero-text { -fx-text-fill: #D5DAE1; -fx-font-size: 14px; }
 
+/* ---------- Pantalla de ingreso (siempre oscura: se dibuja sobre una foto) ---------- */
+.nf-login, .root.nf-login.dark, .root.nf-login.light {
+    -nf-bg: #090810;
+    -nf-surface: rgba(12, 9, 32, 0.70);
+    -nf-surface-alt: #1F232C;
+    -nf-border: #40376A;
+    -nf-text: #F2F4F8;
+    -nf-muted: #AAB1C0;
+    -nf-accent: #A7F626;
+    -nf-accent-text: #A7F626;
+    -nf-accent-soft: rgba(167, 246, 38, 0.14);
+    -nf-danger: #FF6B6D;
+}
+/* The picture already carries the glow and the gym; this only darkens a little the side with the text. */
+.nf-login-shade { -fx-background-color: linear-gradient(to right, rgba(11, 10, 18, 0.30), rgba(11, 10, 18, 0) 50%); }
+.nf-login-brand { -fx-text-fill: white; -fx-font-size: 38px; -fx-font-weight: bold; }
+.nf-login-headline { -fx-fill: white; -fx-font-size: 40px; -fx-font-weight: bold; -fx-font-style: italic; }
+.nf-login-headline-accent { -fx-fill: #A7F626; -fx-font-size: 40px; -fx-font-weight: bold; -fx-font-style: italic; }
+.nf-login-text { -fx-text-fill: #D3D8E2; -fx-font-size: 16px; }
+.nf-login-feature {
+    -fx-background-color: linear-gradient(to bottom, rgba(122, 53, 232, 0.38), rgba(36, 23, 67, 0.62));
+    -fx-background-radius: 18;
+    -fx-border-color: rgba(143, 85, 255, 0.65);
+    -fx-border-radius: 18;
+}
+.nf-login-feature .nf-icon { -fx-background-color: #A7F626; }
+.nf-login-feature-text { -fx-text-fill: #F2F4F8; -fx-font-size: 13px; -fx-text-alignment: center; }
+.nf-login-card {
+    -fx-background-color: linear-gradient(to bottom, rgba(36, 23, 67, 0.80), rgba(16, 12, 32, 0.92));
+    -fx-background-radius: 28;
+    -fx-border-color: rgba(143, 85, 255, 0.60);
+    -fx-border-radius: 28;
+    -fx-border-width: 1.5;
+    -fx-padding: 34 38 30 38;
+    -fx-effect: dropshadow(gaussian, rgba(122, 53, 232, 0.35), 40, 0.12, 0, 0);
+}
+.nf-login-card-brand { -fx-text-fill: white; -fx-font-size: 32px; -fx-font-weight: bold; }
+.nf-login-title { -fx-fill: white; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-login-title-accent { -fx-fill: #A7F626; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-login-subtitle { -fx-text-fill: -nf-muted; -fx-font-size: 14px; }
+.nf-login-field-label { -fx-text-fill: #F2F4F8; -fx-font-size: 13px; -fx-font-weight: bold; }
+.nf-login-help { -fx-border-color: rgba(143, 85, 255, 0.35) transparent transparent transparent; -fx-padding: 14 0 0 0; }
+.root.nf-login .nf-input, .root.nf-login.dark .nf-input, .root.nf-login.light .nf-input {
+    -fx-background-color: rgba(20, 12, 48, 0.70);
+    -fx-text-fill: #F2F4F8;
+    -fx-prompt-text-fill: #C2BCDB;
+    -fx-border-color: rgba(143, 85, 255, 0.55);
+}
+.root.nf-login .nf-input:focused, .root.nf-login.dark .nf-input:focused, .root.nf-login.light .nf-input:focused { -fx-border-color: #A7F626; -fx-border-width: 2; }
+.nf-input-reveal { -fx-padding: 0 48 0 16; }
+.nf-eye { -fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 8; }
+.nf-eye .nf-icon { -fx-background-color: -nf-muted; }
+.nf-eye:hover .nf-icon { -fx-background-color: white; }
+
 /* ---------- Desplazamiento ---------- */
 .nf-scroll, .nf-scroll > .viewport { -fx-background-color: transparent; -fx-background: transparent; }
 .nf-scroll { -fx-padding: 0; -fx-border-color: transparent; }
@@ -207,11 +261,17 @@
     -fx-border-color: transparent transparent -nf-border transparent;
     -fx-size: 44;
 }
-.nf-table .column-header .label { -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
-.nf-table .table-row-cell { -fx-background-color: transparent; -fx-border-color: transparent; }
+.nf-table .column-header { -fx-padding: 0 14 0 14; }
+.nf-table .column-header .label { -fx-alignment: CENTER_LEFT; -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -nf-border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 54px;
+}
 .nf-table .table-row-cell:hover { -fx-background-color: -nf-surface-alt; }
 .nf-table .table-row-cell:selected { -fx-background-color: -nf-accent-soft; }
-.nf-table .table-cell { -fx-text-fill: -nf-text; -fx-alignment: CENTER_LEFT; -fx-font-size: 14px; -fx-border-color: transparent; }
+.nf-table .table-cell { -fx-text-fill: -nf-text; -fx-alignment: CENTER_LEFT; -fx-font-size: 14px; -fx-border-color: transparent; -fx-padding: 0 14 0 14; }
 .nf-table .table-row-cell:selected .table-cell { -fx-text-fill: -nf-text; }
 .nf-table .table-cell.nf-state-on { -fx-text-fill: -nf-success; -fx-font-weight: bold; }
 .nf-table .table-cell.nf-state-off { -fx-text-fill: -nf-muted; -fx-font-weight: bold; }
