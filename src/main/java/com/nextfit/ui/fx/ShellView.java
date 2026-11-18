@@ -3,17 +3,15 @@ package com.nextfit.ui.fx;
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
 import com.nextfit.service.Session;
-import com.nextfit.ui.Formats;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.geometry.Bounds;
+import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
@@ -24,7 +22,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
+
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
@@ -34,7 +32,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.prefs.Preferences;
 
 /**
@@ -44,22 +41,30 @@ import java.util.prefs.Preferences;
  */
 final class ShellView extends BorderPane {
 
+    private static final PseudoClass DASHBOARD = PseudoClass.getPseudoClass("dashboard");
     private final Session session;
     private final FxTheme theme;
     private final Label title = new Label();
+    private final HBox toolbar = new HBox(14);
     private final Label subtitle = new Label();
     private final StackPane host = new StackPane();
     private final List<Button> buttons = new ArrayList<>();
     private final List<FxModule> visible = new ArrayList<>();
-    private static final double WIDE = 260;
+    private static final double WIDE = 220;
     private static final double NARROW = 84;
     private static final String COLLAPSED_KEY = "sidebarCollapsed";
     private final VBox sidebar = new VBox(6);
     private final HBox brand = new HBox(12);
     private final Label brandName = new Label("NextFit");
-    private static final double MIN_PROMO_HEIGHT = 110;
-    private Node promoBlock;
+    private final List<Label> groupLabels = new ArrayList<>();
+    private static final List<List<String>> NAVIGATION = List.of(
+            List.of("panel", "members", "billing", "access", "training", "occupancy"),
+            List.of("alerts", "churn", "assistant", "analytics", "reports"),
+            List.of("users", "audit", "backup"));
+    private static final List<String> GROUP_TITLES = List.of("Operación", "Seguimiento", "Administración");
     private boolean collapsed;
+    private Timeline sidebarSlide;
+    private static final PseudoClass COLLAPSED = PseudoClass.getPseudoClass("collapsed");
     private SearchPalette palette;
 
     /**
@@ -79,7 +84,12 @@ final class ShellView extends BorderPane {
                 visible.add(module);
             }
         }
-        setLeft(buildSidebar());
+        ScrollPane navigation = new ScrollPane(buildSidebar());
+        navigation.getStyleClass().addAll("nf-scroll", "nf-navigation");
+        navigation.setFitToWidth(true);
+        navigation.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        navigation.prefWidthProperty().bind(sidebar.prefWidthProperty().add(2));
+        setLeft(navigation);
         palette = new SearchPalette(this::searchAll, this::openHit);
         setCenter(new StackPane(buildContent(onLogout), palette));
         addEventFilter(KeyEvent.KEY_PRESSED, e -> {
@@ -95,7 +105,7 @@ final class ShellView extends BorderPane {
 
     private Node buildSidebar() {
         sidebar.getStyleClass().add("nf-sidebar");
-        sidebar.setPadding(new Insets(24, 16, 16, 16));
+        sidebar.setPadding(new Insets(16, 12, 16, 12));
 
         brand.setAlignment(Pos.CENTER_LEFT);
         brand.setPadding(new Insets(0, 0, 24, 8));
@@ -111,20 +121,26 @@ final class ShellView extends BorderPane {
         brand.getChildren().add(brandName);
         sidebar.getChildren().add(brand);
 
-        for (FxModule item : visible) {
-            Button button = new Button(item.title(), FxIcons.of(item.icon(), 20));
-            button.getStyleClass().add("nf-nav");
-            button.setMaxWidth(Double.MAX_VALUE);
-            button.setOnAction(e -> show(item));
-            Tooltip.install(button, new Tooltip(item.title()));
-            FxMotion.nudge(button, 4);
-            buttons.add(button);
-            sidebar.getChildren().add(button);
+        List<FxModule> ordered = new ArrayList<>();
+        for (int i = 0; i < NAVIGATION.size(); i++) {
+            List<FxModule> group = NAVIGATION.get(i).stream()
+                    .flatMap(id -> visible.stream().filter(module -> module.id().equals(id)))
+                    .toList();
+            if (!group.isEmpty()) {
+                Label heading = new Label(GROUP_TITLES.get(i));
+                heading.getStyleClass().add("nf-nav-heading");
+                groupLabels.add(heading);
+                sidebar.getChildren().add(heading);
+                group.forEach(this::addNavigationButton);
+                ordered.addAll(group);
+            }
         }
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-        promoBlock = buildPromo();
-        sidebar.getChildren().addAll(spacer, promoBlock);
+        List<FxModule> ungrouped = visible.stream().filter(module -> !ordered.contains(module)).toList();
+        ungrouped.forEach(this::addNavigationButton);
+        ordered.addAll(ungrouped);
+        visible.clear();
+        visible.addAll(ordered);
+
         boolean wasCollapsed = false;
         try {
             wasCollapsed = Preferences.userNodeForPackage(ShellView.class).getBoolean(COLLAPSED_KEY, false);
@@ -135,17 +151,32 @@ final class ShellView extends BorderPane {
         return sidebar;
     }
 
+    /** Adds a button for a module already filtered by the signed-in role. */
+    private void addNavigationButton(FxModule item) {
+        Button button = new Button(item.title(), FxIcons.of(item.icon(), 20));
+        button.getStyleClass().add("nf-nav");
+        button.setMaxWidth(Double.MAX_VALUE);
+        button.setOnAction(e -> show(item));
+        Tooltip.install(button, new Tooltip(item.title()));
+        buttons.add(button);
+        sidebar.getChildren().add(button);
+    }
+
     /** Opens or closes the menu: closed, it shows only the icons and leaves more room to the screen. */
     private void applyCollapsed(boolean value, boolean animate) {
         collapsed = value;
+        sidebar.pseudoClassStateChanged(COLLAPSED, value);
+        if (sidebarSlide != null) {
+            sidebarSlide.stop();
+        }
         double target = value ? NARROW : WIDE;
         sidebar.setMinWidth(0);
         if (animate) {
-            Timeline slide = new Timeline(new KeyFrame(Duration.millis(260),
+            sidebarSlide = new Timeline(new KeyFrame(Duration.millis(260),
                     new KeyValue(sidebar.prefWidthProperty(), target, Interpolator.EASE_BOTH),
                     new KeyValue(sidebar.maxWidthProperty(), target, Interpolator.EASE_BOTH)));
-            slide.setOnFinished(e -> sidebar.setMinWidth(target));
-            slide.play();
+            sidebarSlide.setOnFinished(e -> sidebar.setMinWidth(target));
+            sidebarSlide.play();
         } else {
             sidebar.setPrefWidth(target);
             sidebar.setMaxWidth(target);
@@ -155,76 +186,15 @@ final class ShellView extends BorderPane {
         brandName.setManaged(!value);
         brand.setAlignment(value ? Pos.CENTER : Pos.CENTER_LEFT);
         brand.setPadding(value ? new Insets(0, 0, 24, 0) : new Insets(0, 0, 24, 8));
-        for (Button button : buttons) {
-            button.setContentDisplay(value ? ContentDisplay.GRAPHIC_ONLY : ContentDisplay.LEFT);
-            button.setAlignment(value ? Pos.CENTER : Pos.CENTER_LEFT);
-        }
-        if (promoBlock != null) {
-            promoBlock.setVisible(!value);
-            promoBlock.setManaged(!value);
+        for (Label heading : groupLabels) {
+            heading.setVisible(!value);
+            heading.setManaged(!value);
         }
         try {
             Preferences.userNodeForPackage(ShellView.class).putBoolean(COLLAPSED_KEY, value);
         } catch (RuntimeException e) {
             // Not being able to remember the choice is not worth an error.
         }
-    }
-
-    /**
-     * Motivational block at the foot of the sidebar. The picture (sidebar/promo.png) already carries the
-     * slogan; without it the block shows the slogan as text over a violet gradient.
-     */
-    private Node buildPromo() {
-        StackPane promo = new StackPane();
-        promo.getStyleClass().add("nf-promo");
-        Image athlete = FxImages.load("/images/sidebar/promo.png");
-        if (athlete != null) {
-            ImageView photo = new ImageView(athlete);
-            photo.setPreserveRatio(true);
-            photo.setSmooth(true);
-            // The picture is placed by hand: it always shrinks to fit the free space (never cropped) and sits at
-            // the bottom of the block. When there is almost no room it is hidden.
-            photo.setManaged(false);
-            promo.setPrefHeight(athlete.getWidth() > 0 ? athlete.getHeight() * 228 / athlete.getWidth() : 270);
-            Runnable place = () -> {
-                double w = promo.getWidth();
-                double h = promo.getHeight();
-                // Too little room: hide the whole block, so no empty violet strip is left behind.
-                boolean fits = h >= MIN_PROMO_HEIGHT;
-                photo.setVisible(fits);
-                promo.setOpacity(fits ? 1 : 0);
-                photo.setFitWidth(w);
-                photo.setFitHeight(h);
-                Bounds box = photo.getBoundsInLocal();
-                photo.setLayoutX((w - box.getWidth()) / 2 - box.getMinX());
-                photo.setLayoutY(h - box.getHeight() - box.getMinY());
-            };
-            promo.widthProperty().addListener((o, a1, b1) -> place.run());
-            promo.heightProperty().addListener((o, a1, b1) -> place.run());
-            promo.getChildren().add(photo);
-        } else {
-            Label first = new Label("Entrena.");
-            first.getStyleClass().add("nf-promo-line1");
-            Label second = new Label("Mejora.");
-            second.getStyleClass().add("nf-promo-line1");
-            Label third = new Label("Supera tus límites.");
-            third.getStyleClass().add("nf-promo-line2");
-            VBox lines = new VBox(0, first, second, third);
-            lines.setAlignment(Pos.BOTTOM_LEFT);
-            lines.setPadding(new Insets(0, 0, 18, 18));
-            promo.setPrefHeight(230);
-            promo.getChildren().add(lines);
-            StackPane.setAlignment(lines, Pos.BOTTOM_LEFT);
-        }
-        // The block may shrink so the sidebar never forces the window taller than the screen.
-        promo.setMinHeight(0);
-        javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
-        clip.setArcWidth(40);
-        clip.setArcHeight(40);
-        clip.widthProperty().bind(promo.widthProperty());
-        clip.heightProperty().bind(promo.heightProperty());
-        promo.setClip(clip);
-        return promo;
     }
 
     private Node buildContent(Runnable onLogout) {
@@ -243,6 +213,7 @@ final class ShellView extends BorderPane {
 
         Button toggle = new Button();
         toggle.getStyleClass().add("nf-icon-button");
+        toggle.setAccessibleText("Cambiar tema");
         Runnable refreshIcon = () -> toggle.setGraphic(FxIcons.of(
                 theme.modeProperty().get() == FxTheme.Mode.DARK ? FxIcons.SUN : FxIcons.MOON, 20));
         refreshIcon.run();
@@ -259,25 +230,30 @@ final class ShellView extends BorderPane {
         avatar.setMaxSize(44, 44);
         Label userName = new Label(fullName);
         userName.getStyleClass().add("nf-user-name");
-        Label userRole = new Label(user == null ? "" : user.getRole().getLabel());
-        userRole.getStyleClass().add("nf-muted-small");
-        HBox chip = new HBox(12, avatar, new VBox(2, userName, userRole));
+        HBox chip = new HBox(10, avatar, userName);
+        if (user != null) {
+            Tooltip.install(chip, new Tooltip(user.getRole().getLabel()));
+        }
         chip.setAlignment(Pos.CENTER_LEFT);
 
         Button logout = new Button();
         logout.getStyleClass().add("nf-icon-button");
         logout.setGraphic(FxIcons.of(FxIcons.LOGOUT, 20));
+        logout.setAccessibleText("Cerrar sesión");
         logout.setOnAction(e -> onLogout.run());
 
         Button search = new Button();
         search.getStyleClass().add("nf-icon-button");
         search.setGraphic(FxIcons.of(FxIcons.SEARCH, 20));
+        search.setAccessibleText("Buscar");
         Tooltip.install(search, new Tooltip("Buscar (Ctrl+K)"));
         search.setOnAction(e -> palette.open());
 
-        HBox top = new HBox(16, menu, titles, search, toggle, chip, logout);
+        HBox top = toolbar;
+        top.getChildren().setAll(menu, titles, search, toggle, chip, logout);
+        top.getStyleClass().add("nf-toolbar");
         top.setAlignment(Pos.CENTER_LEFT);
-        top.setPadding(new Insets(24, 0, 20, 0));
+        top.setPadding(new Insets(10, 12, 10, 12));
 
         ScrollPane scroll = new ScrollPane(host);
         scroll.setFitToWidth(true);
@@ -285,8 +261,8 @@ final class ShellView extends BorderPane {
         scroll.getStyleClass().add("nf-scroll");
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        VBox content = new VBox(top, scroll);
-        content.setPadding(new Insets(0, 28, 0, 28));
+        VBox content = new VBox(12, top, scroll);
+        content.setPadding(new Insets(12, 18, 0, 18));
         return content;
     }
 
@@ -329,6 +305,7 @@ final class ShellView extends BorderPane {
             }
         }
         title.setText(item.title());
+        toolbar.pseudoClassStateChanged(DASHBOARD, item.id().equals("panel"));
         subtitle.setText(longDate(LocalDate.now()));
         item.onShow();
         Node screen = item.view();

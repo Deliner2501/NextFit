@@ -2,7 +2,6 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.model.Role;
 import com.nextfit.service.DashboardService;
-import com.nextfit.service.Session;
 import javafx.scene.Node;
 import java.util.List;
 
@@ -13,10 +12,9 @@ public final class DashboardModule implements FxModule {
 
     /**
      * @param service the source of the home screen numbers
-     * @param session the signed-in user, for the greeting
      */
-    public DashboardModule(DashboardService service, Session session) {
-        this.view = new DashboardView(service, session);
+    public DashboardModule(DashboardService service) {
+        this.view = new DashboardView(service);
     }
 
     @Override

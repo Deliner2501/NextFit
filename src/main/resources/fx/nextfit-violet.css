@@ -457,3 +457,204 @@
     -fx-background-radius: 20;
     -fx-border-color: transparent;
 }
+
+/* Dashboard and shared surfaces use the same dark violet base as the sign-in screen. */
+.root.dark.nf-bg {
+    -nf-bg: #0E091B;
+    -nf-surface: #170E29;
+    -nf-surface-alt: #241639;
+    -nf-card-end: #1B112F;
+    -nf-border: #503585;
+    -nf-muted: #CBBCE7;
+    -nf-violet-text: #D1B8FF;
+    -fx-background-color: -nf-bg;
+    -fx-background-image: none;
+}
+
+.nf-navigation {
+    -fx-background-color: -nf-surface;
+    -fx-border-color: transparent -nf-border transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+.root.dark .nf-navigation, .root.dark .nf-navigation > .viewport { -fx-background-color: #140C24; }
+.nf-nav-heading {
+    -fx-text-fill: -nf-violet-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 6 3 6;
+}
+.nf-sidebar .nf-nav {
+    -fx-min-height: 34;
+    -fx-pref-height: 34;
+    -fx-padding: 4 8;
+    -fx-font-size: 13px;
+}
+.nf-sidebar:collapsed .nf-nav {
+    -fx-alignment: CENTER;
+    -fx-content-display: GRAPHIC_ONLY;
+}
+.nf-navigation .nf-sidebar { -fx-border-width: 0; }
+.root.dark .nf-sidebar {
+    -fx-background-color: #140C24;
+    -fx-border-color: transparent -nf-border transparent transparent;
+}
+.root.dark .nf-sidebar .nf-nav .nf-icon { -fx-background-color: -nf-accent-text; }
+.root.dark .nf-sidebar .nf-nav.selected .nf-icon { -fx-background-color: #0E091B; }
+
+.root.dark.nf-bg .nf-card,
+.root.dark.nf-bg .nf-table,
+.root.dark.nf-bg .nf-list,
+.root.dark.nf-bg .nf-exercise-card,
+.root.dark.nf-bg .nf-access-card,
+.root.dark.nf-bg .nf-kpi-card,
+.root.dark.nf-bg .nf-card-feature {
+    -fx-background-color: -nf-card-end;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-effect: null;
+}
+.root.dark.nf-bg .nf-input:focused,
+.root.dark.nf-bg .nf-textarea:focused {
+    -fx-border-color: -nf-accent;
+}
+.root.dark.nf-bg .nf-primary:disabled {
+    -fx-background-color: -nf-surface-alt;
+    -fx-text-fill: -nf-muted;
+    -fx-opacity: 0.72;
+}
+
+.nf-toolbar:dashboard {
+    -fx-min-height: 110;
+    -fx-background-radius: 12;
+}
+.root.dark .nf-toolbar:dashboard {
+    -fx-background-image: url("../images/banners/dashboard-header.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-background-size: cover;
+    -fx-background-radius: 12;
+}
+
+.nf-dashboard .nf-kpi-card { -fx-min-height: 104; }
+.nf-dashboard .nf-kpi-card .nf-muted { -fx-text-fill: -nf-text; }
+.nf-dashboard .nf-kpi-card .nf-kpi-value-small {
+    -fx-font-size: 25px;
+    -fx-text-fill: -nf-accent-text;
+}
+.nf-dashboard .nf-kpi-card .nf-kpi-deco { -fx-opacity: 0; }
+.nf-dashboard .nf-kpi-card .nf-badge-violet .nf-icon { -fx-background-color: -nf-accent-text; }
+.nf-dashboard .nf-donut-total { -fx-text-fill: -nf-accent-text; }
+.root.dark .nf-dashboard .nf-card,
+.root.dark .nf-dashboard .nf-kpi-card { -fx-border-color: #8651D8; }
+.root.dark .nf-dashboard .default-color0.chart-series-area-line { -fx-stroke: -nf-accent; }
+.root.dark .nf-dashboard .default-color0.chart-bar { -fx-bar-fill: linear-gradient(to bottom, #9B5BFA, #7140D0); }
+.root.dark .nf-dashboard .chart-bar.nf-bar-today { -fx-bar-fill: linear-gradient(to bottom, #C4FF5A, #82CC25); }
+.root.dark .nf-dashboard .default-color2.chart-pie { -fx-pie-color: #50C5EC; }
+.root.dark .nf-dashboard .nf-dot-2 { -fx-background-color: #50C5EC; }
+.root.dark .nf-dashboard .default-color3.chart-pie { -fx-pie-color: #EF75AF; }
+.root.dark .nf-dashboard .nf-dot-3 { -fx-background-color: #EF75AF; }
+.root.dark .nf-dashboard .default-color4.chart-pie { -fx-pie-color: #BCA7E8; }
+.root.dark .nf-dashboard .nf-dot-4 { -fx-background-color: #BCA7E8; }
+.root.dark .nf-dashboard .nf-dashboard-members {
+    -fx-background-image: url("../images/banners/dashboard-cable.jpg");
+    -fx-background-position: right center;
+    -fx-background-size: 37% 100%;
+    -fx-background-repeat: no-repeat;
+}
+.root.dark .nf-dashboard .nf-dashboard-attendance {
+    -fx-background-image: url("../images/banners/dashboard-plates.jpg");
+    -fx-background-position: right center;
+    -fx-background-size: 34% 100%;
+    -fx-background-repeat: no-repeat;
+}
+
+.nf-dashboard .nf-kpi-content { -fx-padding: 12 14; -fx-spacing: 10; }
+.nf-dashboard .nf-kpi-content .nf-badge-violet {
+    -fx-min-width: 38;
+    -fx-max-width: 38;
+    -fx-min-height: 38;
+    -fx-max-height: 38;
+}
+.root.dark .nf-toolbar:dashboard .nf-title,
+.root.dark .nf-toolbar:dashboard .nf-muted {
+    -fx-effect: dropshadow(gaussian, #0E091B, 10, 0.8, 0, 1);
+}
+
+/* Status, numeric data and keyboard focus are shared across the workspace. */
+.nf-status-chip {
+    -fx-padding: 4 8;
+    -fx-background-color: -nf-violet-soft;
+    -fx-background-radius: 8;
+    -fx-text-fill: -nf-violet-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.nf-status-active { -fx-background-color: -nf-accent-soft; -fx-text-fill: -nf-success; }
+.nf-status-inactive { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-muted; }
+.nf-access-feedback, .nf-inline-result {
+    -fx-background-color: -nf-surface-alt;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-padding: 12 16;
+}
+.nf-access-feedback {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -nf-text;
+}
+.nf-access-feedback:entry { -fx-border-color: -nf-success; -fx-text-fill: -nf-success; }
+.nf-access-feedback:exit { -fx-border-color: -nf-violet-bright; -fx-text-fill: -nf-violet-text; }
+.nf-access-feedback:denied { -fx-border-color: -nf-danger; -fx-text-fill: -nf-danger; }
+.nf-inline-result.nf-result-ok { -fx-border-color: -nf-success; }
+.nf-inline-result.nf-result-warn { -fx-border-color: -nf-warning; }
+.nf-inline-result.nf-result-bad { -fx-border-color: -nf-danger; }
+.nf-chat-pending { -fx-background-color: -nf-violet-soft; -fx-text-fill: -nf-violet-text; }
+.nf-table .table-cell.nf-table-number,
+.nf-table .column-header.nf-table-number .label { -fx-alignment: CENTER_RIGHT; }
+.nf-table .placeholder .label, .nf-list .placeholder .label {
+    -fx-text-fill: -nf-muted;
+    -fx-padding: 10;
+    -fx-wrap-text: true;
+}
+.nf-exercise-card:focused {
+    -fx-border-color: -nf-accent;
+    -fx-border-width: 2;
+}
+.nf-occupancy-view .nf-tv-percent {
+    -fx-font-size: 34px;
+    -fx-text-fill: -nf-accent-text;
+}
+.nf-login-error {
+    -fx-background-color: rgba(255, 77, 79, 0.10);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255, 107, 109, 0.55);
+    -fx-border-radius: 10;
+    -fx-padding: 9 12;
+}
+
+/* Use stronger ink colors and solid surfaces where the light theme needs contrast. */
+.root.light .nf-navigation,
+.root.light .nf-navigation > .viewport { -fx-background-color: #F4EFFC; }
+.root.light .nf-navigation .nf-sidebar { -fx-background-color: transparent; }
+.root.light .nf-dashboard .nf-card,
+.root.light .nf-dashboard .nf-kpi-card {
+    -fx-background-color: #FCFAFF;
+    -fx-background-insets: 0;
+    -fx-border-color: #C6B5E5;
+    -fx-border-radius: 12;
+    -fx-effect: null;
+}
+.root.light .nf-dashboard .default-color0.chart-series-area-line { -fx-stroke: #6334A6; }
+.root.light .nf-dashboard .default-color0.chart-area-symbol {
+    -fx-background-color: #6334A6, #FCFAFF;
+    -fx-effect: null;
+}
+.root.light .nf-summary {
+    -fx-background-color: #F3ECFC;
+    -fx-border-color: #C6B5E5;
+    -fx-border-radius: 12;
+}
+.root.light .nf-access-feedback:denied { -fx-text-fill: #9F263C; }

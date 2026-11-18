@@ -87,7 +87,8 @@ final class DashboardCharts {
         chart.getData().add(series);
         chart.setLegendVisible(false);
         chart.setCreateSymbols(true);
-        chart.setMinHeight(230);
+        chart.setMinHeight(175);
+        chart.setPrefHeight(210);
         rise(points, targets, 250, 70);
         return chart;
     }
@@ -112,7 +113,8 @@ final class DashboardCharts {
         pie.setLegendVisible(false);
         pie.setStartAngle(90);
         pie.setPadding(Insets.EMPTY);
-        pie.setMinSize(190, 190);
+        pie.setMinSize(155, 155);
+        pie.setPrefSize(205, 205);
         pie.setAnimated(false);
 
         Circle hole = new Circle();
@@ -127,14 +129,14 @@ final class DashboardCharts {
         StackPane donut = new StackPane(pie, hole, center);
         hole.radiusProperty().bind(Bindings.min(donut.widthProperty(), donut.heightProperty()).multiply(0.5 * 0.58));
         hole.setMouseTransparent(true);
-        donut.setMinSize(190, 190);
+        donut.setMinSize(155, 155);
         HBox.setHgrow(donut, Priority.ALWAYS);
         FxMotion.spinIn(pie, 450);
         FxMotion.countUp(count, total, n -> Long.toString(n));
 
         VBox legend = new VBox(12);
         legend.setAlignment(Pos.CENTER_LEFT);
-        legend.setMinWidth(170);
+        legend.setMinWidth(150);
         for (int i = 0; i < names.length; i++) {
             Region dot = new Region();
             dot.getStyleClass().add("nf-dot-" + i);
@@ -194,7 +196,8 @@ final class DashboardCharts {
         chart.setLegendVisible(false);
         chart.setBarGap(6);
         chart.setCategoryGap(22);
-        chart.setMinHeight(250);
+        chart.setMinHeight(155);
+        chart.setPrefHeight(185);
         return chart;
     }
 
