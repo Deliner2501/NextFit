@@ -23,7 +23,7 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 |---|---|---|---|---|
 | File | Used in | Author | Source URL | License |
 |---|---|---|---|---|
-| `images/login/background.jpg` | Login background | Salman Sidheek | https://unsplash.com/es/fotos/interior-oscuro-del-gimnasio-con-maquinas-de-ejercicio-e-iluminacion-led-ER28K86K4Ho | Unsplash License |
+| `images/login/background-gym.jpg` | Login background | AI-generated image made for NextFit (neon gym with the project colors) | Own work, no third-party material |
 | `images/banners/dashboard.jpg` | Dashboard banner | Luis Reyes | https://unsplash.com/es/fotos/foto-en-escala-de-grises-de-mancuernas-mTorQ9gFfOg | Unsplash License |
 | `images/banners/members.jpg` | Members banner | Vitaly Gariev | https://unsplash.com/es/fotos/el-entrenador-discute-el-progreso-con-el-cliente-usando-una-tableta-en-el-gimnasio-5p8vhHUEEgY | Unsplash License |
 | `images/banners/billing.jpg` | Billing banner | Andrea Piacquadio | https://www.pexels.com/es-es/foto/contenido-femenino-atletico-en-la-recepcion-en-el-centro-deportivo-3757950/ | Pexels License |

@@ -65,6 +65,16 @@ short (under a second) and never block the user: the screen is usable from the f
 Gotchas: `Interpolator.SPLINE` only accepts control points between 0 and 1 (a bounce needs its own `Interpolator`); an
 exception while building the dashboard keeps the user on the login screen with no message.
 
+## The sign-in screen and the tables
+
+`LoginView` draws the brand, what the system does and the sign-in card over a photo. The screen has its own dark colors
+(`.nf-login` redefines the tokens, also in the light theme) because it sits on a photo, so it reads the same in both
+themes. The password field has an eye button that swaps it with a text field bound to the same text. `LoginView` only
+collects the credentials; checking them stays in `AuthService`.
+
+Every table (`.nf-table`) draws a thin line under each row with `-nf-border` and a taller row (54 px) with side padding in
+the cells, so the data does not look crowded. Empty rows below the data have no line.
+
 ## The shell
 
 `ShellView` holds the sidebar, the top bar and the screen of the chosen module. The sidebar can be collapsed to icons

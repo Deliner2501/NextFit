@@ -189,7 +189,10 @@ final class ShellView extends BorderPane {
             Runnable place = () -> {
                 double w = promo.getWidth();
                 double h = promo.getHeight();
-                photo.setVisible(h >= MIN_PROMO_HEIGHT);
+                // Too little room: hide the whole block, so no empty violet strip is left behind.
+                boolean fits = h >= MIN_PROMO_HEIGHT;
+                photo.setVisible(fits);
+                promo.setOpacity(fits ? 1 : 0);
                 photo.setFitWidth(w);
                 photo.setFitHeight(h);
                 Bounds box = photo.getBoundsInLocal();
