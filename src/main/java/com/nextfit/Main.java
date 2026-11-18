@@ -90,6 +90,7 @@ import com.nextfit.ai.tools.MyNextWorkoutTool;
 import com.nextfit.ai.tools.RevenueSummaryTool;
 import com.nextfit.exceptions.AiException;
 import com.nextfit.persistence.jdbc.DatabaseConfig;
+import com.nextfit.persistence.jdbc.JdbcStorage;
 import com.nextfit.ui.fx.AssistantModule;
 import java.util.Optional;
 
@@ -136,7 +137,7 @@ public final class Main {
         UserService userService = new UserService(users, new UserValidator(), auditService, actor);
 
         BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone(),
-                auditService, actor);
+                auditService, actor, storage instanceof JdbcStorage database ? database::exportBackup : null);
         try {
             backups.backupIfNoneToday(14);
         } catch (RuntimeException e) {

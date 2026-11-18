@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Clock;
@@ -27,11 +28,12 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import com.nextfit.model.AuditAction;
 import com.nextfit.service.audit.AuditLog;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Makes and restores backups of the data folder. A backup is one zip with the CSV files, the access key
- * and the exercise pictures. It knows nothing about screens: it only works with folders and files.
+ * Makes portable backups of the active data, the access key and locally stored pictures.
+ * Direct restoration is available in CSV mode.
  *
  * <p>Restoring is careful: it checks that the zip really is a NextFit backup, refuses any entry that
  * could write outside the data folder, and makes a safety backup of the current data first.
@@ -40,7 +42,8 @@ public class BackupService {
 
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
     private static final String PREFIX = "nextfit-respaldo-";
-    private static final Pattern NAME = Pattern.compile("nextfit-(?:respaldo|antes-de-restaurar)-(\\d{8}-\\d{6})\\.zip");
+    private static final String ORACLE_PREFIX = "nextfit-respaldo-oracle-";
+    private static final Pattern NAME = Pattern.compile("nextfit-(?:respaldo(?:-oracle)?|antes-de-restaurar)-(\\d{8}-\\d{6})\\.zip");
     private static final String SAFETY_PREFIX = "nextfit-antes-de-restaurar-";
     private static final Set<String> PICTURE_TYPES = Set.of("png", "jpg", "jpeg", "gif", "webp");
     private static final long MAX_RESTORE_BYTES = 1L << 30;
@@ -50,6 +53,7 @@ public class BackupService {
     private final Clock clock;
     private final AuditLog audit;
     private final Supplier<String> actor;
+    private final Consumer<Path> databaseExport;
     /**
      * Creates the service.
      *
@@ -71,11 +75,26 @@ public class BackupService {
      * @param actor     gives the sign-in name of whoever is acting now
      */
     public BackupService(Path dataDir, Path backupDir, Clock clock, AuditLog audit, Supplier<String> actor) {
+        this(dataDir, backupDir, clock, audit, actor, null);
+    }
+
+    /**
+     * Creates the service with an optional database export into a temporary directory.
+     * A null export uses the existing local CSV files.
+     */
+    public BackupService(Path dataDir, Path backupDir, Clock clock, AuditLog audit, Supplier<String> actor,
+                         Consumer<Path> databaseExport) {
         this.dataDir = dataDir.toAbsolutePath().normalize();
         this.backupDir = backupDir.toAbsolutePath().normalize();
         this.clock = clock;
         this.audit = audit;
         this.actor = actor;
+        this.databaseExport = databaseExport;
+    }
+
+    /** Whether direct restoration to the local CSV files is available in the active mode. */
+    public boolean canRestore() {
+        return databaseExport == null;
     }
 
     /**
@@ -93,7 +112,7 @@ public class BackupService {
      * @return the backup file
      */
     public Path createBackup() {
-        Path file = write(PREFIX);
+        Path file = write(canRestore() ? PREFIX : ORACLE_PREFIX);
         audit.record(actor.get(), AuditAction.BACKUP_CREATED, file.getFileName().toString());
         return file;
     }
@@ -107,7 +126,7 @@ public class BackupService {
      */
     public Path backupIfNoneToday(int keep) {
         LocalDate today = LocalDate.now(clock);
-        boolean done = list().stream().anyMatch(b -> b.name().startsWith(PREFIX) && b.createdAt().toLocalDate().equals(today));
+        boolean done = list().stream().anyMatch(b -> isAutomaticForCurrentMode(b) && b.createdAt().toLocalDate().equals(today));
         Path created = done ? null : createBackup();
         prune(keep);
         return created;
@@ -143,6 +162,9 @@ public class BackupService {
      * @throws InvalidDataException when the file is not a NextFit backup or has unsafe contents
      */
     public Path restore(Path zip) {
+        if (!canRestore()) {
+            throw new InvalidDataException("respaldo", "abre NextFit en modo CSV para restaurar este archivo");
+        }
         List<String> names = check(zip);
         Path safety = write(SAFETY_PREFIX);
         Path staging = null;
@@ -171,7 +193,8 @@ public class BackupService {
         }
         audit.record(actor.get(), AuditAction.BACKUP_RESTORED,
                 zip.getFileName() + " (copia anterior: " + safety.getFileName() + ")");
-        return safety;    }
+        return safety;
+    }
 
     // Validates the zip and returns the names of the entries to extract.
     private List<String> check(Path zip) {
@@ -222,34 +245,61 @@ public class BackupService {
         if (!lower.contains("/")) {
             return lower.endsWith(".csv") || lower.equals("access.key");
         }
-        return lower.startsWith("images/") && PICTURE_TYPES.contains(lower.substring(lower.lastIndexOf('.') + 1));
+        return (lower.startsWith("images/") || lower.startsWith("photos/"))
+                && PICTURE_TYPES.contains(lower.substring(lower.lastIndexOf('.') + 1));
     }
 
     private Path write(String prefix) {
         Path target = backupDir.resolve(prefix + LocalDateTime.now(clock).format(STAMP) + ".zip");
+        Path staging = null;
+        Path temporary = null;
         try {
             Files.createDirectories(backupDir);
-            Path tmp = target.resolveSibling(target.getFileName() + ".tmp");
-            try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(tmp));
-                 Stream<Path> files = Files.isDirectory(dataDir) ? Files.walk(dataDir) : Stream.empty()) {
-                for (Path file : (Iterable<Path>) files.filter(Files::isRegularFile).sorted()::iterator) {
-                    String name = dataDir.relativize(file).toString().replace('\\', '/');
-                    if (allowed(name)) {
-                        out.putNextEntry(new ZipEntry(name));
-                        Files.copy(file, out);
-                        out.closeEntry();
-                    }
-                }
+            if (databaseExport != null) {
+                staging = Files.createTempDirectory(backupDir, ".exportando-");
+                databaseExport.accept(staging);
             }
-            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+            temporary = Files.createTempFile(backupDir, ".respaldo-", ".tmp");
+            try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(temporary))) {
+                if (staging != null) {
+                    addFiles(out, staging, false);
+                }
+                addFiles(out, dataDir, staging != null);
+            }
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
             return target;
         } catch (IOException e) {
             throw new PersistenceException("No se pudo crear el respaldo", e);
+        } finally {
+            deleteTree(temporary);
+            deleteTree(staging);
         }
     }
 
+    private void addFiles(ZipOutputStream out, Path directory, boolean onlyPictures) throws IOException {
+        if (!Files.isDirectory(directory)) {
+            return;
+        }
+        try (Stream<Path> files = Files.walk(directory)) {
+            for (Path file : (Iterable<Path>) files.filter(path -> Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS))
+                    .sorted()::iterator) {
+                String name = directory.relativize(file).toString().replace('\\', '/');
+                if (allowed(name) && (!onlyPictures || name.contains("/"))) {
+                    out.putNextEntry(new ZipEntry(name));
+                    Files.copy(file, out);
+                    out.closeEntry();
+                }
+            }
+        }
+    }
+
+    private boolean isAutomaticForCurrentMode(BackupInfo backup) {
+        boolean oracle = backup.name().startsWith(ORACLE_PREFIX);
+        return canRestore() ? backup.name().startsWith(PREFIX) && !oracle : oracle;
+    }
+
     private void prune(int keep) {
-        List<BackupInfo> automatic = list().stream().filter(b -> b.name().startsWith(PREFIX)).toList();
+        List<BackupInfo> automatic = list().stream().filter(b -> isAutomaticForCurrentMode(b)).toList();
         for (int i = keep; i < automatic.size(); i++) {
             try {
                 Files.deleteIfExists(automatic.get(i).file());

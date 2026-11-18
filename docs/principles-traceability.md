@@ -390,6 +390,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | OCP and polymorphism | `CsvStorage` and `JdbcStorage` implement `Storage` | A new kind of storage is a new class that implements `Storage`; the services, the screens and `Main` do not change. |
 | Liskov substitution | `JdbcMemberRepository`, `JdbcRoutineRepository` and the other repositories | Each one keeps the contract of its interface: `save` with id 0 assigns an identifier, `findBy...` returns empty or an empty list, so it can replace the CSV one. |
 | Data access pattern (DAO) | `Jdbc...Repository` | Each class is the only one that knows the SQL of its table and turns rows into objects and objects into rows. |
+| SRP | `JdbcAccessKeyStore`, `JdbcCsvBackup`, `CsvSnapshot`, `BackupService` | Key initialization, database snapshot, CSV formatting and ZIP management each have a dedicated owner. |
 | SRP | `DatabaseConfig`, `OracleConnectionProvider`, `PooledConnectionSource`, `JdbcSupport`, `StorageSetup` | One reason to change each: the settings file, how to reach Oracle, how connections are reused, the shared SQL helpers, and the choice of storage. |
 | GRASP Pure Fabrication | `JdbcSupport`, `PooledConnectionSource`, `StorageSetup` | They are not gym concepts; they exist so the repositories stay short and the application keeps low coupling. |
 | GRASP Low coupling | `ConnectionSource` and the `Jdbc...Repository` classes | The repositories receive a one-method contract that gives a connection; they do not know Oracle, the pool or the settings. |
