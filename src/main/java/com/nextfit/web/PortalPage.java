@@ -68,8 +68,8 @@ public final class PortalPage {
                                 Optional<ProgressReport> report) {
         StringBuilder body = new StringBuilder();
         header(body, summary.member(), token);
-        membership(body, summary);
         workout(body, summary);
+        membership(body, summary);
         report.ifPresent(data -> upcoming(body, data));
         bestTimes(body, summary);
         if (chatEnabled) {
@@ -294,7 +294,7 @@ public final class PortalPage {
     private static final String STYLE = """
             *{box-sizing:border-box}
             body{margin:0;min-height:100vh;padding:22px 16px 34px;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-            background:radial-gradient(120% 60% at 50% -10%,#5A22B8 0%,rgba(90,34,184,0) 60%),#0B0A12}
+            background:radial-gradient(120% 60% at 50% -10%,#40246E 0%,rgba(64,36,110,0) 60%),#0E091B}
             .wrap{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
             .brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
             .brand img{width:40px;height:40px;border-radius:11px}
@@ -307,8 +307,9 @@ public final class PortalPage {
             h1{font-size:28px;margin:0}
             h2{font-size:13px;margin:0 0 12px;letter-spacing:2px;text-transform:uppercase;color:#A7F626}
             h3{font-size:14px;margin:18px 0 10px;color:#E4DDF5}
-            .card{padding:20px;border-radius:24px;background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(255,255,255,.04));
-            border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 44px rgba(0,0,0,.4)}
+            .card{padding:20px;border-radius:18px;background:#1B112F;
+            border:1px solid #6746A6;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+            a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #A7F626;outline-offset:3px}
             .center{text-align:center}
             .big{font-size:22px;font-weight:700;margin:0 0 6px}
             .muted{margin:0;color:#B9AFD6;font-size:15px;line-height:1.4}
