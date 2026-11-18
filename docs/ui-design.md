@@ -5,7 +5,7 @@ How the JavaFX interface of NextFit is designed, and how to build a screen that 
 
 ## Look
 
-Violet and lime, in two themes (dark and light). The base theme is AtlantaFX; on top of it:
+NextFit uses a near-black violet base, brighter violet accents and lime for key actions and figures. Both dark and light themes use AtlantaFX as their base:
 
 | File | Content |
 |---|---|
@@ -28,9 +28,7 @@ Two rules learned the hard way:
 
 ### Backgrounds and images
 
-`images/bg/bg-dark.jpg` and `bg-light.jpg` are the window backgrounds (`-fx-background-size: cover`). The logo is in
-`images/logo/` (SVG and PNG 32 to 512). The athlete of the menu is `images/sidebar/promo.png`, a PNG with feathered edges
-so it melts into the sidebar.
+The dark workspace uses a solid near-black violet background. The Panel header uses the sign-in gym photo, with two smaller equipment crops in the membership and attendance cards. Charts use solid surfaces to keep their axes and labels readable. The light theme uses `images/bg/bg-light.jpg`. The logo is in `images/logo/` (SVG and PNG 32 to 512).
 
 ## Building blocks
 
@@ -56,7 +54,6 @@ JavaFX CSS cannot animate, so all motion is in `FxMotion`:
 | `popIn(node, delay)` | A badge grows with a small bounce. |
 | `spinIn(node, delay)` | A round chart appears spinning. |
 | `hoverLift(node, scale)` | A card grows slightly under the mouse. |
-| `nudge(node, dx)` | A menu button moves a few pixels when hovered. |
 | `installPressEffect(scene)` | Every primary or secondary button shrinks a little when pressed (installed once in `FxApp`). |
 
 Charts rise by changing their data with a `Timeline` (line chart) or by scaling each bar (bar chart). Keep the motion
@@ -75,11 +72,18 @@ collects the credentials; checking them stays in `AuthService`.
 Every table (`.nf-table`) draws a thin line under each row with `-nf-border` and a taller row (54 px) with side padding in
 the cells, so the data does not look crowded. Empty rows below the data have no line.
 
+Use `FxTables.alignNumbers(column)` for amounts and counts. It aligns the header and the values to the right. Keep visible
+text on status badges so the meaning is clear without relying on color. `AccessFeedback` provides the same entry, exit
+and denial treatment for the face and password screens.
+
+The member file keeps its identity card above the tabs. Membership sales place the recipient, total and charge action
+in a separate summary beside the form when there is room. In narrower windows the summary follows the form.
+
 ## The shell
 
 `ShellView` holds the sidebar, the top bar and the screen of the chosen module. The sidebar can be collapsed to icons
 (button at the left of the title); the choice is remembered with `java.util.prefs`. It builds its buttons from the list
-of modules, hiding those that `allowedFor(role)` refuses.
+of modules, hiding those that `allowedFor(role)` refuses. The sidebar groups modules by operation, monitoring and administration and scrolls independently in shorter windows. The Panel switches to two indicator columns and stacked charts when the content area is narrow.
 
 ## Add a new screen
 

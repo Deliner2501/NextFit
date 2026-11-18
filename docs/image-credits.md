@@ -23,7 +23,10 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 |---|---|---|---|---|
 | File | Used in | Author | Source URL | License |
 |---|---|---|---|---|
-| `images/login/background-gym.jpg` | Login background | AI-generated image made for NextFit (neon gym with the project colors) | Own work, no third-party material |
+| `images/login/background-gym.jpg` | Login background | AI-generated image made for NextFit (neon gym with the project colors) | — | Original generated image |
+| `images/banners/dashboard-header.jpg` | Dashboard header | Crop of the NextFit login background | — | Original generated image |
+| `images/banners/dashboard-cable.jpg` | Dashboard active memberships card | AI-generated gym equipment image made for NextFit | — | Original generated image |
+| `images/banners/dashboard-plates.jpg` | Dashboard attendance card | AI-generated gym equipment image made for NextFit | — | Original generated image |
 | `images/banners/dashboard.jpg` | Dashboard banner | Luis Reyes | https://unsplash.com/es/fotos/foto-en-escala-de-grises-de-mancuernas-mTorQ9gFfOg | Unsplash License |
 | `images/banners/members.jpg` | Members banner | Vitaly Gariev | https://unsplash.com/es/fotos/el-entrenador-discute-el-progreso-con-el-cliente-usando-una-tableta-en-el-gimnasio-5p8vhHUEEgY | Unsplash License |
 | `images/banners/billing.jpg` | Billing banner | Andrea Piacquadio | https://www.pexels.com/es-es/foto/contenido-femenino-atletico-en-la-recepcion-en-el-centro-deportivo-3757950/ | Pexels License |
