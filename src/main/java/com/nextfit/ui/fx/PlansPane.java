@@ -68,6 +68,7 @@ final class PlansPane extends VBox {
         TableColumn<MembershipPlan, String> name = FxTables.column("Plan", 200, MembershipPlan::getName);
         TableColumn<MembershipPlan, String> duration = FxTables.column("Duración", 110, p -> Formats.days(p.getDurationDays()));
         TableColumn<MembershipPlan, String> price = FxTables.column("Precio", 140, p -> Formats.money(p.getPrice()));
+        FxTables.alignNumbers(price);
         TableColumn<MembershipPlan, String> description = FxTables.column("Descripción", 360, MembershipPlan::getDescription);
         TableColumn<MembershipPlan, String> state = FxTables.column("Estado", 130, p -> p.isActive() ? ON_SALE : "Retirado");
         FxTables.colorize(state, value -> ON_SALE.equals(value) ? "nf-state-on" : "nf-state-off");

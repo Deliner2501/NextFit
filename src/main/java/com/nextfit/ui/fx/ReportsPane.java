@@ -186,7 +186,7 @@ final class ReportsPane extends VBox {
         // Without a minimum, the table may squeeze the columns to nothing and hide their title and values.
         column.setMinWidth(header.equals("Fecha") ? width : Math.min(width, 120));
         if (type != ColumnType.TEXT) {
-            column.setStyle("-fx-alignment: CENTER-RIGHT;");
+            FxTables.alignNumbers(column);
         }
         return column;
     }

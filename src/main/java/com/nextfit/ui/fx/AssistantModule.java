@@ -4,6 +4,8 @@ import com.nextfit.ai.AssistantChat;
 import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.Role;
 import javafx.concurrent.Task;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -39,7 +41,7 @@ public final class AssistantModule implements FxModule {
     private final TextField input = new TextField();
     private final Button send = new Button("Enviar");
     private final VBox view = new VBox(16);
-    private boolean busy;
+    private final BooleanProperty busy = new SimpleBooleanProperty(false);
 
     /**
      * @param chat the chat of the assistant, or empty when the assistant is off
@@ -99,6 +101,7 @@ public final class AssistantModule implements FxModule {
         if (chat.isPresent()) {
             Button restart = new Button("Nueva conversación");
             restart.getStyleClass().add("nf-secondary");
+            restart.disableProperty().bind(busy);
             restart.setOnAction(e -> startOver());
             header.getChildren().add(restart);
         }
@@ -122,13 +125,18 @@ public final class AssistantModule implements FxModule {
         scroll.setFitToWidth(true);
         scroll.getStyleClass().add("nf-scroll");
         messages.setPadding(new Insets(4));
-        messages.heightProperty().addListener((obs, was, now) -> scroll.setVvalue(1.0));
+        messages.heightProperty().addListener((obs, was, now) -> {
+            if (scroll.getVvalue() >= 0.95) {
+                scroll.setVvalue(1.0);
+            }
+        });
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
         FlowPane examples = new FlowPane(8, 8);
         for (String example : EXAMPLES) {
             Button button = new Button(example);
             button.getStyleClass().add("nf-secondary");
+            button.disableProperty().bind(busy);
             button.setOnAction(e -> ask(example));
             examples.getChildren().add(button);
         }
@@ -139,6 +147,8 @@ public final class AssistantModule implements FxModule {
         input.setOnAction(e -> ask(input.getText()));
         HBox.setHgrow(input, Priority.ALWAYS);
         send.getStyleClass().add("nf-primary");
+        send.disableProperty().bind(busy.or(input.textProperty().isEmpty()));
+        input.disableProperty().bind(busy);
         send.setPrefHeight(44);
         send.setOnAction(e -> ask(input.getText()));
         HBox inputRow = new HBox(10, input, send);
@@ -153,14 +163,14 @@ public final class AssistantModule implements FxModule {
 
     private void ask(String text) {
         String question = text == null ? "" : text.strip();
-        if (question.isEmpty() || busy) {
+        if (question.isEmpty() || busy.get()) {
             return;
         }
         input.clear();
         addBubble(question, "nf-chat-user", true);
-        Node thinking = addBubble("Pensando…", "nf-chat-assistant", false);
+        Node thinking = addBubble("Preparando respuesta…", "nf-chat-pending", false);
         setBusy(true);
-        // EXPLICACIÓN: la consulta a internet tarda segundos; se hace en otro hilo para no congelar la ventana
+        // Run the request off the JavaFX thread so the conversation stays responsive.
         Task<String> task = new Task<>() {
             @Override
             protected String call() {
@@ -191,9 +201,7 @@ public final class AssistantModule implements FxModule {
     }
 
     private void setBusy(boolean value) {
-        busy = value;
-        input.setDisable(value);
-        send.setDisable(value);
+        busy.set(value);
         if (!value) {
             input.requestFocus();
         }

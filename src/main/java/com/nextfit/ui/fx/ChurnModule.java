@@ -69,7 +69,7 @@ public final class ChurnModule implements FxModule {
 
     @Override
     public String title() {
-        return "Abandono";
+        return "Riesgo de abandono";
     }
 
     @Override

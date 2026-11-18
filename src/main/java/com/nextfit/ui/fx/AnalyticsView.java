@@ -143,9 +143,25 @@ final class AnalyticsView extends VBox {
         Label caption = new Label(map.total() == 0
                 ? "Todavía no hay entradas para dibujar. Los socios registran sus visitas con el rostro o con su contraseña."
                 : "Entradas por día y hora (últimas " + AnalyticsService.HEATMAP_WEEKS
-                        + " semanas). Violeta es poca gente y verde es mucha.");
+                        + " semanas).");
         caption.getStyleClass().add("nf-muted-small");
-        return card("Horas de mayor afluencia", new VBox(12, caption, grid));
+        caption.setWrapText(true);
+        HBox legend = new HBox(14, legendItem("Sin entradas", "nf-heat-empty"),
+                legendItem("Baja afluencia", "nf-heat-low"), legendItem("Alta afluencia", "nf-heat-cell"));
+        return card("Horas de mayor afluencia", new VBox(12, caption, grid, legend));
+    }
+
+    /** Pairs a heat-map color with its meaning. */
+    private static HBox legendItem(String text, String style) {
+        Region marker = new Region();
+        marker.setMinSize(13, 13);
+        marker.setMaxSize(13, 13);
+        marker.getStyleClass().add(style);
+        Label label = new Label(text);
+        label.getStyleClass().add("nf-muted-small");
+        HBox row = new HBox(6, marker, label);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
     }
 
     private static Region cell(long count, long max, DayOfWeek day, int hour) {

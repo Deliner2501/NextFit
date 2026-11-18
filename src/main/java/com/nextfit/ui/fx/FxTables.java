@@ -36,6 +36,15 @@ final class FxTables {
     }
 
     /**
+     * Aligns amounts and quantities so they can be compared down the column.
+     *
+     * @param column the numeric column
+     */
+    static void alignNumbers(TableColumn<?, ?> column) {
+        column.getStyleClass().add("nf-table-number");
+    }
+
+    /**
      * Colors the text of a column according to its content.
      *
      * @param column  the column to color

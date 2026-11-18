@@ -8,6 +8,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
+import javafx.scene.AccessibleRole;
+import javafx.scene.input.KeyCode;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -138,7 +140,7 @@ final class ExercisesPane extends VBox {
         name.setMaxHeight(44);
         Label detail = new Label(exercise.getMuscleGroup().getLabel() + " · "
                 + exercise.getDifficulty().getLabel());
-        detail.getStyleClass().add("nf-muted");
+        detail.getStyleClass().add("nf-status-chip");
         VBox text = new VBox(4, name, detail);
         text.setPadding(new Insets(12));
 
@@ -148,7 +150,16 @@ final class ExercisesPane extends VBox {
         card.setPrefSize(CARD_WIDTH, CARD_HEIGHT);
         card.setMaxSize(CARD_WIDTH, CARD_HEIGHT);
         card.setOnMouseClicked(e -> openForm(exercise));
-        // EXPLICACIÓN: el recorte redondea las esquinas también en la foto.
+        card.setAccessibleRole(AccessibleRole.BUTTON);
+        card.setAccessibleText(exercise.getName() + ", " + detail.getText());
+        card.setFocusTraversable(true);
+        card.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.SPACE) {
+                openForm(exercise);
+                e.consume();
+            }
+        });
+        // Clip the photo as well as the card to the rounded corners.
         Rectangle clip = new Rectangle(CARD_WIDTH, CARD_HEIGHT);
         clip.setArcWidth(CARD_ARC);
         clip.setArcHeight(CARD_ARC);
