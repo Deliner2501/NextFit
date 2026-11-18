@@ -46,7 +46,7 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 > This repository is the course project of *Programación III*.
 >
-> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, entry with the face (camera, offline) or with a password, analytics, TV screen, reports and cash close, alerts, users, audit log and backup. The last step will be moving the storage from CSV files to a database.
+> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, entry with the face (camera, offline) or with a password, analytics, TV screen, reports and cash close, alerts, users, audit log and backup. NextFit supports Oracle Cloud and local CSV storage.
 
 ---
 
@@ -103,8 +103,8 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - Reports of payments, attendance and members, exportable to **PDF** and **Excel** with the NextFit branding ([details](docs/reports-cash-close.md)).
 
 ### 💾 Backup
-- A backup of the data (CSV files, access key and exercise photos) is made automatically once a day and the last 14 are kept.
-- The administrator can create one, restore one (a safety copy is made first) or save a copy elsewhere ([details](docs/backup-restore.md)).
+- NextFit makes a daily ZIP of the active data, carnet signing key and local pictures. It keeps the last 14 backups per storage mode.
+- The administrator can create or save a copy in either mode and restore files in CSV mode ([backup and restore guide](docs/backup-restore.md)).
 
 ### 🎨 Interface
 - Dark and light themes with depth: gradient light borders, glows and background images.
@@ -378,7 +378,11 @@ To make the application look alive from the very first run, `DemoData` fills an 
 
 ## Data storage
 
-Everything is stored as plain CSV files inside `data/`:
+NextFit can use a shared Oracle Cloud database or the local CSV files in `data/`. To use Oracle, follow the [team setup guide](docs/oracle-setup.md). If Oracle is disabled or unreachable at startup, the app opens with the local CSV data. That local copy is independent of later changes made in Oracle.
+
+Oracle shares the carnet signing key and caches it as `data/access.key` for offline use. Member photos and exercise images remain local. Copy the files privately with the same relative paths if the team needs them on more than one computer.
+
+The CSV format is also used in the ZIP exports from Oracle:
 
 | File | Content |
 |---|---|
@@ -396,11 +400,13 @@ Everything is stored as plain CSV files inside `data/`:
 | `assignments.csv` | Routines assigned to members |
 | `training_sessions.csv` | Training sessions log |
 | `audit.csv` | Audit log (who did what and when) |
-| `access.key` | Secret key of the carnet QR codes (never committed; deleting it invalidates the printed carnets) |
+| `member_credentials.csv` | Hashes of passwords for member self-access |
+| `face_templates.csv` | Numerical face templates |
+| `access.key` | Secret signing key for carnet QR codes |
 | `images/exercises/` | Pictures of the exercises |
 | `photos/` | Photos uploaded for members and trainers |
 
-Backups of this folder are kept in `backups/` (see [`docs/backup-restore.md`](docs/backup-restore.md)).
+Exports and local backups are kept in `backups/` (see [`docs/backup-restore.md`](docs/backup-restore.md)).
 
 Relations between entities are stored as identifiers (for example a subscription keeps the `memberId` and the `planId`). A shared `CsvStore` handles reading and writing, and one `CsvMapper` per entity converts between rows and objects.
 
