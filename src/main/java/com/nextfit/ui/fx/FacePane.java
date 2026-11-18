@@ -58,7 +58,7 @@ final class FacePane extends HBox {
 
     private final ImageView preview = new ImageView();
     private final Label hint = new Label("La cámara está apagada");
-    private final Label outcome = new Label();
+    private final AccessFeedback outcome = new AccessFeedback();
     private final Button entryButton = new Button("Iniciar entrada con rostro");
     private final Button enrollButton = new Button("Registrar rostro");
     private final Button removeButton = new Button("Eliminar rostro");
@@ -128,8 +128,6 @@ final class FacePane extends HBox {
 
         hint.getStyleClass().add("nf-access-message");
         hint.setWrapText(true);
-        outcome.getStyleClass().add("nf-access-verdict");
-        outcome.setWrapText(true);
 
         entryButton.getStyleClass().add("nf-primary");
         entryButton.setOnAction(e -> {
@@ -162,7 +160,7 @@ final class FacePane extends HBox {
 
     /** Shows a result and removes it after a few seconds. */
     private void say(String text) {
-        outcome.setText(text);
+        outcome.showMessage(text);
         clearOutcome.stop();
         if (!text.isEmpty()) {
             clearOutcome.playFromStart();
@@ -220,11 +218,8 @@ final class FacePane extends HBox {
     }
 
     private void showResult(AccessResult result) {
-        say(switch (result.outcome()) {
-            case ENTRY -> "ENTRADA: " + result.member().getFullName();
-            case EXIT -> "SALIDA: " + result.member().getFullName();
-            case DENIED -> "DENEGADO: " + result.message();
-        });
+        outcome.showResult(result);
+        clearOutcome.playFromStart();
     }
 
     // ---------------------------------------------------------------- enrollment

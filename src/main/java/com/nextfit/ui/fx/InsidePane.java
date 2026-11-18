@@ -6,10 +6,12 @@ import com.nextfit.model.Member;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.MemberService;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
@@ -64,7 +66,9 @@ final class InsidePane extends VBox {
                         + record.getCheckIn().format(TIME));
                 since.getStyleClass().add("nf-muted-small");
                 setText(null);
-                setGraphic(new VBox(2, name, since));
+                HBox identity = new HBox(10, MemberAvatar.of(member, 36), new VBox(2, name, since));
+                identity.setAlignment(Pos.CENTER_LEFT);
+                setGraphic(identity);
             }
         });
         inside.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> forceExit.setDisable(now == null));
