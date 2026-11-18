@@ -23,6 +23,7 @@ import java.nio.file.Path;
 /** The storage of the Oracle database: every repository works on the same connections. */
 public final class JdbcStorage implements Storage {
 
+    private final ConnectionSource connections;
     private final JdbcAccessKeyStore accessKeys;
     private final UserRepository users;
     private final MemberRepository members;
@@ -47,6 +48,7 @@ public final class JdbcStorage implements Storage {
      * @param connections where the connections come from
      */
     public JdbcStorage(ConnectionSource connections) {
+        this.connections = connections;
         accessKeys = new JdbcAccessKeyStore(connections);
         users = new JdbcUserRepository(connections);
         members = new JdbcMemberRepository(connections);
@@ -149,6 +151,11 @@ public final class JdbcStorage implements Storage {
     @Override
     public byte[] accessKey(Path localFile) {
         return accessKeys.loadOrInitialize(localFile);
+    }
+
+    /** Exports the database to CSV files in the given staging directory. */
+    public void exportBackup(Path directory) {
+        JdbcCsvBackup.export(connections, directory);
     }
 
     @Override

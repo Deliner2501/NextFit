@@ -94,6 +94,8 @@ public final class BackupModule implements FxModule {
 
         Button restore = secondary("Restaurar seleccionado", this::restoreSelected);
         Button fromFile = secondary("Restaurar desde archivo", this::restoreFromFile);
+        restore.setDisable(!service.canRestore());
+        fromFile.setDisable(!service.canRestore());
         Button copy = secondary("Guardar copia en…", this::saveCopy);
         Button create = new Button("+ Crear respaldo ahora");
         create.getStyleClass().add("nf-primary-small");
@@ -105,10 +107,12 @@ public final class BackupModule implements FxModule {
     }
 
     private Node buildExplanation() {
-        Label text = new Label("Un respaldo guarda los socios, pagos, rutinas, usuarios y las fotos de los ejercicios. "
-                + "NextFit hace uno cada día al abrirse y conserva los últimos 14. Antes de restaurar, guarda una copia de "
-                + "lo que hay ahora, así que siempre se puede volver atrás.\nCarpeta de respaldos: "
-                + service.backupDir());
+        String details = service.canRestore()
+                ? "Antes de restaurar, NextFit guarda una copia de los datos locales."
+                : "Este respaldo exporta los datos de Oracle. Para restaurar los archivos, inicia NextFit en modo CSV.";
+        Label text = new Label("Un respaldo guarda los datos y las fotos locales. "
+                + "NextFit hace uno cada día al abrirse y conserva los últimos 14 de este modo. "
+                + details + "\nCarpeta de respaldos: " + service.backupDir());
         text.setWrapText(true);
         text.getStyleClass().add("nf-muted");
         VBox card = new VBox(text);

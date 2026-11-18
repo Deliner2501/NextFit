@@ -4,15 +4,29 @@ import com.nextfit.model.AuditAction;
 import com.nextfit.model.AuditEntry;
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
+import com.nextfit.exceptions.InvalidDataException;
+import com.nextfit.exceptions.PersistenceException;
+import com.nextfit.persistence.CsvStorage;
+import com.nextfit.service.BackupService;
+import com.nextfit.service.audit.AuditLog;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.zip.ZipFile;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** Users, the audit log and the migration between two storages, all on in-memory H2 databases. */
@@ -116,6 +130,54 @@ class JdbcUsersAuditAndMigrationTest {
         assertEquals(1, members.written());
         assertEquals(1, members.errors().size());
         assertTrue(!members.isComplete());
+    }
+
+    @Test
+    void exportsOracleDataAndLocalPhotosToARecoverableArchive(@TempDir Path directory) throws IOException {
+        JdbcStorage oracle = new JdbcStorage(new PooledConnectionSource(source));
+        populate(oracle);
+        oracle.users().save(new User(73, "extra", "Otro usuario", "hash-extra", Role.values()[0], true));
+        Path data = directory.resolve("data");
+        Path backups = directory.resolve("backups");
+        byte[] key = oracle.accessKey(data.resolve("access.key"));
+        Path photos = Files.createDirectories(data.resolve("photos"));
+        Files.writeString(photos.resolve("100.png"), "foto local");
+        new CsvStorage(data).users().save(new User(0, "old", "Usuario local", "hash-local", Role.values()[0], true));
+
+        BackupService local = new BackupService(data, backups, Clock.systemUTC());
+        local.createBackup();
+        BackupService online = new BackupService(data, backups, Clock.systemUTC(), AuditLog.NONE,
+                () -> "", oracle::exportBackup);
+
+        Path archive = online.backupIfNoneToday(14);
+        assertNotNull(archive);
+        assertTrue(archive.getFileName().toString().startsWith("nextfit-respaldo-oracle-"));
+        assertThrows(InvalidDataException.class, () -> online.restore(archive));
+        try (ZipFile zip = new ZipFile(archive.toFile())) {
+            assertNotNull(zip.getEntry("photos/100.png"));
+        }
+
+        Path recovered = directory.resolve("recovered");
+        new BackupService(recovered, backups, Clock.systemUTC()).restore(archive);
+        CsvStorage restored = new CsvStorage(recovered);
+        assertEquals(DataMigration.count(oracle), DataMigration.count(restored));
+        assertEquals(73, restored.users().findByUsername("extra").orElseThrow().getId());
+        assertEquals("hash-de-ana", restored.memberCredentials().find(1).orElseThrow().passwordHash());
+        assertArrayEquals(key, Files.readAllBytes(recovered.resolve("access.key")));
+        assertEquals("foto local", Files.readString(recovered.resolve("photos/100.png")));
+    }
+
+    @Test
+    void failedExportLeavesNoArchiveAndCleansItsTemporaryFiles(@TempDir Path directory) throws IOException {
+        Path backups = directory.resolve("backups");
+        BackupService online = new BackupService(directory.resolve("data"), backups, Clock.systemUTC(),
+                AuditLog.NONE, () -> "", new JdbcStorage(source)::exportBackup);
+
+        assertThrows(PersistenceException.class, online::createBackup);
+
+        try (var files = Files.list(backups)) {
+            assertEquals(0, files.count());
+        }
     }
 
     /** Two members with a plan, a payment, a routine, an assignment, a password, faces and an audit entry. */

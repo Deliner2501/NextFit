@@ -52,7 +52,7 @@ final class JdbcAccessKeyStore {
         }
     }
 
-    private static byte[] read(Connection connection) throws SQLException {
+    static byte[] read(Connection connection) throws SQLException {
         try (PreparedStatement select = connection.prepareStatement(
                      "SELECT access_key FROM access_settings WHERE id = 1");
              ResultSet rows = select.executeQuery()) {

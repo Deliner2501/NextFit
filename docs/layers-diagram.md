@@ -7,7 +7,7 @@ NextFit follows a layered architecture. Each arrow means "depends on" (it comes 
 ```mermaid
 graph TD
     subgraph ROOT["com.nextfit - Composition root"]
-        R["<b>nextfit</b><br/>DemoData<br/>Main<br/>TrainingModule"]
+        R["<b>nextfit</b><br/>DemoData<br/>Main<br/>StorageSetup<br/>TrainingModule"]
     end
 
     subgraph PRES["Presentation layer (JavaFX + AtlantaFX)"]
@@ -21,7 +21,8 @@ graph TD
         VA["<b>validation</b><br/>ExerciseValidator<br/>HealthValidator<br/>MemberValidator<br/>MembershipPlanValidator<br/>PaymentValidator<br/>RoutineValidator<br/>TrainerValidator<br/>TrainingSessionValidator<br/>UserValidator"]
     end
 
-    subgraph DATA["Persistence layer (CSV files)"]
+    subgraph DATA["Persistence layer (CSV and Oracle)"]
+        JD["<b>persistence.jdbc</b><br/>JdbcStorage<br/>JDBC repositories<br/>JdbcAccessKeyStore<br/>JdbcCsvBackup"]
         PE["<b>persistence</b><br/>AssignmentCsvMapper<br/>AssignmentRepository<br/>AttendanceCsvMapper<br/>AttendanceRepository<br/>CsvAssignmentRepository<br/>CsvAttendanceRepository<br/>CsvExerciseRepository<br/>CsvHealthProfileRepository<br/>CsvMeasurementRepository<br/>CsvMemberRepository<br/>CsvMembershipPlanRepository<br/>CsvPaymentRepository<br/>CsvRoutineRepository<br/>CsvStore<br/>CsvSubscriptionRepository<br/>CsvTrainerRepository<br/>CsvTrainingSessionRepository<br/>CsvUserRepository<br/>ExerciseCsvMapper<br/>ExerciseRepository<br/>HealthProfileCsvMapper<br/>HealthProfileRepository<br/>MeasurementCsvMapper<br/>MeasurementRepository<br/>MemberCsvMapper<br/>MemberRepository<br/>MembershipPlanCsvMapper<br/>MembershipPlanRepository<br/>PaymentCsvMapper<br/>PaymentRepository<br/>RoutineCsvMapper<br/>RoutineRepository<br/>SubscriptionCsvMapper<br/>SubscriptionRepository<br/>TrainerCsvMapper<br/>TrainerRepository<br/>TrainingSessionCsvMapper<br/>TrainingSessionRepository<br/>UserCsvMapper<br/>UserRepository"]
     end
 
@@ -37,6 +38,8 @@ graph TD
     R --> UIF
     R --> SV
     R --> PE
+    R --> JD
+    JD --> PE
     R --> VA
 
     UIF --> UI

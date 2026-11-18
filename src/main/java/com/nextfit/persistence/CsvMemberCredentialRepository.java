@@ -10,7 +10,7 @@ import java.util.Optional;
 /** Keeps the member passwords in a CSV file: one row per member with the hash of the password. */
 public class CsvMemberCredentialRepository implements MemberCredentialRepository {
 
-    private static final String[] COLUMNS = {"member_id", "password_hash"};
+    static final String[] COLUMNS = {"member_id", "password_hash"};
 
     private final CsvStore store;
 
@@ -32,13 +32,17 @@ public class CsvMemberCredentialRepository implements MemberCredentialRepository
     @Override
     public synchronized void save(MemberCredential credential) {
         List<String[]> rows = rowsWithout(credential.memberId());
-        rows.add(new String[]{String.valueOf(credential.memberId()), credential.passwordHash()});
+        rows.add(toRow(credential));
         store.writeAll(rows);
     }
 
     @Override
     public synchronized void delete(long memberId) {
         store.writeAll(rowsWithout(memberId));
+    }
+
+    static String[] toRow(MemberCredential credential) {
+        return new String[]{String.valueOf(credential.memberId()), credential.passwordHash()};
     }
 
     private List<String[]> rowsWithout(long memberId) {

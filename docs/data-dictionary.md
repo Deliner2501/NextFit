@@ -261,3 +261,12 @@ Password a member creates to enter by himself. One per member.
 |---|---|---|---|---|
 | `member_id` | NUMBER(19) | No | PK, FK | Member. References `members(id)`, `ON DELETE CASCADE`. |
 | `password_hash` | VARCHAR2(200) | No |  | Salted hash of the password. The password itself is never stored. |
+
+## `access_settings`
+
+One row holds the carnet signing key shared by all NextFit installations using this database.
+
+| Column | Type | Null | Key | Description |
+|---|---|---|---|---|
+| `id` | NUMBER(1) | No | PK | Always 1, enforced by a check constraint. |
+| `access_key` | BLOB | No | | The signing key. Each installation caches it in its local `access.key` file. |

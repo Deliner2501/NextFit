@@ -9,7 +9,7 @@ import java.util.List;
 /** Keeps the face templates in a CSV file: one row per template, the vector as numbers separated by semicolons. */
 public class CsvFaceTemplateRepository implements FaceTemplateRepository {
 
-    private static final String[] COLUMNS = {"member_id", "vector"};
+    static final String[] COLUMNS = {"member_id", "vector"};
 
     private final CsvStore store;
 
@@ -31,7 +31,7 @@ public class CsvFaceTemplateRepository implements FaceTemplateRepository {
     public synchronized void replace(long memberId, List<float[]> vectors) {
         List<String[]> rows = rowsWithout(memberId);
         for (float[] vector : vectors) {
-            rows.add(new String[]{String.valueOf(memberId), format(vector)});
+            rows.add(toRow(memberId, vector));
         }
         store.writeAll(rows);
     }
@@ -49,6 +49,10 @@ public class CsvFaceTemplateRepository implements FaceTemplateRepository {
             }
         }
         return rows;
+    }
+
+    static String[] toRow(long memberId, float[] vector) {
+        return new String[]{String.valueOf(memberId), format(vector)};
     }
 
     private static String format(float[] vector) {
