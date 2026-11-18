@@ -3,7 +3,6 @@ package com.nextfit;
 import com.nextfit.ui.fx.BackupModule;
 import com.nextfit.ui.fx.AuditModule;
 import com.nextfit.service.BackupService;
-import com.nextfit.persistence.AccessKeyStore;
 import com.nextfit.persistence.Storage;
 import com.nextfit.persistence.MemberCredentialRepository;
 import com.nextfit.persistence.FaceTemplateRepository;
@@ -121,6 +120,8 @@ public final class Main {
         Storage storage = StorageSetup.create(DATA_DIR, Path.of(DatabaseConfig.FILE_NAME));
         System.out.println("Almacenamiento: " + storage.description());
 
+        byte[] accessKey = storage.accessKey(DATA_DIR.resolve("access.key"));
+
         // Repositories come from the storage chosen at the start (CSV files or Oracle).
         UserRepository users = storage.users();
 
@@ -167,7 +168,7 @@ public final class Main {
                 memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
                 Clock.systemDefaultZone());
         PhoneAccess phoneAccess = new PhoneAccess(memberService,
-                new AccessTokens(AccessKeyStore.loadOrCreate(DATA_DIR.resolve("access.key"))));
+                new AccessTokens(accessKey));
         // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
         FaceTemplateRepository faceTemplates = storage.faceTemplates();
         FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);

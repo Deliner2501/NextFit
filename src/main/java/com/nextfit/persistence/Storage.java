@@ -1,5 +1,7 @@
 package com.nextfit.persistence;
 
+import java.nio.file.Path;
+
 /**
  * Where the application keeps its data: one repository for each kind of data.
  * There are two kinds of storage (CSV files and the Oracle database), and the
@@ -54,6 +56,11 @@ public interface Storage {
 
     /** @return the repository of the passwords that members create to enter by themselves */
     MemberCredentialRepository memberCredentials();
+
+    /** Reads the signing key and makes it available in the given local file for offline use. */
+    default byte[] accessKey(Path localFile) {
+        return AccessKeyStore.loadOrCreate(localFile);
+    }
 
     /** @return a short text that says which storage is in use, to show in the console */
     String description();

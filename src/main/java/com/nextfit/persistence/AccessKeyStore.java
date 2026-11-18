@@ -3,9 +3,12 @@ package com.nextfit.persistence;
 import com.nextfit.exceptions.PersistenceException;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 /**
  * Keeps the secret key of the access codes in a small file. The key is created
@@ -36,13 +39,37 @@ public final class AccessKeyStore {
             }
             byte[] key = new byte[KEY_BYTES];
             new SecureRandom().nextBytes(key);
-            if (file.getParent() != null) {
-                Files.createDirectories(file.getParent());
-            }
-            Files.write(file, key);
+            cache(file, key);
             return key;
         } catch (IOException e) {
             throw new PersistenceException("No se pudo leer o crear la clave de acceso", e);
+        }
+    }
+
+    /** Replaces the offline copy if the shared key differs. */
+    public static void cache(Path file, byte[] key) {
+        if (key.length < KEY_BYTES) {
+            throw new PersistenceException("La clave de acceso guardada es demasiado corta", null);
+        }
+        Path target = file.toAbsolutePath();
+        try {
+            if (Files.isRegularFile(target) && Arrays.equals(Files.readAllBytes(target), key)) {
+                return;
+            }
+            Files.createDirectories(target.getParent());
+            Path temporary = Files.createTempFile(target.getParent(), ".access-key-", ".tmp");
+            try {
+                Files.write(temporary, key);
+                try {
+                    Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                } catch (AtomicMoveNotSupportedException e) {
+                    Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } finally {
+                Files.deleteIfExists(temporary);
+            }
+        } catch (IOException e) {
+            throw new PersistenceException("No se pudo guardar la copia local de la clave de acceso", e);
         }
     }
 }

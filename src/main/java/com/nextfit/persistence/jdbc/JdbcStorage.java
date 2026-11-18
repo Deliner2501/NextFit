@@ -18,9 +18,12 @@ import com.nextfit.persistence.UserRepository;
 import com.nextfit.persistence.MemberCredentialRepository;
 import com.nextfit.persistence.Storage;
 
+import java.nio.file.Path;
+
 /** The storage of the Oracle database: every repository works on the same connections. */
 public final class JdbcStorage implements Storage {
 
+    private final JdbcAccessKeyStore accessKeys;
     private final UserRepository users;
     private final MemberRepository members;
     private final HealthProfileRepository healthProfiles;
@@ -44,6 +47,7 @@ public final class JdbcStorage implements Storage {
      * @param connections where the connections come from
      */
     public JdbcStorage(ConnectionSource connections) {
+        accessKeys = new JdbcAccessKeyStore(connections);
         users = new JdbcUserRepository(connections);
         members = new JdbcMemberRepository(connections);
         healthProfiles = new JdbcHealthProfileRepository(connections);
@@ -140,6 +144,11 @@ public final class JdbcStorage implements Storage {
     @Override
     public TrainingSessionRepository trainingSessions() {
         return trainingSessions;
+    }
+
+    @Override
+    public byte[] accessKey(Path localFile) {
+        return accessKeys.loadOrInitialize(localFile);
     }
 
     @Override

@@ -178,3 +178,8 @@ CREATE TABLE IF NOT EXISTS member_credentials (
     password_hash VARCHAR2(200) NOT NULL
 );
 
+-- One signing key for the carnets used by every NextFit installation on this database.
+CREATE TABLE IF NOT EXISTS access_settings (
+    id         NUMBER(1) PRIMARY KEY CHECK (id = 1),
+    access_key BLOB NOT NULL
+);
