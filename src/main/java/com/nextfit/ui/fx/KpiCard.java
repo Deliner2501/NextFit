@@ -29,6 +29,7 @@ final class KpiCard extends StackPane {
 
     private final Label value = new Label();
     private final Label hintLabel = new Label();
+    private final VBox texts = new VBox(4);
 
     /**
      * Creates the card.
@@ -48,7 +49,10 @@ final class KpiCard extends StackPane {
         hintLabel.setText(hint);
         hintLabel.getStyleClass().add("nf-muted-small");
         hintLabel.setWrapText(true);
-        VBox texts = new VBox(4, captionLabel, value, hintLabel);
+        captionLabel.setWrapText(true);
+        hintLabel.visibleProperty().bind(hintLabel.textProperty().isNotEmpty());
+        hintLabel.managedProperty().bind(hintLabel.visibleProperty());
+        texts.getChildren().addAll(captionLabel, value, hintLabel);
         HBox.setHgrow(texts, Priority.ALWAYS);
 
         double badgeSize = feature ? 56 : 52;
@@ -57,6 +61,7 @@ final class KpiCard extends StackPane {
         badge.setMinSize(badgeSize, badgeSize);
         badge.setMaxSize(badgeSize, badgeSize);
         HBox content = new HBox(16, badge, texts);
+        content.getStyleClass().add("nf-kpi-content");
         content.setAlignment(Pos.CENTER_LEFT);
         content.setPadding(new Insets(feature ? 26 : 18, 22, feature ? 26 : 18, 22));
         getChildren().add(content);
@@ -104,6 +109,19 @@ final class KpiCard extends StackPane {
         StackPane.setMargin(chip, new Insets(14, 16, 0, 0));
         getChildren().add(chip);
         FxMotion.popIn(chip, 900);
+    }
+
+    /**
+     * Shows the comparison beneath the figure in a compact dashboard card.
+     *
+     * @param text the formatted change
+     * @param up whether the value increased
+     * @param tooltip the comparison period and its value
+     */
+    void trendBelow(String text, boolean up, String tooltip) {
+        Label comparison = chip(text, up, tooltip);
+        texts.getChildren().add(comparison);
+        FxMotion.popIn(comparison, 900);
     }
 
     /**

@@ -83,6 +83,7 @@ final class PaymentsPane extends VBox {
         TableColumn<Row, String> member = FxTables.column("Socio", 240, Row::member);
         TableColumn<Row, String> method = FxTables.column("Método", 130, r -> r.payment().getMethod().getLabel());
         TableColumn<Row, String> total = FxTables.column("Total", 130, r -> Formats.money(r.payment().getTotal()));
+        FxTables.alignNumbers(total);
         TableColumn<Row, String> by = FxTables.column("Atendido por", 140, r -> r.payment().getRegisteredBy());
         table.getColumns().addAll(List.of(number, date, member, method, total, by));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);

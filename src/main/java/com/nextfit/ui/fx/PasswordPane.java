@@ -33,7 +33,7 @@ final class PasswordPane extends HBox {
 
     private final TextField documentField = new TextField();
     private final PasswordField passwordField = new PasswordField();
-    private final Label outcome = new Label();
+    private final AccessFeedback outcome = new AccessFeedback();
     private final Label status = new Label("Elige un socio");
     private final Button createButton = new Button("Crear contraseña");
     private final Button resetButton = new Button("Restablecer contraseña");
@@ -78,8 +78,6 @@ final class PasswordPane extends HBox {
         passwordField.setOnAction(e -> enter());
         documentField.setOnAction(e -> passwordField.requestFocus());
 
-        outcome.getStyleClass().add("nf-access-verdict");
-        outcome.setWrapText(true);
         Button enter = new Button("Registrar acceso");
         enter.getStyleClass().add("nf-primary");
         enter.setOnAction(e -> enter());
@@ -113,13 +111,12 @@ final class PasswordPane extends HBox {
     private void enter() {
         AccessResult result = selfAccess.enter(documentField.getText(), passwordField.getText());
         passwordField.clear();
+        outcome.showResult(result);
+        clearOutcome.playFromStart();
         if (result.outcome() == AccessResult.Outcome.DENIED) {
-            say("DENEGADO: " + result.message());
             return;
         }
         documentField.clear();
-        say((result.outcome() == AccessResult.Outcome.ENTRY ? "ENTRADA: " : "SALIDA: ")
-                + result.member().getFullName());
     }
 
     private void create() {
@@ -176,7 +173,7 @@ final class PasswordPane extends HBox {
 
     /** Shows a result and removes it after a few seconds. */
     private void say(String text) {
-        outcome.setText(text);
+        outcome.showMessage(text);
         clearOutcome.stop();
         if (!text.isEmpty()) {
             clearOutcome.playFromStart();

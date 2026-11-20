@@ -179,27 +179,6 @@ final class FxMotion {
     }
 
     /**
-     * Makes a node slide sideways a few pixels while the mouse is over it.
-     *
-     * @param node the node to animate
-     * @param dx   how many pixels it moves to the right
-     */
-    static void nudge(Node node, double dx) {
-        TranslateTransition forward = new TranslateTransition(Duration.millis(140), node);
-        forward.setToX(dx);
-        TranslateTransition back = new TranslateTransition(Duration.millis(170), node);
-        back.setToX(0);
-        node.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> {
-            back.stop();
-            forward.playFromStart();
-        });
-        node.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
-            forward.stop();
-            back.playFromStart();
-        });
-    }
-
-    /**
      * Makes every primary and secondary button of the scene sink a little while it is pressed. It is installed
      * once on the scene, so the buttons of any screen (also the ones other people write) get it without code.
      *

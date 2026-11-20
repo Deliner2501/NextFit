@@ -16,6 +16,7 @@ import com.nextfit.service.Session;
 import com.nextfit.service.SubscriptionService;
 import com.nextfit.ui.Formats;
 import com.nextfit.ui.billing.ReceiptText;
+import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -24,6 +25,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -67,6 +69,8 @@ final class SalePane extends HBox {
     private final Label subtotalLabel = new Label("$ 0");
     private final Label discountLabel = new Label("$ 0");
     private final Label totalLabel = new Label("$ 0");
+    private final Label saleRecipient = new Label("Selecciona un socio");
+    private final Label salePlan = new Label();
     private final Label messageLabel = new Label(" ");
     private final Button chargeButton = new Button("Cobrar y generar comprobante");
 
@@ -117,6 +121,7 @@ final class SalePane extends HBox {
 
         planBox.setConverter(converter(plan -> plan == null ? ""
                 : plan.getName() + "  ·  " + Formats.days(plan.getDurationDays()) + "  ·  " + Formats.money(plan.getPrice())));
+        planBox.setPromptText("No hay planes en venta");
         methodBox.getItems().addAll(PaymentMethod.values());
         methodBox.setConverter(converter(method -> method == null ? "" : method.getLabel()));
         methodBox.setValue(PaymentMethod.CASH);
@@ -142,27 +147,56 @@ final class SalePane extends HBox {
         totalLabel.getStyleClass().add("nf-total");
         messageLabel.getStyleClass().add("nf-error");
         messageLabel.setWrapText(true);
+        messageLabel.managedProperty().bind(messageLabel.visibleProperty());
+        messageLabel.visibleProperty().bind(Bindings.createBooleanBinding(
+                () -> !messageLabel.getText().isBlank(), messageLabel.textProperty()));
         chargeButton.getStyleClass().add("nf-primary");
         chargeButton.setMaxWidth(Double.MAX_VALUE);
         chargeButton.setPrefHeight(52);
         chargeButton.setOnAction(e -> charge());
 
-        VBox summary = new VBox(8, summaryRow("Subtotal", subtotalLabel),
+        Label summaryTitle = new Label("Resumen de la venta");
+        summaryTitle.getStyleClass().add("nf-card-title");
+        saleRecipient.getStyleClass().add("nf-muted");
+        saleRecipient.setWrapText(true);
+        salePlan.getStyleClass().add("nf-muted-small");
+        salePlan.setWrapText(true);
+        VBox summary = new VBox(10, summaryTitle, new VBox(3, saleRecipient, salePlan),
+                summaryRow("Subtotal", subtotalLabel),
                 summaryRow("Descuento aplicado", discountLabel), summaryRow("Total a pagar", totalLabel));
+        summary.getChildren().add(chargeButton);
         summary.getStyleClass().add("nf-summary");
         summary.setPadding(new Insets(16, 18, 16, 18));
+        summary.setMaxHeight(Region.USE_PREF_SIZE);
 
-        HBox startAndMethod = twoColumns(FxDialogs.labeled("Inicio", startPicker),
+        HBox startAndMethod = twoColumns(FxDialogs.labeled("Fecha de inicio", startPicker),
                 FxDialogs.labeled("Método de pago", methodBox));
         HBox discounts = twoColumns(FxDialogs.labeled("Descuento", discountBox),
                 FxDialogs.labeled("Valor", discountField));
 
         VBox card = new VBox(14, new VBox(4, memberLabel, memberInfo), FxDialogs.labeled("Plan", planBox),
-                startAndMethod, discounts, summary, messageLabel, chargeButton);
+                startAndMethod, discounts, messageLabel, summary);
         card.getStyleClass().add("nf-card");
         card.setPadding(new Insets(28));
         card.setAlignment(Pos.TOP_LEFT);
-        return card;
+        card.setMaxHeight(Region.USE_PREF_SIZE);
+        BorderPane checkout = new BorderPane(card);
+        BorderPane.setAlignment(card, Pos.TOP_LEFT);
+        BorderPane.setAlignment(summary, Pos.TOP_LEFT);
+        BorderPane.setMargin(summary, new Insets(0, 0, 0, 16));
+        widthProperty().addListener((obs, old, width) -> {
+            boolean wide = width.doubleValue() >= 1120;
+            if (wide && checkout.getRight() == null) {
+                card.getChildren().remove(summary);
+                summary.setPrefWidth(280);
+                checkout.setRight(summary);
+            } else if (!wide && checkout.getRight() != null) {
+                checkout.setRight(null);
+                summary.setPrefWidth(Region.USE_COMPUTED_SIZE);
+                card.getChildren().add(summary);
+            }
+        });
+        return checkout;
     }
 
     private static HBox twoColumns(Node left, Node right) {
@@ -200,6 +234,8 @@ final class SalePane extends HBox {
     }
 
     private void showMember(Member member) {
+        refreshChargeAvailability(member);
+        saleRecipient.setText(member == null ? "Selecciona un socio" : member.getFullName());
         messageLabel.setText(" ");
         if (member == null) {
             memberLabel.setText("Selecciona un socio de la lista");
@@ -221,6 +257,8 @@ final class SalePane extends HBox {
     // Recalculates the three amounts. A discount that is still being typed counts as zero.
     private void updateSummary() {
         MembershipPlan plan = planBox.getValue();
+        refreshChargeAvailability(picker.selected());
+        salePlan.setText(plan == null ? "Sin plan" : plan.getName() + " · " + Formats.days(plan.getDurationDays()));
         long subtotal = plan == null ? 0 : plan.getPrice();
         long off;
         try {
@@ -231,6 +269,11 @@ final class SalePane extends HBox {
         subtotalLabel.setText(Formats.money(subtotal));
         discountLabel.setText(off > 0 ? "-" + Formats.money(off) : Formats.money(0));
         totalLabel.setText(Formats.money(subtotal - off));
+    }
+
+    /** Keeps the primary action disabled until a member and a plan can be charged. */
+    private void refreshChargeAvailability(Member member) {
+        chargeButton.setDisable(member == null || !member.isActive() || planBox.getValue() == null);
     }
 
     private Discount buildDiscount() {

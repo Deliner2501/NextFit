@@ -64,14 +64,12 @@ final class MembersPane extends VBox {
     }
 
     private Node buildHeader() {
-        Label title = new Label("Socios");
-        title.getStyleClass().add("nf-section-title");
         countLabel.getStyleClass().add("nf-muted");
-        VBox titles = new VBox(2, title, countLabel);
+        VBox titles = new VBox(countLabel);
         titles.setMinWidth(Region.USE_PREF_SIZE);
         HBox.setHgrow(titles, Priority.ALWAYS);
 
-        searchField.setPromptText("Buscar por nombre, documento o teléfono");
+        searchField.setPromptText("Nombre, documento o teléfono");
         searchField.getStyleClass().add("nf-input");
         searchField.setPrefSize(280, 44);
         searchField.setMinWidth(120);
@@ -143,16 +141,20 @@ final class MembersPane extends VBox {
                 }
             }
         }
-        boolean editable = canEdit.getAsBoolean();
-        for (Button button : List.of(editButton, toggleButton, createButton)) {
-            button.setVisible(editable);
-            button.setManaged(editable);
-        }
+        createButton.setVisible(canEdit.getAsBoolean());
+        createButton.setManaged(createButton.isVisible());
         updateButtons();
     }
 
     private void updateButtons() {
         Member selected = table.getSelectionModel().getSelectedItem();
+        fichaButton.setVisible(selected != null);
+        fichaButton.setManaged(fichaButton.isVisible());
+        boolean canModify = selected != null && canEdit.getAsBoolean();
+        for (Button button : List.of(editButton, toggleButton)) {
+            button.setVisible(canModify);
+            button.setManaged(canModify);
+        }
         fichaButton.setDisable(selected == null);
         editButton.setDisable(selected == null);
         toggleButton.setDisable(selected == null);

@@ -5,6 +5,7 @@ import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
 import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.ui.Formats;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -49,13 +50,18 @@ final class MemberFicha extends VBox {
 
         Label name = new Label(member.getFullName());
         name.getStyleClass().add("nf-section-title");
+        name.setWrapText(true);
+        Label state = new Label(member.isActive() ? "Activo" : "De baja");
+        state.getStyleClass().addAll("nf-status-chip", member.isActive() ? "nf-status-active" : "nf-status-inactive");
         Label details = new Label("Documento " + member.getDocumentNumber() + " · " + member.getPhone()
-                + " · " + (member.isActive() ? "Activo" : "De baja") + " desde " + Formats.date(member.getJoinDate()));
+                + " · Ingreso: " + Formats.date(member.getJoinDate()));
         details.getStyleClass().add("nf-muted");
         details.setWrapText(true);
-        VBox texts = new VBox(2, name, details);
+        VBox texts = new VBox(5, state, name, details);
         HBox identity = new HBox(14, MemberAvatar.of(member, 64), texts);
         identity.setAlignment(Pos.CENTER_LEFT);
+        identity.setPadding(new Insets(16));
+        identity.getStyleClass().add("nf-card");
         HBox.setHgrow(texts, Priority.ALWAYS);
 
         TabPane tabs = new TabPane();

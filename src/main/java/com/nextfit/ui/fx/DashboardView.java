@@ -2,7 +2,6 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.DashboardService.Summary;
-import com.nextfit.service.Session;
 import com.nextfit.ui.Formats;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -11,196 +10,135 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.shape.Polygon;
-import javafx.scene.shape.Rectangle;
 
-import java.time.YearMonth;
-import java.util.Map;
+import java.util.List;
+import java.util.function.LongFunction;
 
-/**
- * Home screen with visual hierarchy: a banner with the greeting, one large
- * feature card (income of the month with its trend), three smaller key numbers
- * beside it, and two charts of different width below. Every number is worked
- * out by {@link DashboardService}; this class only decides where to place it.
- */
+/** Arranges the daily indicators and charts calculated by {@link DashboardService}. */
 final class DashboardView extends VBox {
 
     private static final String LAST_3 = "Últimos 3 meses";
     private static final String LAST_6 = "Últimos 6 meses";
-
+    private static final double WIDE_LAYOUT = 1010;
     private final DashboardService service;
-    private final Session session;
+    private final GridPane indicators = new GridPane();
+    private final GridPane charts = new GridPane();
+    private List<KpiCard> keyFigures = List.of();
+    private Region income;
+    private Region memberships;
 
-    /**
-     * @param service the source of the summary
-     * @param session the signed-in user, for the greeting
-     */
-    DashboardView(DashboardService service, Session session) {
-        super(20);
+    /** @param service the source of the dashboard summary */
+    DashboardView(DashboardService service) {
+        super(16);
         this.service = service;
-        this.session = session;
-        setPadding(new Insets(0, 4, 24, 0));
+        getStyleClass().add("nf-dashboard");
+        setPadding(new Insets(0, 0, 16, 0));
+        for (GridPane grid : List.of(indicators, charts)) {
+            grid.setHgap(16);
+            grid.setVgap(16);
+        }
+        widthProperty().addListener((obs, old, width) -> {
+            if (income != null && (old.doubleValue() >= WIDE_LAYOUT) != (width.doubleValue() >= WIDE_LAYOUT)) {
+                arrange();
+            }
+        });
     }
 
-    /** Reads the summary again and redraws the whole screen. */
+    /** Reloads the business data and displays the same figures in either layout. */
     void refresh() {
         Summary summary = service.summary();
-        long vigentes = Math.max(0, summary.activeSubscriptions() - summary.expiringSoon());
-
-        KpiCard active = new KpiCard("Membresías activas", "0", "Socios con acceso hoy", FxIcons.MEMBERS,
-                KpiCard.Kind.LIME);
-        KpiCard expiring = new KpiCard("Por vencer", "0", "Terminan en 7 días o menos", FxIcons.BILLING,
-                KpiCard.Kind.VIOLET);
-        KpiCard today = new KpiCard("Asistencia de hoy", "0", "Entradas registradas", FxIcons.ACCESS,
-                KpiCard.Kind.LIME);
-        FxMotion.countUp(active.value(), summary.activeSubscriptions(), n -> Long.toString(n));
-        FxMotion.countUp(expiring.value(), summary.expiringSoon(), n -> Long.toString(n));
-        FxMotion.countUp(today.value(), summary.checkInsToday(), n -> Long.toString(n));
+        long valid = Math.max(0, summary.activeSubscriptions() - summary.expiringSoon());
+        KpiCard revenue = figure("Ingresos del mes", "", FxIcons.ANALYTICS,
+                summary.incomeThisMonth(), Formats::money);
+        summary.incomeChangePercent().ifPresent(percent -> revenue.trendBelow(
+                Formats.signedPercent(percent), percent >= 0,
+                "Frente a los mismos días del mes anterior (" + Formats.money(summary.incomeLastMonthToDate()) + ")"));
+        KpiCard active = figure("Membresías activas", "", FxIcons.MEMBERS,
+                summary.activeSubscriptions(), Long::toString);
+        active.getStyleClass().add("nf-dashboard-members");
+        KpiCard expiring = figure("Por vencer", "Próximos 7 días", FxIcons.BILLING,
+                summary.expiringSoon(), Long::toString);
+        KpiCard today = figure("Asistencia de hoy", "Entradas registradas", FxIcons.ACCESS,
+                summary.checkInsToday(), Long::toString);
+        today.getStyleClass().add("nf-dashboard-attendance");
         long change = summary.checkInsChange();
         if (change != 0) {
-            today.trend((change > 0 ? "+" : "") + change, change > 0, "Frente a ayer (" + summary.checkInsYesterday() + ")");
-        }
-        VBox side = new VBox(16, active, expiring, today);
-        for (var child : side.getChildren()) {
-            VBox.setVgrow(child, Priority.ALWAYS);
-            ((Region) child).setMaxWidth(Double.MAX_VALUE);
+            today.trendBelow((change > 0 ? "+" : "") + change, change > 0,
+                    "Frente a ayer (" + summary.checkInsYesterday() + ")");
         }
 
-        getChildren().setAll(
-                hero(),
-                split(featureCard(summary), side, 66),
-                split(card("Estado de las membresías", DashboardCharts.statusDonut(vigentes, summary)),
-                        card("Asistencia por día de la semana", DashboardCharts.weekdayBars(summary.checkInsByWeekday())),
-                        40));
-        // The blocks rise one after another and the three small numbers follow a moment later.
-        FxMotion.enter(getChildren(), 0, 90);
-        FxMotion.enter(side.getChildren(), 240, 110);
+        keyFigures = List.of(revenue, active, expiring, today);
+        income = incomeCard(summary);
+        memberships = card("Estado de las membresías", null, DashboardCharts.statusDonut(valid, summary));
+        Region attendance = card("Asistencia por día de la semana", null,
+                DashboardCharts.weekdayBars(summary.checkInsByWeekday()));
+        arrange();
+        getChildren().setAll(indicators, charts, attendance);
+        FxMotion.enter(getChildren(), 0, 65);
     }
 
-    private Region hero() {
-        Region photo = FxImages.cover("/images/banners/dashboard.jpg", 0.5, 0.5);
-        Region shade = new Region();
-        shade.getStyleClass().add("nf-hero-shade");
+    /** Keeps figures and legends readable when the sidebar is open in a narrow window. */
+    private void arrange() {
+        boolean wide = getWidth() >= WIDE_LAYOUT;
+        int columns = wide ? 4 : 2;
+        indicators.getChildren().clear();
+        indicators.getColumnConstraints().clear();
+        for (int columnIndex = 0; columnIndex < columns; columnIndex++) {
+            indicators.getColumnConstraints().add(column(100.0 / columns));
+        }
+        for (int index = 0; index < keyFigures.size(); index++) {
+            indicators.add(keyFigures.get(index), index % columns, index / columns);
+        }
 
-        Label hello = new Label("Hola, ");
-        hello.getStyleClass().add("nf-hero-title");
-        Label name = new Label(session.getCurrentUser().map(u -> u.getFullName()).orElse("bienvenido"));
-        name.getStyleClass().add("nf-hero-name");
-        Label subtitle = new Label("Así va el gimnasio hoy");
-        subtitle.getStyleClass().add("nf-hero-text");
-        VBox text = new VBox(4, new HBox(hello, name), subtitle);
-        text.setAlignment(Pos.CENTER_LEFT);
-        text.setPadding(new Insets(0, 0, 0, 40));
-
-        Region bar = new Region();
-        bar.getStyleClass().add("nf-hero-bar");
-        bar.setMinWidth(6);
-        bar.setMaxWidth(6);
-        bar.setMaxHeight(Double.MAX_VALUE);
-        StackPane.setAlignment(bar, Pos.CENTER_LEFT);
-
-        // A diagonal green band on the right edge, drawn again whenever the banner changes size.
-        Pane stripes = new Pane();
-        stripes.setMouseTransparent(true);
-        Polygon band = new Polygon();
-        band.getStyleClass().add("nf-hero-stripe");
-        stripes.getChildren().add(band);
-
-        StackPane hero = new StackPane(photo, shade, stripes, bar, text);
-        hero.setAlignment(Pos.CENTER_LEFT);
-        hero.setMinHeight(150);
-        hero.setPrefHeight(150);
-        hero.setMaxHeight(150);
-        Runnable drawBand = () -> {
-            double w = hero.getWidth();
-            double h = hero.getHeight();
-            band.getPoints().setAll(w - 150, h, w - 100, h, w, h - 110, w, h - 165);
-        };
-        hero.widthProperty().addListener((obs, old, now) -> drawBand.run());
-        hero.heightProperty().addListener((obs, old, now) -> drawBand.run());
-        roundCorners(hero, 20);
-        return hero;
+        charts.getChildren().clear();
+        charts.getColumnConstraints().setAll(wide ? List.of(column(57), column(43)) : List.of(column(100)));
+        charts.add(income, 0, 0);
+        charts.add(memberships, wide ? 1 : 0, wide ? 0 : 1);
     }
 
-    private static void roundCorners(Region region, double radius) {
-        Rectangle clip = new Rectangle();
-        clip.setArcWidth(radius * 2);
-        clip.setArcHeight(radius * 2);
-        clip.widthProperty().bind(region.widthProperty());
-        clip.heightProperty().bind(region.heightProperty());
-        region.setClip(clip);
+    private static ColumnConstraints column(double percent) {
+        ColumnConstraints column = new ColumnConstraints();
+        column.setPercentWidth(percent);
+        return column;
     }
 
-    /** Places two cards side by side; the first one takes {@code percentFirst} percent of the width. */
-    private static GridPane split(Region first, Region second, double percentFirst) {
-        GridPane grid = new GridPane();
-        grid.setHgap(16);
-        ColumnConstraints left = new ColumnConstraints();
-        left.setPercentWidth(percentFirst);
-        ColumnConstraints right = new ColumnConstraints();
-        right.setPercentWidth(100 - percentFirst);
-        grid.getColumnConstraints().addAll(left, right);
-        grid.add(first, 0, 0);
-        grid.add(second, 1, 0);
-        first.setMaxWidth(Double.MAX_VALUE);
-        second.setMaxWidth(Double.MAX_VALUE);
-        return grid;
-    }
-
-    /** The protagonist card: the income of the month, big, with the trend of the last months under it. */
-    private Region featureCard(Summary summary) {
-        Label caption = new Label("Ingresos del mes");
-        caption.getStyleClass().add("nf-muted");
-        Label value = new Label(Formats.money(0));
-        value.getStyleClass().add("nf-kpi-xl");
-        Label hint = new Label("Desde el primer día del mes · tendencia de los últimos meses");
-        hint.getStyleClass().add("nf-muted-small");
-        StackPane badge = new StackPane(FxIcons.of(FxIcons.ANALYTICS, 26));
-        badge.getStyleClass().add("nf-badge-solid");
-        badge.setMinSize(56, 56);
-        badge.setMaxSize(56, 56);
-        // The number with its change next to it: how the month goes against the same days of the last one.
-        HBox valueRow = new HBox(14, value);
-        valueRow.setAlignment(Pos.CENTER_LEFT);
-        summary.incomeChangePercent().ifPresent(percent -> {
-            Label chip = KpiCard.chip(Formats.signedPercent(percent), percent >= 0,
-                    "Frente a los mismos días del mes anterior (" + Formats.money(summary.incomeLastMonthToDate()) + ")");
-            valueRow.getChildren().add(chip);
-            FxMotion.popIn(chip, 1000);
-        });
-        VBox texts = new VBox(4, caption, valueRow, hint);
-        HBox.setHgrow(texts, Priority.ALWAYS);
-
-        ComboBox<String> range = new ComboBox<>();
-        range.getItems().addAll(LAST_3, LAST_6);
-        range.setValue(LAST_6);
-        HBox head = new HBox(16, badge, texts, range);
-        head.setAlignment(Pos.TOP_LEFT);
-
-        Map<YearMonth, Long> byMonth = summary.incomeByMonth();
-        StackPane chartHolder = new StackPane(DashboardCharts.incomeChart(byMonth, 6));
-        range.valueProperty().addListener((obs, old, now) -> chartHolder.getChildren()
-                .setAll(DashboardCharts.incomeChart(byMonth, LAST_3.equals(now) ? 3 : 6)));
-        VBox.setVgrow(chartHolder, Priority.ALWAYS);
-
-        VBox card = new VBox(14, head, chartHolder);
-        card.getStyleClass().add("nf-card-feature");
-        card.setPadding(new Insets(26));
-        FxMotion.countUp(value, summary.incomeThisMonth(), Formats::money);
+    private static KpiCard figure(String title, String hint, String icon, long amount, LongFunction<String> format) {
+        KpiCard card = new KpiCard(title, format.apply(0), hint, icon, KpiCard.Kind.LIME);
+        card.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        FxMotion.countUp(card.value(), amount, format);
         return card;
     }
 
-    private static Region card(String title, Region content) {
+    private static Region incomeCard(Summary summary) {
+        ComboBox<String> range = new ComboBox<>();
+        range.getItems().addAll(LAST_3, LAST_6);
+        range.setValue(LAST_6);
+        range.setAccessibleText("Período de ingresos");
+        StackPane chart = new StackPane(DashboardCharts.incomeChart(summary.incomeByMonth(), 6));
+        range.valueProperty().addListener((obs, old, value) -> chart.getChildren()
+                .setAll(DashboardCharts.incomeChart(summary.incomeByMonth(), LAST_3.equals(value) ? 3 : 6)));
+        return card("Evolución de ingresos", range, chart);
+    }
+
+    private static Region card(String title, Region action, Region content) {
         Label label = new Label(title);
         label.getStyleClass().add("nf-card-title");
-        VBox box = new VBox(12, label, content);
+        label.setWrapText(true);
+        HBox heading = new HBox(12, label);
+        heading.setAlignment(Pos.CENTER_LEFT);
+        if (action != null) {
+            label.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(label, Priority.ALWAYS);
+            heading.getChildren().add(action);
+        }
+        VBox box = new VBox(8, heading, content);
         box.getStyleClass().add("nf-card");
-        box.setPadding(new Insets(20));
+        box.setPadding(new Insets(14, 16, 12, 16));
+        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         VBox.setVgrow(content, Priority.ALWAYS);
         return box;
     }

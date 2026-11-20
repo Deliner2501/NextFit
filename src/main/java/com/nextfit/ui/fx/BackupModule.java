@@ -132,6 +132,7 @@ public final class BackupModule implements FxModule {
         TableColumn<BackupInfo, String> name = FxTables.column("Archivo", 420, BackupInfo::name);
         TableColumn<BackupInfo, String> date = FxTables.column("Fecha", 200, b -> b.createdAt().format(MOMENT));
         TableColumn<BackupInfo, String> size = FxTables.column("Tamaño", 140, b -> size(b.size()));
+        FxTables.alignNumbers(size);
         table.getColumns().addAll(List.of(name, date, size));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setFixedCellSize(46);
@@ -155,7 +156,10 @@ public final class BackupModule implements FxModule {
     private void refresh() {
         List<BackupInfo> found = service.list();
         table.getItems().setAll(found);
-        countLabel.setText(found.size() == 1 ? "1 respaldo" : found.size() + " respaldos");
+        String count = found.size() == 1 ? "1 respaldo" : found.size() + " respaldos";
+        found.stream().map(BackupInfo::createdAt).max(java.util.Comparator.naturalOrder())
+                .ifPresentOrElse(latest -> countLabel.setText(count + " · Último: " + latest.format(MOMENT)),
+                        () -> countLabel.setText(count));
     }
 
     private void createNow() {

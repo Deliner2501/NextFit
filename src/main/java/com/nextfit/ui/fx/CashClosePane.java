@@ -186,7 +186,12 @@ final class CashClosePane extends VBox {
         countedField.textProperty().addListener((obs, old, now) -> readCounted());
         resultLabel.getStyleClass().add("nf-muted");
         resultLabel.setWrapText(true);
-        VBox box = new VBox(10, title, new VBox(2, expectedCaption, expectedLabel),
+        resultLabel.setMaxWidth(Double.MAX_VALUE);
+        resultLabel.getStyleClass().add("nf-inline-result");
+        VBox expected = new VBox(2, expectedCaption, expectedLabel);
+        expected.getStyleClass().add("nf-summary");
+        expected.setPadding(new Insets(12));
+        VBox box = new VBox(10, title, expected,
                 FxDialogs.labeled("Efectivo contado", countedField), resultLabel);
         box.getStyleClass().add("nf-card");
         box.setPadding(new Insets(22));
@@ -203,6 +208,7 @@ final class CashClosePane extends VBox {
         TableColumn<CashClose.Line, String> discount = FxTables.column("Descuento", 120,
                 l -> l.discount() == 0 ? "—" : Formats.money(l.discount()));
         TableColumn<CashClose.Line, String> total = FxTables.column("Total", 130, l -> Formats.money(l.total()));
+        FxTables.alignNumbers(total);
         TableColumn<CashClose.Line, String> cashier = FxTables.column("Atendido por", 130,
                 l -> l.cashier() == null ? "" : l.cashier());
         discount.setStyle("-fx-alignment: CENTER-RIGHT;");

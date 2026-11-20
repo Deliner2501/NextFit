@@ -39,7 +39,7 @@ final class LoginView extends StackPane {
     private final TextField visiblePasswordField = new TextField();
     private final Button revealButton = new Button();
     private final Button loginButton = new Button(LOGIN_LABEL);
-    private final Label errorLabel = new Label(" ");
+    private final Label errorLabel = new Label();
 
     /**
      * @param auth      the sign-in rules
@@ -190,8 +190,11 @@ final class LoginView extends StackPane {
         StackPane.setAlignment(revealButton, Pos.CENTER_RIGHT);
         StackPane.setMargin(revealButton, new Insets(0, 6, 0, 0));
 
-        errorLabel.getStyleClass().add("nf-error");
+        errorLabel.getStyleClass().addAll("nf-error", "nf-login-error");
         errorLabel.setWrapText(true);
+        errorLabel.setMaxWidth(Double.MAX_VALUE);
+        errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+        errorLabel.managedProperty().bind(errorLabel.visibleProperty());
         loginButton.getStyleClass().add("nf-primary");
         loginButton.setMaxWidth(Double.MAX_VALUE);
         loginButton.setPrefHeight(54);
@@ -248,7 +251,7 @@ final class LoginView extends StackPane {
         String username = usernameField.getText();
         String password = passwordField.getText();
         setBusy(true);
-        errorLabel.setText(" ");
+        errorLabel.setText("");
         Task<User> task = new Task<>() {
             @Override
             protected User call() {

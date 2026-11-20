@@ -57,6 +57,7 @@ final class OccupancyView extends VBox {
     /** @param service the service that calculates the occupancy */
     OccupancyView(OccupancyService service) {
         super(18);
+        getStyleClass().add("nf-occupancy-view");
         this.service = service;
         timeline = new Timeline(new KeyFrame(Duration.seconds(REFRESH_SECONDS), e -> tick()));
         timeline.setCycleCount(Animation.INDEFINITE);
