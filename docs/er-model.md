@@ -1,8 +1,9 @@
 # Entity-relationship model (MER)
 
-NextFit keeps its data in an Oracle Autonomous Database (Always Free) with **17 tables**, one for each
-kind of data the application handles. The tables are created from `src/main/resources/db/schema.sql`
-by the `OracleSchemaInstaller` program, and the data of the CSV files is copied with `CsvToOracleMigration`.
+NextFit keeps its data in an Oracle Autonomous Database (Always Free). The base schema has **18 tables**,
+created from `src/main/resources/db/schema.sql` by `OracleSchemaInstaller`. Installing
+`docs/sql/plsql-extras.sql` adds `payment_db_log`, bringing the total to **19 application tables**.
+The data of the CSV files is copied with `CsvToOracleMigration`.
 The columns, types and checks of every table are in the [data dictionary](data-dictionary.md).
 
 ## Diagram
@@ -163,11 +164,29 @@ erDiagram
         NUMBER member_id PK, FK
         VARCHAR2 password_hash
     }
+    access_settings {
+        NUMBER id PK
+        BLOB access_key
+    }
+    payment_db_log {
+        NUMBER id PK
+        NUMBER payment_id
+        NUMBER member_id
+        NUMBER subtotal
+        TIMESTAMP logged_at
+        VARCHAR2 db_user
+    }
 ```
 
 Keys: `PK` primary key, `FK` foreign key, `UK` unique. `routine_lines` has a primary key of three columns.
 `users` and `audit_log` have no relationships on purpose: the audit log keeps the user name as text, so it
 does not depend on the `users` table.
+
+`access_settings` holds the shared carnet signing key in one row and has no foreign keys.
+`payment_db_log` is added by the PL/SQL extras script. Its `payment_id` and `member_id` columns
+record the identifiers copied by `trg_payments_log`; the script declares no foreign keys on them,
+so they are shown without FK relationships. The view `v_active_members` is a query over existing
+tables and is excluded from the table count.
 
 ## Relationships
 
@@ -196,10 +215,13 @@ subscriptions, payments and attendance is kept.
 
 ## Design decisions
 
-- **One table per CSV file** (and `routine_lines` for the lines of the routines), so the model of the
-  database is the same model the application already had.
+- **CSV data:** the 17 data tables follow the existing CSV formats, including `routine_lines` for
+  routine exercises. `access_settings` stores the shared key, and `payment_db_log` records payments
+  through a database trigger.
 - **Identifiers:** `NUMBER(19)` identity columns that also accept a given value, so the migration keeps the
   identifiers of the CSV files and the repositories can still ask the database for a new one.
+  The supporting table `payment_db_log` uses `GENERATED ALWAYS AS IDENTITY`; `access_settings`
+  instead uses a fixed identifier of 1 enforced by a check constraint.
 - **Enumerations** (role, payment method, muscle group, status...) are stored by the **name** of the Java
   constant, never by its label, so a label can change without touching the data.
 - **Money** is `NUMBER(12,2)` in whole Colombian pesos. The total of a payment is calculated, not stored.
