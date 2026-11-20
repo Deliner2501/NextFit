@@ -3,6 +3,10 @@
 All the tables of the Oracle database, with the meaning, type and rules of each column.
 See the [entity-relationship model](er-model.md) for the diagram.
 
+`src/main/resources/db/schema.sql` creates 18 tables. The optional PL/SQL extras script
+`docs/sql/plsql-extras.sql` adds `payment_db_log`, giving 19 application tables when both
+scripts are installed. The view `v_active_members` is excluded from this count.
+
 **Key:** `PK` primary key, `FK` foreign key, `UK` unique. **Null:** `No` means the column is required.
 Names of Java constants (`Role`, `PaymentMethod`, `MuscleGroup`, `Difficulty`, `AssignmentStatus`,
 `AuditAction`) are stored by name.
@@ -28,6 +32,8 @@ Names of Java constants (`Role`, `PaymentMethod`, `MuscleGroup`, `Difficulty`, `
 | [`audit_log`](#audit_log) | Record of what the users did (sign in, create, edit...). Rows are only added. |
 | [`face_templates`](#face_templates) | Numeric description of a face, used by the face access. Never a photo. |
 | [`member_credentials`](#member_credentials) | Password a member creates to enter by himself. One per member. |
+| [`access_settings`](#access_settings) | Shared signing key for the membership card QR codes. |
+| [`payment_db_log`](#payment_db_log) | Payment insert log maintained by the PL/SQL trigger. |
 
 ## `users`
 
@@ -270,3 +276,18 @@ One row holds the carnet signing key shared by all NextFit installations using t
 |---|---|---|---|---|
 | `id` | NUMBER(1) | No | PK | Always 1, enforced by a check constraint. |
 | `access_key` | BLOB | No | | The signing key. Each installation caches it in its local `access.key` file. |
+
+## `payment_db_log`
+
+Supporting table created by `docs/sql/plsql-extras.sql`. The `trg_payments_log` trigger inserts
+one log row after each payment insert. The log insert participates in the payment transaction,
+so rolling back the payment also rolls back its log row.
+
+| Column | Type | Null | Key | Description |
+|---|---|---|---|---|
+| `id` | NUMBER(19) | No | PK | Identifier generated with `GENERATED ALWAYS AS IDENTITY`. |
+| `payment_id` | NUMBER(19) | No | | Identifier of the inserted payment, copied from `payments.id`. No foreign key is declared. |
+| `member_id` | NUMBER(19) | No | | Identifier of the member, copied from the payment. No foreign key is declared. |
+| `subtotal` | NUMBER(12,2) | No | | Payment subtotal at insertion time. |
+| `logged_at` | TIMESTAMP | No | | Time the log row was created. Defaults to `SYSTIMESTAMP`. |
+| `db_user` | VARCHAR2(128) | No | | Database session user returned by `SYS_CONTEXT('USERENV', 'SESSION_USER')`. |
