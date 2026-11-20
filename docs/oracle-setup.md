@@ -55,3 +55,7 @@ Las fotos de socios permanecen en `data/photos/` y las imágenes de ejercicios e
 `data/images/`. Oracle guarda la ruta de cada imagen. Para que la foto se vea en otro
 equipo, copien esos archivos por un medio privado manteniendo la ruta relativa. El
 respaldo incluye las fotos presentes en el computador que lo genera.
+
+## PL/SQL extras
+
+The file `docs/sql/plsql-extras.sql` adds a supporting table, a view, a function, a procedure, two triggers and a package. Java services retain the business rules used in CSV mode. The payment and subscription triggers also run automatically when the application writes to Oracle. Run the script as ADMIN in Database Actions using Run Script (F5).
