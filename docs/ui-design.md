@@ -91,7 +91,7 @@ of modules, hiding those that `allowedFor(role)` refuses. The sidebar groups mod
 2. Put the colors in tokens, the texts in Spanish and the code and comments in English.
 3. Show messages and errors with `FxDialogs`; catch `NextFitException` and let the service decide the rules.
 4. Animate the entrance with `FxMotion.enter` (optional).
-5. Register the module in the list of `Main`. If a `PendingModule` with the same id exists, replace it.
+5. Register the module in the list of `Main`.
 6. Check the screen in dark and light, with the menu open and collapsed.
 
 ## Checklist before a pull request

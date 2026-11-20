@@ -45,7 +45,7 @@ Each row links a principle or pattern to the class or method where it is applied
 | SRP and GRASP Information Expert | `DashboardView` | It only draws the `Summary` that `DashboardService` calculates; no business rule is repeated in the view |
 | OCP | `Main` (JavaFX only) | The interface was replaced without changing services, model or persistence |
 | SRP | `LoginView`, `ShellView`, `FxIcons`, `FxImages` | One class per concern: sign-in screen, main window, vector icons, photo areas |
-| OCP and polymorphism | `FxModule`, `DashboardModule`, `PendingModule`, `UsersModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
+| OCP and polymorphism | `FxModule`, `DashboardModule`, `UsersModule`, `ChurnModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
 | SRP and DIP | `UsersModule` | It only collects clicks and shows data; every rule (last administrator, own account, password strength) stays in `UserService` |
 | DRY and GRASP Pure Fabrication | `MemberPicker` | The member search column is one reusable class that any module (sales, training, members) can use instead of copying it |
 | SRP and DIP | `SalePane`, `PlansPane` | They only collect data and show the total; the discount math is the `Discount` hierarchy and the sale rules are in `PaymentService` |
