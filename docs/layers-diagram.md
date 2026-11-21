@@ -43,6 +43,7 @@ graph TD
         P_exceptions["<b>exceptions</b><br/>(6 classes)"]
         P_util["<b>util</b><br/>(2 classes)"]
     end
+    P__root_ --> P_service_mail
     P_ai --> P_service
     P_ai --> P_service_audit
     P_ai --> P_service_suggest

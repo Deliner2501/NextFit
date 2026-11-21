@@ -74,7 +74,8 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - Sale of a membership to a member with a **payment method** (cash, card, transfer) and an optional **discount** (percentage or fixed amount).
 - Automatic receipt with its number, subtotal, discount and total.
 - Subscription list with computed status: *upcoming, active, expired, cancelled*, with days left; subscriptions can be cancelled.
-- Payment history.
+- Payment history, with the delivery state of each receipt email.
+- **Automatic email** through Gmail (off by default): the receipt is sent after each payment and a reminder three days before a membership expires. Test mode sends only to the developer's inbox; failed receipts can be retried from the *Pagos* tab. See [`docs/automatic-email.md`](docs/automatic-email.md).
 
 ### 🏃 Training
 - **Exercise catalog** with description, muscle group, difficulty and photo.
@@ -224,6 +225,7 @@ The sidebar only shows the modules that the logged-in role can use.
 | **CSV files** | Local persistence and export format of the backups |
 | **H2** | In-memory database used only by the tests of the JDBC repositories |
 | **OpenCV** | Face recognition (YuNet detector and SFace recognizer), offline |
+| **Jakarta Mail (Angus)** | Automatic emails through Gmail (receipts and expiry reminders), behind the `MailDelivery` interface |
 | **Claude API** | Language model of the assistant, behind the `AiClient` interface |
 | **Own PDF and Excel writers** | Reports, with no extra dependency (`PdfExporter`, `XlsxWriter`) |
 | **JUnit 5** | Unit testing |
@@ -348,6 +350,7 @@ NextFit/
     │   │   │   ├── alert/         #   alerts engine
     │   │   │   ├── audit/         #   audit log
 │   │   │   ├── churn/         #   risk of leaving
+│   │   │   ├── mail/          #   automatic Gmail receipts and reminders
 │   │   │   ├── face/          #   face recognition rules
 │   │   │   ├── gamification/  #   streaks, badges, ranking
 │   │   │   ├── portal/        #   data of the personal portal
@@ -530,6 +533,7 @@ Some examples:
 | [Phone QR access](docs/phone-qr-access.md) | QR of the carnet: personal portal |
 | [Face recognition](docs/face-recognition.md) | How the face entry works and its safety checks |
 | [Member password](docs/member-password.md) | Entry with document and password |
+| [Automatic email](docs/automatic-email.md) | Gmail setup, test and live modes, delivery records and receipt retry |
 | [Oracle setup](docs/oracle-setup.md) | Connect the application to the shared Oracle database |
 | [Entity-relationship model](docs/er-model.md) | Tables and relations of the database |
 | [Data dictionary](docs/data-dictionary.md) | Every table and column with type and meaning |
