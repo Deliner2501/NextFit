@@ -45,3 +45,9 @@ Reminders can be sent on the expiration day if NextFit was closed during its thr
 To retry a failed receipt, open **Membresías y pagos → Pagos**, select the payment and choose **Reintentar correo**. Confirm only after checking the sender's Sent folder. The retry uses the current test or live mode and preserves the original payment and its delivery history. Receipts marked as sent or pending are ineligible for retry.
 
 The **Correo** column in **Pagos** reads the current mode's history and refreshes automatically. **Enviado** means Gmail accepted the message, **Fallido** means the transport returned an error, **Pendiente** means an attempt started without a recorded outcome, and **Sin intento** means there is no delivery record in that mode.
+
+## Example
+
+A membership reminder as the member sees it in Gmail:
+
+<p align="center"><img src="screenshots/email-reminder.png" alt="Membership reminder email" width="320"></p>

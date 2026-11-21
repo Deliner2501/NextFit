@@ -2,13 +2,13 @@
 
 # Class Catalog
 
-352 classes, interfaces, records and enums, by package. The type comes from the declaration and the role from the Javadoc of each class.
+357 classes, interfaces, records and enums, by package. The type comes from the declaration and the role from the Javadoc of each class.
 
 | Type | Count |
 |---|--:|
-| Class | 262 |
-| Record | 38 |
-| Interface | 34 |
+| Class | 264 |
+| Record | 40 |
+| Interface | 35 |
 | Enum | 15 |
 | Abstract class | 3 |
 

@@ -38,7 +38,7 @@ Four tabs:
 - **Venta**: choose the member, the plan, the start date and the payment method, apply a discount if there is one
   (percentage or fixed amount) and press **Cobrar y generar comprobante**. A receipt is shown with its number.
 - **Suscripciones**: every membership with its state (próxima, activa, vencida, cancelada) and the days left; a valid one can be cancelled.
-- **Pagos**: history of payments and receipts.
+- **Pagos**: history of payments and receipts. The **Correo** column shows whether the receipt email was sent (*Enviado*, *Fallido*, *Pendiente* or *Sin intento*); select a payment and choose **Reintentar correo** to send it again, only after checking the sender's Sent folder. Email setup is in [automatic-email.md](automatic-email.md).
 - **Planes**: create, edit and retire membership plans.
 
 ## Entrenamiento

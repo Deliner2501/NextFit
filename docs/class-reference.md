@@ -928,10 +928,13 @@ For each class: its responsibility, its attributes and its public methods. Gette
 |---|---|
 | `payments` | `PaymentService` |
 | `members` | `MemberService` |
+| `email` | `EmailNotifications` |
 | `table` | `TableView<Row>` |
 | `countLabel` | `Label` |
 | `totalLabel` | `Label` |
 | `searchField` | `TextField` |
+| `statusRefresh` | `Timeline` |
+| `checkingEmail` | `boolean` |
 
 ### PlansPane
 
