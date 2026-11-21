@@ -254,7 +254,6 @@ public final class Main {
         Supplier<String> phoneUrl = () -> "http://" + LanAddress.find() + ":" + accessServer.port();
 
         // The modules are built by a supplier because JavaFX controls can only be created after the toolkit starts.
-        // Each owner replaces their PendingModule with the real screen.
         FxApp.run(auth, session, () -> List.of(
                 new DashboardModule(dashboardService),
                 new MembersModule(memberService, healthService, attendanceService, gamificationService,

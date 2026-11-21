@@ -14,7 +14,7 @@ Members can enter by looking at the camera of the reception laptop. The QR and t
 | Layer | Class | Role |
 |---|---|---|
 | model | `FaceTemplate` | The numbers of one face |
-| persistence | `FaceTemplateRepository`, `CsvFaceTemplateRepository` | Storage (`data/face_templates.csv`); a database implementation can replace it |
+| persistence | `FaceTemplateRepository`, `CsvFaceTemplateRepository`, `JdbcFaceTemplateRepository` | Storage (`data/face_templates.csv`, or the `JdbcFaceTemplateRepository` in Oracle) |
 | service | `FaceMatcher`, `FaceStabilizer`, `HeadTurnChallenge` | Pure rules, fully unit tested |
 | service | `FaceEnrollmentService`, `FaceAccessService` | Registration and access, with audit |
 | service | `FaceCamera`, `FaceFrame`, `FaceModels` | What the rest of the application knows about the camera |
