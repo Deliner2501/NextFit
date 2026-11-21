@@ -129,8 +129,12 @@ BEGIN
     VALUES (p_member_id, p_plan_id, v_start, v_start + v_duration - 1, 0)
     RETURNING id INTO v_sub_id;
 
-    INSERT INTO payments (subscription_id, member_id, paid_at, method, subtotal, registered_by)
-    VALUES (v_sub_id, p_member_id, SYSTIMESTAMP, p_method, v_price, p_user);
+    -- discount_type y discount_value se llenan con NONE y 0 porque JdbcPaymentRepository
+    -- lee el tipo con un switch y falla si viene NULL (pago sin descuento = NONE).
+    INSERT INTO payments (subscription_id, member_id, paid_at, method, subtotal,
+                          discount_type, discount_value, registered_by)
+    VALUES (v_sub_id, p_member_id, SYSTIMESTAMP, p_method, v_price,
+            'NONE', 0, p_user);
 END sp_renew_subscription;
 /
 
