@@ -9,7 +9,7 @@
 ![JavaFX](https://img.shields.io/badge/UI-JavaFX%20%2B%20AtlantaFX-blue)
 ![Storage](https://img.shields.io/badge/Storage-Oracle%20%7C%20CSV-green)
 ![Tests](https://img.shields.io/badge/Tests-JUnit%205-25A162?logo=junit5&logoColor=white)
-![Version](https://img.shields.io/badge/version-0.7.0-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0-7A35E8)
 
 Programación III · Universidad Popular del Cesar
 
