@@ -23,7 +23,10 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 |---|---|---|---|---|
 | File | Used in | Author | Source URL | License |
 |---|---|---|---|---|
-| `images/login/background.jpg` | Login background | Salman Sidheek | https://unsplash.com/es/fotos/interior-oscuro-del-gimnasio-con-maquinas-de-ejercicio-e-iluminacion-led-ER28K86K4Ho | Unsplash License |
+| `images/login/background-gym.jpg` | Login background | AI-generated image made for NextFit (neon gym with the project colors) | — | Original generated image |
+| `images/banners/dashboard-header.jpg` | Dashboard header | Crop of the NextFit login background | — | Original generated image |
+| `images/banners/dashboard-cable.jpg` | Dashboard active memberships card | AI-generated gym equipment image made for NextFit | — | Original generated image |
+| `images/banners/dashboard-plates.jpg` | Dashboard attendance card | AI-generated gym equipment image made for NextFit | — | Original generated image |
 | `images/banners/dashboard.jpg` | Dashboard banner | Luis Reyes | https://unsplash.com/es/fotos/foto-en-escala-de-grises-de-mancuernas-mTorQ9gFfOg | Unsplash License |
 | `images/banners/members.jpg` | Members banner | Vitaly Gariev | https://unsplash.com/es/fotos/el-entrenador-discute-el-progreso-con-el-cliente-usando-una-tableta-en-el-gimnasio-5p8vhHUEEgY | Unsplash License |
 | `images/banners/billing.jpg` | Billing banner | Andrea Piacquadio | https://www.pexels.com/es-es/foto/contenido-femenino-atletico-en-la-recepcion-en-el-centro-deportivo-3757950/ | Pexels License |
@@ -39,3 +42,7 @@ The mark combines a dumbbell (training) with a heartbeat line (health tracking),
 | `images/exercises/glutes.jpg` | Glutes exercises | Gabrielle Durant | https://www.pexels.com/es-es/foto/blanco-y-negro-persona-pantalones-cortos-shorts-13122465/ | Pexels License |
 
 Rules: only pictures with a license that allows free use (for example Unsplash or Pexels licenses), the author and URL must be written here, and the file name in `src/main/resources/images/` must match the one listed.
+
+## Image quality
+
+The photographs are exported from the original files at 1600 px (exercises) and 2560 px (banners) on the long side, saved as progressive JPEG at quality 88, and drawn at the real pixel size of the screen. Keep the originals outside the repository and export new pictures at the same sizes.

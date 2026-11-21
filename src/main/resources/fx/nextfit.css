@@ -1,0 +1,434 @@
+/* NextFit, interfaz JavaFX. Todos los colores viven aquí: las pantallas nunca los escriben en código. */
+
+.root.dark {
+    -nf-bg: #0E1014;
+    -nf-surface: #171A21;
+    -nf-surface-alt: #1F232C;
+    -nf-border: #262B36;
+    -nf-text: #E8ECF1;
+    -nf-muted: #8B93A1;
+    -nf-accent: #B6FF3B;
+    -nf-accent-text: #B6FF3B;
+    -nf-accent-soft: rgba(182, 255, 59, 0.14);
+    -nf-success: #3DDC97;
+    -nf-warning: #FFB020;
+    -nf-danger: #FF4D4F;
+    -nf-shade-start: rgba(14, 16, 20, 0.15);
+    -nf-shade-end: rgba(14, 16, 20, 0.92);
+}
+
+.root.light {
+    -nf-bg: #F3F5F8;
+    -nf-surface: #FFFFFF;
+    -nf-surface-alt: #EAEEF3;
+    -nf-border: #DCE1E8;
+    -nf-text: #14181F;
+    -nf-muted: #5E6776;
+    -nf-accent: #B6FF3B;
+    -nf-accent-text: #3F6A12;
+    -nf-accent-soft: rgba(120, 190, 30, 0.18);
+    -nf-success: #1FAE74;
+    -nf-warning: #E69500;
+    -nf-danger: #E03438;
+    -nf-shade-start: rgba(14, 16, 20, 0.25);
+    -nf-shade-end: rgba(14, 16, 20, 0.88);
+}
+
+.nf-bg { -fx-background-color: -nf-bg; }
+
+/* ---------- Texto ---------- */
+.nf-title { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
+.nf-muted { -fx-text-fill: -nf-muted; -fx-font-size: 14px; }
+.nf-muted-small { -fx-text-fill: -nf-muted; -fx-font-size: 12px; }
+.nf-card-title { -fx-text-fill: -nf-text; -fx-font-size: 16px; -fx-font-weight: bold; }
+.nf-field-label { -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-error { -fx-text-fill: -nf-danger; -fx-font-size: 13px; -fx-padding: 10 0 6 0; }
+.nf-user-name { -fx-text-fill: -nf-text; -fx-font-weight: bold; -fx-font-size: 14px; }
+.nf-sidebar-brand { -fx-text-fill: -nf-text; -fx-font-size: 22px; -fx-font-weight: bold; }
+
+/* ---------- Tarjetas ---------- */
+.nf-card {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+}
+.nf-kpi-value { -fx-font-size: 30px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
+.nf-badge { -fx-background-color: -nf-accent-soft; -fx-background-radius: 12; }
+.nf-tag { -fx-background-color: -nf-accent-soft; -fx-background-radius: 10; -fx-text-fill: -nf-accent-text; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 2 8 2 8; }
+.nf-badge .nf-icon { -fx-background-color: -nf-accent-text; }
+
+/* ---------- Iconos ---------- */
+.nf-icon { -fx-background-color: -nf-muted; }
+
+/* ---------- Barra lateral ---------- */
+.nf-sidebar {
+    -fx-background-color: -nf-surface;
+    -fx-border-color: -nf-border;
+    -fx-border-width: 0 1 0 0;
+}
+.nf-nav {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-text-fill: -nf-muted;
+    -fx-font-size: 15px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12 16;
+    -fx-graphic-text-gap: 14;
+    -fx-cursor: hand;
+}
+.nf-nav:hover { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-text; }
+.nf-nav:hover .nf-icon { -fx-background-color: -nf-text; }
+.nf-nav.selected { -fx-background-color: -nf-accent-soft; -fx-text-fill: -nf-accent-text; -fx-font-weight: bold; }
+.nf-nav.selected .nf-icon { -fx-background-color: -nf-accent-text; }
+
+/* ---------- Botones ---------- */
+.nf-primary {
+    -fx-background-color: -nf-accent;
+    -fx-text-fill: #0E1014;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 14;
+    -fx-cursor: hand;
+}
+.nf-primary:hover { -fx-background-color: derive(-nf-accent, -8%); }
+.nf-primary:disabled { -fx-opacity: 0.6; }
+.nf-icon-button {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+    -fx-cursor: hand;
+}
+.nf-icon-button:hover { -fx-background-color: -nf-surface-alt; }
+.nf-icon-button .nf-icon { -fx-background-color: -nf-text; }
+
+/* ---------- Campos ---------- */
+.nf-input {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 14;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 14;
+    -fx-text-fill: -nf-text;
+    -fx-prompt-text-fill: -nf-muted;
+    -fx-font-size: 15px;
+    -fx-padding: 0 16;
+}
+.nf-input:focused { -fx-border-color: -nf-accent; -fx-border-width: 2; }
+
+/* ---------- Avatar ---------- */
+.nf-avatar { -fx-background-color: -nf-accent; -fx-background-radius: 999; }
+.nf-avatar-text { -fx-text-fill: #0E1014; -fx-font-weight: bold; -fx-font-size: 16px; }
+
+/* ---------- Pantalla de ingreso y banner ---------- */
+.nf-brand-shade { -fx-background-color: linear-gradient(to bottom, -nf-shade-start, -nf-shade-end); }
+.nf-brand-name { -fx-text-fill: white; -fx-font-size: 48px; -fx-font-weight: bold; }
+.nf-brand-slogan { -fx-text-fill: #B6FF3B; -fx-font-size: 22px; }
+.nf-brand-text { -fx-text-fill: #C9CFD8; -fx-font-size: 16px; }
+.nf-brand-credit { -fx-text-fill: #9AA2AF; -fx-font-size: 12px; }
+.nf-hero-shade { -fx-background-color: linear-gradient(to right, rgba(14,16,20,0.85), rgba(14,16,20,0.15)); }
+.nf-hero-title { -fx-text-fill: white; -fx-font-size: 28px; -fx-font-weight: bold; }
+.nf-hero-text { -fx-text-fill: #D5DAE1; -fx-font-size: 14px; }
+
+/* ---------- Pantalla de ingreso (siempre oscura: se dibuja sobre una foto) ---------- */
+.nf-login, .root.nf-login.dark, .root.nf-login.light {
+    -nf-bg: #090810;
+    -nf-surface: rgba(12, 9, 32, 0.70);
+    -nf-surface-alt: #1F232C;
+    -nf-border: #40376A;
+    -nf-text: #F2F4F8;
+    -nf-muted: #AAB1C0;
+    -nf-accent: #A7F626;
+    -nf-accent-text: #A7F626;
+    -nf-accent-soft: rgba(167, 246, 38, 0.14);
+    -nf-danger: #FF6B6D;
+}
+/* The picture already carries the glow and the gym; this only darkens a little the side with the text. */
+.nf-login-shade { -fx-background-color: linear-gradient(to right, rgba(11, 10, 18, 0.30), rgba(11, 10, 18, 0) 50%); }
+.nf-login-brand { -fx-text-fill: white; -fx-font-size: 38px; -fx-font-weight: bold; }
+.nf-login-headline { -fx-fill: white; -fx-font-size: 40px; -fx-font-weight: bold; -fx-font-style: italic; }
+.nf-login-headline-accent { -fx-fill: #A7F626; -fx-font-size: 40px; -fx-font-weight: bold; -fx-font-style: italic; }
+.nf-login-text { -fx-text-fill: #D3D8E2; -fx-font-size: 16px; }
+.nf-login-feature {
+    -fx-background-color: linear-gradient(to bottom, rgba(122, 53, 232, 0.38), rgba(36, 23, 67, 0.62));
+    -fx-background-radius: 18;
+    -fx-border-color: rgba(143, 85, 255, 0.65);
+    -fx-border-radius: 18;
+}
+.nf-login-feature .nf-icon { -fx-background-color: #A7F626; }
+.nf-login-feature-text { -fx-text-fill: #F2F4F8; -fx-font-size: 13px; -fx-text-alignment: center; }
+.nf-login-card {
+    -fx-background-color: linear-gradient(to bottom, rgba(36, 23, 67, 0.80), rgba(16, 12, 32, 0.92));
+    -fx-background-radius: 28;
+    -fx-border-color: rgba(143, 85, 255, 0.60);
+    -fx-border-radius: 28;
+    -fx-border-width: 1.5;
+    -fx-padding: 34 38 30 38;
+    -fx-effect: dropshadow(gaussian, rgba(122, 53, 232, 0.35), 40, 0.12, 0, 0);
+}
+.nf-login-card-brand { -fx-text-fill: white; -fx-font-size: 32px; -fx-font-weight: bold; }
+.nf-login-title { -fx-fill: white; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-login-title-accent { -fx-fill: #A7F626; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-login-subtitle { -fx-text-fill: -nf-muted; -fx-font-size: 14px; }
+.nf-login-field-label { -fx-text-fill: #F2F4F8; -fx-font-size: 13px; -fx-font-weight: bold; }
+.nf-login-help { -fx-border-color: rgba(143, 85, 255, 0.35) transparent transparent transparent; -fx-padding: 14 0 0 0; }
+.root.nf-login .nf-input, .root.nf-login.dark .nf-input, .root.nf-login.light .nf-input {
+    -fx-background-color: rgba(20, 12, 48, 0.70);
+    -fx-text-fill: #F2F4F8;
+    -fx-prompt-text-fill: #C2BCDB;
+    -fx-border-color: rgba(143, 85, 255, 0.55);
+}
+.root.nf-login .nf-input:focused, .root.nf-login.dark .nf-input:focused, .root.nf-login.light .nf-input:focused { -fx-border-color: #A7F626; -fx-border-width: 2; }
+.nf-input-reveal { -fx-padding: 0 48 0 16; }
+.nf-eye { -fx-background-color: transparent; -fx-cursor: hand; -fx-padding: 8; }
+.nf-eye .nf-icon { -fx-background-color: -nf-muted; }
+.nf-eye:hover .nf-icon { -fx-background-color: white; }
+
+/* ---------- Desplazamiento ---------- */
+.nf-scroll, .nf-scroll > .viewport { -fx-background-color: transparent; -fx-background: transparent; }
+.nf-scroll { -fx-padding: 0; -fx-border-color: transparent; }
+
+/* ---------- Gráficos ---------- */
+.chart { -fx-background-color: transparent; }
+.chart-plot-background { -fx-background-color: transparent; }
+.chart-horizontal-grid-lines, .chart-vertical-grid-lines { -fx-stroke: -nf-border; }
+.chart-horizontal-zero-line, .chart-vertical-zero-line { -fx-stroke: -nf-border; }
+.axis { -fx-tick-label-fill: -nf-muted; }
+.axis-tick-mark, .axis-minor-tick-mark { -fx-stroke: transparent; }
+.axis:top, .axis:bottom, .axis:left, .axis:right { -fx-border-color: transparent; }
+.chart-legend { -fx-background-color: transparent; }
+.chart-legend-item { -fx-text-fill: -nf-muted; }
+
+.default-color0.chart-bar { -fx-bar-fill: -nf-accent; }
+.chart-bar { -fx-background-radius: 6 6 0 0; }
+.default-color0.chart-series-line { -fx-stroke: -nf-accent; -fx-stroke-width: 3px; }
+.default-color0.chart-line-symbol { -fx-background-color: -nf-accent, -nf-surface; }
+.default-color0.chart-series-area-fill { -fx-fill: -nf-accent-soft; }
+
+.default-color0.chart-pie { -fx-pie-color: -nf-accent; -fx-border-color: -nf-surface; }
+.default-color1.chart-pie { -fx-pie-color: -nf-warning; -fx-border-color: -nf-surface; }
+.default-color2.chart-pie { -fx-pie-color: -nf-success; -fx-border-color: -nf-surface; }
+.default-color3.chart-pie { -fx-pie-color: -nf-danger; -fx-border-color: -nf-surface; }
+.default-color4.chart-pie { -fx-pie-color: -nf-muted; -fx-border-color: -nf-surface; }
+.chart-legend-item-symbol { -fx-background-radius: 999; }
+.default-color0.chart-legend-item-symbol { -fx-background-color: -nf-accent; }
+.default-color1.chart-legend-item-symbol { -fx-background-color: -nf-warning; }
+.default-color2.chart-legend-item-symbol { -fx-background-color: -nf-success; }
+.default-color3.chart-legend-item-symbol { -fx-background-color: -nf-danger; }
+.default-color4.chart-legend-item-symbol { -fx-background-color: -nf-muted; }
+.chart-pie { -fx-background-color: -fx-pie-color; -fx-background-insets: 0; -fx-border-width: 2; }
+.chart-pie-label { -fx-fill: -nf-text; }
+
+/* ---------- Botones secundarios y pequeños ---------- */
+.nf-secondary {
+    -fx-background-color: -nf-surface;
+    -fx-text-fill: -nf-text;
+    -fx-background-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 12;
+    -fx-padding: 10 16;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+.nf-secondary:hover { -fx-background-color: -nf-surface-alt; }
+.nf-primary-small {
+    -fx-background-color: -nf-accent;
+    -fx-text-fill: #0E1014;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-radius: 12;
+    -fx-padding: 10 18;
+    -fx-cursor: hand;
+}
+.nf-primary-small:hover { -fx-background-color: derive(-nf-accent, -8%); }
+
+/* ---------- Ventanas de diálogo ---------- */
+.nf-dialog-title { -fx-text-fill: -nf-text; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-dialog .combo-box { -fx-pref-height: 44; }
+
+/* ---------- Tablas ---------- */
+.nf-table {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-padding: 4;
+}
+.nf-table .column-header-background { -fx-background-color: transparent; }
+.nf-table .column-header, .nf-table .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -nf-border transparent;
+    -fx-size: 44;
+}
+.nf-table .column-header { -fx-padding: 0 14 0 14; }
+.nf-table .column-header .label { -fx-alignment: CENTER_LEFT; -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-table .table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -nf-border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 54px;
+}
+.nf-table .table-row-cell:hover { -fx-background-color: -nf-surface-alt; }
+.nf-table .table-row-cell:selected { -fx-background-color: -nf-accent-soft; }
+.nf-table .table-cell { -fx-text-fill: -nf-text; -fx-alignment: CENTER_LEFT; -fx-font-size: 14px; -fx-border-color: transparent; -fx-padding: 0 14 0 14; }
+.nf-table .table-row-cell:selected .table-cell { -fx-text-fill: -nf-text; }
+.nf-table .table-cell.nf-state-on { -fx-text-fill: -nf-success; -fx-font-weight: bold; }
+.nf-table .table-cell.nf-state-off { -fx-text-fill: -nf-muted; -fx-font-weight: bold; }
+
+/* Filas vacías transparentes y estados que conservan su color al seleccionar */
+.nf-table .table-row-cell:empty { -fx-background-color: transparent; -fx-border-color: transparent; }
+.nf-table .table-row-cell:odd, .nf-table .table-row-cell:even { -fx-background-color: transparent; }
+.nf-table .table-row-cell:filled:odd:hover, .nf-table .table-row-cell:filled:even:hover { -fx-background-color: -nf-surface-alt; }
+.nf-table .table-row-cell:filled:selected, .nf-table .table-row-cell:filled:selected:hover { -fx-background-color: -nf-accent-soft; }
+.nf-table .table-row-cell:selected .table-cell.nf-state-on { -fx-text-fill: -nf-success; }
+.nf-table .table-row-cell:selected .table-cell.nf-state-off { -fx-text-fill: -nf-muted; }
+
+/* ---------- Pestañas ---------- */
+.nf-tabs { -fx-background-color: transparent; -fx-background-insets: 0; }
+.nf-tabs > .tab-header-area { -fx-background-color: transparent; -fx-padding: 0; }
+.nf-tabs > .tab-header-area > .headers-region { -fx-background-color: transparent; }
+.nf-tabs > .tab-header-area > .tab-header-background { -fx-background-color: transparent; }
+.nf-tabs > .tab-header-area .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent -nf-border transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 8 18;
+}
+.nf-tabs > .tab-header-area .tab .tab-label { -fx-text-fill: -nf-muted; -fx-font-size: 14px; }
+.nf-tabs > .tab-header-area .tab:hover .tab-label { -fx-text-fill: -nf-text; }
+.nf-tabs > .tab-header-area .tab:selected { -fx-border-color: transparent transparent -nf-accent transparent; }
+.nf-tabs > .tab-header-area .tab:selected .tab-label { -fx-text-fill: -nf-accent-text; -fx-font-weight: bold; }
+.nf-tabs > .tab-content-area { -fx-background-color: transparent; }
+
+/* ---------- Títulos de sección y listas ---------- */
+.nf-section-title { -fx-text-fill: -nf-text; -fx-font-size: 22px; -fx-font-weight: bold; }
+.nf-member-name { -fx-text-fill: -nf-text; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-list {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-padding: 4;
+}
+.nf-list .list-cell { -fx-background-color: transparent; -fx-background-radius: 10; -fx-padding: 8 12; }
+.nf-list .list-cell:empty { -fx-background-color: transparent; }
+.nf-list .list-cell:filled:hover { -fx-background-color: -nf-surface-alt; }
+.nf-list .list-cell:filled:selected, .nf-list .list-cell:filled:selected:hover { -fx-background-color: -nf-accent-soft; }
+.nf-list-name { -fx-text-fill: -nf-text; -fx-font-size: 14px; -fx-font-weight: bold; }
+
+/* ---------- Resumen de venta y comprobante ---------- */
+.nf-summary { -fx-background-color: -nf-surface-alt; -fx-background-radius: 14; }
+.nf-total { -fx-text-fill: -nf-accent-text; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-success-title { -fx-text-fill: -nf-success; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-receipt { -fx-font-family: "Consolas", "Courier New", monospace; -fx-font-size: 14px; -fx-text-fill: -nf-text; }
+.nf-receipt .content { -fx-background-color: -nf-surface-alt; -fx-background-radius: 12; }
+
+/* ---------- Estados de color en tablas y total del pie ---------- */
+.nf-table .table-cell.nf-state-warn, .nf-table .table-row-cell:selected .table-cell.nf-state-warn { -fx-text-fill: -nf-warning; -fx-font-weight: bold; }
+.nf-table .table-cell.nf-state-bad, .nf-table .table-row-cell:selected .table-cell.nf-state-bad { -fx-text-fill: -nf-danger; -fx-font-weight: bold; }
+.nf-footer-total { -fx-text-fill: -nf-accent-text; -fx-font-size: 16px; -fx-font-weight: bold; }
+
+/* ---------- Control de acceso (kiosco) y carnet ---------- */
+.nf-access-card {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-border-width: 2;
+    -fx-background-color: -nf-surface;
+    -fx-border-color: -nf-border;
+}
+.nf-access-idle .nf-icon { -fx-background-color: -nf-muted; }
+.nf-access-ok     { -fx-background-color: derive(-nf-success, -72%); -fx-border-color: -nf-success; }
+.nf-access-exit   { -fx-background-color: -nf-accent-soft;           -fx-border-color: -nf-accent; }
+.nf-access-denied { -fx-background-color: derive(-nf-danger, -72%);  -fx-border-color: -nf-danger; }
+.nf-access-verdict { -fx-text-fill: -nf-text; -fx-font-size: 28px; -fx-font-weight: bold; }
+.nf-access-ok .nf-access-verdict     { -fx-text-fill: -nf-success; }
+.nf-access-exit .nf-access-verdict   { -fx-text-fill: -nf-accent; }
+.nf-access-denied .nf-access-verdict { -fx-text-fill: -nf-danger; }
+.nf-access-name    { -fx-text-fill: -nf-text; -fx-font-size: 22px; -fx-font-weight: bold; }
+.nf-access-message { -fx-text-fill: -nf-text; -fx-font-size: 16px; -fx-text-alignment: center; }
+.nf-avatar { -fx-background-color: -nf-accent-soft; }
+.nf-avatar-initials { -fx-text-fill: -nf-accent; -fx-font-weight: bold; }
+
+/* The carnet is printed on paper, so it keeps its own colors in both themes. */
+.nf-carnet {
+    -fx-background-color: white;
+    -fx-background-radius: 18;
+    -fx-border-color: #D0D7DE;
+    -fx-border-radius: 18;
+}
+.nf-carnet-brand { -fx-text-fill: #0F9D6B; -fx-font-size: 26px; -fx-font-weight: bold; }
+.nf-carnet-kind  { -fx-text-fill: #57606A; -fx-font-size: 11px; -fx-font-weight: bold; }
+.nf-carnet-name  { -fx-text-fill: #1F2328; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-carnet-text  { -fx-text-fill: #57606A; -fx-font-size: 13px; }
+.nf-carnet .nf-avatar { -fx-background-color: #DDF3E8; }
+.nf-carnet .nf-avatar-initials { -fx-text-fill: #0B7A53; }
+
+/* ---------- Analítica: mapa de calor ---------- */
+.nf-heat-empty { -fx-background-color: -nf-surface-alt; -fx-background-radius: 6; }
+.nf-heat-cell  { -fx-background-color: -nf-accent; -fx-background-radius: 6; }
+
+/* Initials of the avatar must stay readable on the light theme. */
+.root.light .nf-avatar { -fx-background-color: #DDF3E8; }
+.root.light .nf-avatar-initials { -fx-text-fill: #0B7A53; }
+
+/* ---------- Acento de marca en los controles de AtlantaFX (foco, selección, calendario) ---------- */
+.root.dark, .root.light {
+    -color-accent-emphasis: -nf-accent;
+    -color-accent-fg: -nf-accent-text;
+    -color-accent-subtle: -nf-accent-soft;
+}
+
+
+/* ---------- Galería de ejercicios ---------- */
+.nf-exercise-card {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 16;
+    -fx-cursor: hand;
+}
+.nf-exercise-card:hover { -fx-border-color: -nf-accent; }
+.nf-exercise-empty { -fx-background-color: -nf-surface-alt; }
+
+
+/* ---------- Formulario de ejercicio ---------- */
+.nf-textarea {
+    -fx-background-color: -nf-surface;
+    -fx-background-radius: 14;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 14;
+    -fx-text-fill: -nf-text;
+    -fx-prompt-text-fill: -nf-muted;
+    -fx-font-size: 15px;
+}
+.nf-textarea .content { -fx-background-color: transparent; -fx-padding: 10 14; }
+.nf-textarea:focused { -fx-border-color: -nf-accent; -fx-border-width: 2; }
+
+
+
+/* ---------- Pantalla de TV: ocupación en vivo ---------- */
+.nf-tv-percent { -fx-text-fill: -nf-text; -fx-font-size: 20px; -fx-font-weight: bold; }
+.nf-occupancy-bar > .track { -fx-background-color: -nf-surface-alt; -fx-background-radius: 11; -fx-background-insets: 0; }
+.nf-occupancy-bar > .bar { -fx-background-radius: 11; -fx-background-insets: 0; }
+.nf-level-quiet > .bar { -fx-background-color: -nf-success; }
+.nf-level-moderate > .bar { -fx-background-color: -nf-accent; }
+.nf-level-busy > .bar { -fx-background-color: -nf-warning; }
+.nf-level-full > .bar { -fx-background-color: -nf-danger; }
+
+/* ---------- Logros del socio (Ronald) ---------- */
+.nf-achievement-earned { -fx-border-color: -nf-accent; }
+.nf-achievement-locked { -fx-opacity: 0.55; }
+.nf-achievement-earned-text { -fx-text-fill: -nf-success; -fx-font-size: 12px; -fx-font-weight: bold; }
+
+
+/* ---------- Centro de alertas (Ronald) ---------- */
+.nf-alert-message { -fx-text-fill: -nf-text; -fx-font-size: 15px; }
+
+
+/* ---------- Asistente (chat) ---------- */
+.nf-chat-bubble { -fx-padding: 10 14; -fx-background-radius: 14; -fx-font-size: 14px; }
+.nf-chat-user { -fx-background-color: -nf-accent-soft; -fx-text-fill: -nf-text; }
+.nf-chat-assistant { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-text; }
+.nf-chat-error { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-danger; }

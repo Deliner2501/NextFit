@@ -2,34 +2,54 @@ package com.nextfit.service;
 
 import com.nextfit.exceptions.BusinessRuleException;
 import com.nextfit.exceptions.ResourceNotFoundException;
+import com.nextfit.model.AuditAction;
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
 import com.nextfit.persistence.UserRepository;
+import com.nextfit.service.audit.AuditLog;
 import com.nextfit.util.PasswordHasher;
 import com.nextfit.validation.UserValidator;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Rules for managing the accounts that can sign in: create them, change their
  * name and role, reset a password and enable or disable them. It guarantees
- * that the gym is never left without an active administrator.
+ * that the gym is never left without an active administrator, and it writes
+ * every change in the audit log.
  */
 public class UserService {
 
     private final UserRepository users;
     private final UserValidator validator;
+    private final AuditLog audit;
+    private final Supplier<String> actor;
 
     /**
-     * Creates the service.
+     * Creates the service without audit.
      *
      * @param users     the user storage
      * @param validator the checker of user data
      */
     public UserService(UserRepository users, UserValidator validator) {
+        this(users, validator, AuditLog.NONE, () -> "");
+    }
+
+    /**
+     * Creates the service with an audit log.
+     *
+     * @param users     the user storage
+     * @param validator the checker of user data
+     * @param audit     where the changes are written
+     * @param actor     gives the sign-in name of whoever is acting now
+     */
+    public UserService(UserRepository users, UserValidator validator, AuditLog audit, Supplier<String> actor) {
         this.users = users;
         this.validator = validator;
+        this.audit = audit;
+        this.actor = actor;
     }
 
     /**
@@ -60,8 +80,11 @@ public class UserService {
         if (users.findByUsername(cleanName).isPresent()) {
             throw new BusinessRuleException("Ya existe un usuario con el nombre '" + cleanName + "'");
         }
-        return users.save(new User(0, cleanName, fullName.trim(),
+        User stored = users.save(new User(0, cleanName, fullName.trim(),
                 PasswordHasher.hash(password), role, true));
+        audit.record(actor.get(), AuditAction.USER_CREATED,
+                "Usuario '" + stored.getUsername() + "' con rol " + role.getLabel());
+        return stored;
     }
 
     /**
@@ -80,8 +103,11 @@ public class UserService {
         if (current.isActive() && current.getRole() == Role.ADMIN && role != Role.ADMIN) {
             ensureAnotherActiveAdmin(id);
         }
-        return users.save(new User(id, current.getUsername(), fullName.trim(),
+        User stored = users.save(new User(id, current.getUsername(), fullName.trim(),
                 current.getPasswordHash(), role, current.isActive()));
+        audit.record(actor.get(), AuditAction.USER_UPDATED,
+                "Usuario '" + stored.getUsername() + "', rol " + role.getLabel());
+        return stored;
     }
 
     /**
@@ -96,6 +122,7 @@ public class UserService {
         User current = findById(id);
         users.save(new User(id, current.getUsername(), current.getFullName(),
                 PasswordHasher.hash(newPassword), current.getRole(), current.isActive()));
+        audit.record(actor.get(), AuditAction.PASSWORD_RESET, "Usuario '" + current.getUsername() + "'");
     }
 
     /**
@@ -117,7 +144,9 @@ public class UserService {
         if (current.getRole() == Role.ADMIN) {
             ensureAnotherActiveAdmin(id);
         }
-        return users.save(withActive(current, false));
+        User stored = users.save(withActive(current, false));
+        audit.record(actor.get(), AuditAction.USER_DEACTIVATED, "Usuario '" + stored.getUsername() + "'");
+        return stored;
     }
 
     /**
@@ -128,7 +157,12 @@ public class UserService {
      */
     public User reactivate(long id) {
         User current = findById(id);
-        return current.isActive() ? current : users.save(withActive(current, true));
+        if (current.isActive()) {
+            return current;
+        }
+        User stored = users.save(withActive(current, true));
+        audit.record(actor.get(), AuditAction.USER_REACTIVATED, "Usuario '" + stored.getUsername() + "'");
+        return stored;
     }
 
     private User findById(long id) {

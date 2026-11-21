@@ -23,6 +23,31 @@ public final class Formats {
     }
 
     /**
+     * Writes a number of days with the right singular or plural.
+     *
+     * @param days the number of days
+     * @return the text, e.g. "1 día" or "30 días"
+     */
+    public static String days(int days) {
+        return days == 1 ? "1 día" : days + " días";
+    }
+
+    /**
+     * Writes a change in percent with its sign and a decimal comma, keeping the decimal only when it matters.
+     *
+     * @param percent the change, for example 12.5 or -8
+     * @return the text, e.g. "+12,5 %", "+110 %", "-8 %" or "0 %"
+     */
+    public static String signedPercent(double percent) {
+        // One decimal only when it matters: +12,5 % but +110 %.
+        double rounded = Math.round(percent * 10) / 10.0;
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.ROOT);
+        symbols.setDecimalSeparator(',');
+        String digits = new DecimalFormat(rounded == Math.rint(rounded) ? "0" : "0.0", symbols).format(Math.abs(rounded));
+        return (rounded > 0 ? "+" : rounded < 0 ? "-" : "") + digits + " %";
+    }
+
+    /**
      * Writes an amount of pesos with a dot between thousands.
      *
      * @param pesos the amount

@@ -7,6 +7,7 @@ import com.nextfit.persistence.MemberRepository;
 import com.nextfit.validation.MemberValidator;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Rules of the gym members: who can be registered, changed or deactivated.
@@ -51,8 +52,18 @@ public class MemberService {
     }
 
     /**
-     * Searches members whose name contains the text or whose document number
-     * contains it. An empty text returns every member.
+     * Looks a member up by document number.
+     *
+     * @param documentNumber the document number, spaces around it are ignored
+     * @return the member, or empty when nobody has that document
+     */
+    public Optional<Member> findByDocumentNumber(String documentNumber) {
+        return members.findByDocumentNumber(documentNumber.trim());
+    }
+
+    /**
+     * Searches members whose name, document number or phone contains the text.
+     * An empty text returns every member.
      *
      * @param text the text to look for
      * @return the matching members
@@ -64,7 +75,8 @@ public class MemberService {
         String wanted = text.trim().toLowerCase();
         return members.findAll().stream()
                 .filter(m -> m.getFullName().toLowerCase().contains(wanted)
-                        || m.getDocumentNumber().contains(wanted))
+                        || m.getDocumentNumber().contains(wanted)
+                        || m.getPhone().contains(wanted))
                 .toList();
     }
 

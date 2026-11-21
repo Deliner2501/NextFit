@@ -98,6 +98,15 @@ public class AttendanceService {
     }
 
     /**
+     * Returns every visit ever registered, for reports and analytics.
+     *
+     * @return the records, open and closed
+     */
+    public List<AttendanceRecord> findAll() {
+        return attendance.findAll();
+    }
+
+    /**
      * Returns every visit of a member, from the oldest to the newest.
      *
      * @param memberId the identifier of the member

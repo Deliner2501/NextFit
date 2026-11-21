@@ -22,6 +22,12 @@ class FormatsTest {
     }
 
     @Test
+    void daysUseSingularForOne() {
+        assertEquals("1 día", Formats.days(1));
+        assertEquals("30 días", Formats.days(30));
+    }
+
+    @Test
     void moneyKeepsTheSignOfNegativeAmounts() {
         assertEquals("-$ 1.500", Formats.money(-1_500));
     }
@@ -39,6 +45,16 @@ class FormatsTest {
         assertEquals(80_000, Formats.parseMoney("precio", "80000"));
         assertEquals(80_000, Formats.parseMoney("precio", "80.000"));
         assertEquals(80_000, Formats.parseMoney("precio", " $ 80.000 "));
+    }
+
+    @Test
+    void signedPercentShowsTheSignAndOnlyUsefulDecimals() {
+        assertEquals("+12,5 %", Formats.signedPercent(12.5));
+        assertEquals("+110 %", Formats.signedPercent(110.0));
+        assertEquals("-8 %", Formats.signedPercent(-8.0));
+        assertEquals("-3,3 %", Formats.signedPercent(-3.33));
+        assertEquals("0 %", Formats.signedPercent(0.0));
+        assertEquals("0 %", Formats.signedPercent(0.01));
     }
 
     @Test

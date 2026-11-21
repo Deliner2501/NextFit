@@ -1,0 +1,660 @@
+/*
+ * NextFit, segunda capa de diseño: violeta vivo + verde lima, tarjetas con degradado y jerarquía visual.
+ * Se carga después de nextfit.css y solo sobrescribe lo necesario, así que todos los módulos (también los
+ * de los demás integrantes) heredan la paleta sin cambiar su código. Los colores viven aquí como variables.
+ */
+
+/* ======================= Variables de color ======================= */
+.root.dark {
+    -nf-bg: #090810;
+    -nf-surface: #13121C;
+    -nf-surface-alt: #1D1830;
+    -nf-border: #40376A;
+    -nf-text: #F4F1FB;
+    -nf-muted: #C2BCDB;
+    -nf-accent: #A7F626;
+    -nf-accent-text: #A7F626;
+    -nf-accent-soft: rgba(167, 246, 38, 0.14);
+    -nf-shade-start: rgba(14, 10, 30, 0.15);
+    -nf-shade-end: rgba(14, 10, 30, 0.92);
+    -nf-violet: #7A35E8;
+    -nf-violet-bright: #8F55FF;
+    -nf-violet-text: #C3A8FF;
+    -nf-violet-soft: rgba(122, 53, 232, 0.24);
+    -nf-violet-deep: #241743;
+    -nf-card-start: #1B1530;
+    -nf-card-end: #13121C;
+    -nf-side-top: #100E1A;
+    -nf-side-bottom: #1D1238;
+    -nf-glow: rgba(109, 43, 208, 0.22);
+    -nf-lime-glow: rgba(167, 246, 38, 0.35);
+    -nf-page-glow: rgba(109, 43, 208, 0.40);
+    /* Profundidad de las tarjetas: borde de luz, brillos en las esquinas y luz superior */
+    -nf-ring-a: rgba(167, 246, 38, 0.60);
+    -nf-ring-b: rgba(143, 85, 255, 0.50);
+    -nf-ring-c: rgba(64, 55, 106, 0.55);
+    -nf-shine-a: rgba(143, 85, 255, 0.30);
+    -nf-shine-b: rgba(167, 246, 38, 0.17);
+    -nf-top-light: rgba(255, 255, 255, 0.06);
+    -nf-lift: rgba(0, 0, 0, 0.45);
+    -nf-shine-a-0: rgba(143, 85, 255, 0);
+    -nf-shine-b-0: rgba(167, 246, 38, 0);
+    -nf-top-light-0: rgba(255, 255, 255, 0);
+}
+
+.root.light {
+    -nf-bg: #E9E4F7;
+    -nf-surface: #FFFFFF;
+    -nf-surface-alt: #E2DAF4;
+    -nf-border: #C6BAE6;
+    -nf-text: #160E2E;
+    -nf-muted: #483F68;
+    -nf-accent: #A7F626;
+    -nf-accent-text: #2C5608;
+    -nf-accent-soft: rgba(120, 190, 30, 0.18);
+    -nf-shade-start: rgba(14, 10, 30, 0.25);
+    -nf-shade-end: rgba(14, 10, 30, 0.88);
+    -nf-violet: #7A35E8;
+    -nf-violet-bright: #8F55FF;
+    -nf-violet-text: #4519A6;
+    -nf-violet-soft: rgba(122, 53, 232, 0.14);
+    -nf-violet-deep: #DDD0FA;
+    -nf-card-start: #FFFFFF;
+    -nf-card-end: #FBF9FF;
+    -nf-side-top: #FFFFFF;
+    -nf-side-bottom: #EEE8FC;
+    -nf-glow: rgba(40, 20, 100, 0.16);
+    -nf-lime-glow: rgba(120, 190, 30, 0.30);
+    -nf-page-glow: rgba(122, 53, 232, 0.10);
+    -nf-ring-a: rgba(122, 53, 232, 0.60);
+    -nf-ring-b: rgba(143, 85, 255, 0.38);
+    -nf-ring-c: rgba(198, 186, 230, 0.95);
+    -nf-shine-a: rgba(143, 85, 255, 0.16);
+    -nf-shine-b: rgba(167, 246, 38, 0.24);
+    -nf-top-light: rgba(255, 255, 255, 0.55);
+    -nf-lift: rgba(40, 20, 100, 0.22);
+    -nf-shine-a-0: rgba(143, 85, 255, 0);
+    -nf-shine-b-0: rgba(167, 246, 38, 0);
+    -nf-top-light-0: rgba(255, 255, 255, 0);
+}
+
+/* Los controles de AtlantaFX (listas desplegables, calendario, diálogos) usan la misma paleta. */
+.root.dark, .root.light {
+    -color-bg-default: -nf-surface;
+    -color-bg-subtle: -nf-surface-alt;
+    -color-bg-inset: -nf-bg;
+    -color-border-default: -nf-border;
+    -color-border-muted: -nf-border;
+    -color-fg-default: -nf-text;
+    -color-fg-muted: -nf-muted;
+}
+
+/* ======================= Fondo y barra lateral ======================= */
+.nf-bg {
+    -fx-background-color:
+        radial-gradient(center 82% 0%, radius 38%, -nf-page-glow, rgba(109, 43, 208, 0)),
+        -nf-bg;
+}
+.nf-sidebar {
+    -fx-background-color: linear-gradient(to bottom, -nf-side-top, -nf-side-bottom);
+    -fx-border-color: -nf-border;
+    -fx-border-width: 0 1 0 0;
+}
+.nf-nav { -fx-background-radius: 12; }
+.nf-nav:hover { -fx-background-color: -nf-violet-soft; }
+.nf-nav.selected {
+    -fx-background-color: linear-gradient(to right, #A7F626, #6DB21A);
+    -fx-text-fill: #0B0A12;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 16, 0, 0, 3);
+}
+.nf-nav.selected .nf-icon { -fx-background-color: #0B0A12; }
+
+/* Bloque promocional del pie de la barra lateral */
+.nf-promo { -fx-background-radius: 20; -fx-background-color: linear-gradient(to bottom, rgba(122,53,232,0.10), rgba(122,53,232,0.55)); }
+.nf-promo-line1 { -fx-text-fill: white; -fx-font-size: 21px; -fx-font-weight: bold; }
+.nf-promo-line2 { -fx-text-fill: #A7F626; -fx-font-size: 21px; -fx-font-weight: bold; }
+
+/* ======================= Tarjetas, tablas y listas ======================= */
+.nf-card, .nf-table, .nf-list, .nf-exercise-card {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end);
+    -fx-background-radius: 20;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 20;
+}
+.nf-card { -fx-effect: dropshadow(gaussian, -nf-glow, 20, 0, 0, 6); }
+
+/* Tarjeta protagonista: más grande, con fondo violeta y el dato principal en verde. */
+.nf-card-feature {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-card-end);
+    -fx-background-radius: 20;
+    -fx-border-color: -nf-violet;
+    -fx-border-radius: 20;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, -nf-glow, 26, 0, 0, 8);
+}
+.nf-card-feature .nf-muted { -fx-text-fill: -nf-violet-text; }
+.nf-kpi-xl { -fx-font-size: 48px; -fx-font-weight: bold; -fx-text-fill: -nf-accent-text; }
+.nf-kpi-value-small { -fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: -nf-text; }
+
+/* Tarjeta de indicador: insignia violeta, número grande y un ícono grande de fondo */
+.nf-kpi-card {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end);
+    -fx-background-radius: 20;
+    -fx-border-color: -nf-border;
+    -fx-border-radius: 20;
+    -fx-effect: dropshadow(gaussian, -nf-glow, 20, 0, 0, 6);
+}
+.nf-kpi-card-lime {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -nf-card-start 40%, rgba(167,246,38,0.20));
+}
+.nf-kpi-deco .nf-icon { -fx-background-color: -nf-accent-text; }
+.nf-kpi-deco-violet .nf-icon { -fx-background-color: -nf-violet-bright; }
+
+.nf-badge { -fx-background-color: -nf-accent-soft; -fx-background-radius: 999; }
+.nf-badge-violet { -fx-background-color: -nf-violet-soft; -fx-background-radius: 999; }
+.nf-badge-violet .nf-icon { -fx-background-color: -nf-violet-bright; }
+.nf-badge-solid { -fx-background-color: -nf-violet; -fx-background-radius: 999; }
+.nf-badge-solid .nf-icon { -fx-background-color: white; }
+
+/* Variaciones (por ejemplo "+12,5 %") */
+.nf-chip-up, .nf-chip-down {
+    -fx-background-radius: 999;
+    -fx-padding: 4 10;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+.nf-chip-up { -fx-background-color: rgba(167,246,38,0.16); -fx-text-fill: -nf-accent-text; }
+.nf-chip-down { -fx-background-color: rgba(255,77,79,0.16); -fx-text-fill: -nf-danger; }
+
+/* ======================= Portada del panel ======================= */
+.nf-hero-shade {
+    -fx-background-color: linear-gradient(to right, rgba(12,8,28,0.94) 0%, rgba(60,24,130,0.72) 55%, rgba(122,53,232,0.40) 100%);
+}
+.nf-hero-title { -fx-text-fill: white; -fx-font-size: 34px; -fx-font-weight: bold; }
+.nf-hero-name { -fx-text-fill: #A7F626; -fx-font-size: 34px; -fx-font-weight: bold; }
+.nf-hero-text { -fx-text-fill: #E4DDF5; -fx-font-size: 16px; }
+.nf-hero-bar { -fx-background-color: linear-gradient(to bottom, #C4FF5A, #6DB21A); }
+.nf-hero-stripe { -fx-fill: linear-gradient(to bottom right, #C4FF5A, #6DB21A); }
+
+/* ======================= Botones ======================= */
+.nf-primary, .nf-primary-small {
+    -fx-background-color: linear-gradient(to right, #A7F626, #7CC81F);
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 14, 0, 0, 2);
+}
+.nf-primary:hover, .nf-primary-small:hover { -fx-background-color: linear-gradient(to right, #B8FF4A, #8AD82A); }
+.nf-secondary:hover, .nf-icon-button:hover { -fx-background-color: -nf-violet-soft; }
+.nf-icon-button { -fx-border-color: -nf-border; }
+
+/* ======================= Tablas y listas ======================= */
+.nf-table .column-header .label { -fx-text-fill: -nf-violet-text; }
+.nf-table .table-row-cell:filled:hover, .nf-list .list-cell:filled:hover { -fx-background-color: -nf-violet-soft; }
+.nf-table .table-row-cell:filled:odd:hover, .nf-table .table-row-cell:filled:even:hover { -fx-background-color: -nf-violet-soft; }
+.nf-exercise-card:hover { -fx-border-color: -nf-violet-bright; }
+.nf-summary { -fx-background-color: -nf-violet-soft; }
+
+/* ======================= Gráficas ======================= */
+.chart-horizontal-grid-lines { -fx-stroke: -nf-border; -fx-stroke-dash-array: 2 6; }
+.default-color0.chart-bar { -fx-bar-fill: linear-gradient(to bottom, #8F55FF, #5A22B8); }
+.chart-bar { -fx-background-radius: 8 8 0 0; }
+.chart-bar.nf-bar-today { -fx-bar-fill: linear-gradient(to bottom, #C4FF5A, #6DB21A); }
+.default-color0.chart-series-area-line { -fx-stroke: linear-gradient(to right, #8F55FF, #A7F626); -fx-stroke-width: 3.5px; }
+.default-color0.chart-series-area-fill { -fx-fill: linear-gradient(to bottom, rgba(167,246,38,0.30), rgba(122,53,232,0.04)); }
+.default-color0.chart-area-symbol {
+    -fx-background-color: #A7F626, -nf-card-end;
+    -fx-background-insets: 0, 3;
+    -fx-background-radius: 6;
+    -fx-padding: 5;
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 10, 0.4, 0, 0);
+}
+.default-color0.chart-pie { -fx-pie-color: #A7F626; -fx-border-color: -nf-card-end; }
+.default-color1.chart-pie { -fx-pie-color: #FFB020; -fx-border-color: -nf-card-end; }
+.default-color2.chart-pie { -fx-pie-color: #7A35E8; -fx-border-color: -nf-card-end; }
+.default-color3.chart-pie { -fx-pie-color: #FF4D4F; -fx-border-color: -nf-card-end; }
+.default-color4.chart-pie { -fx-pie-color: #8A86A0; -fx-border-color: -nf-card-end; }
+.nf-dot-0, .nf-dot-1, .nf-dot-2, .nf-dot-3, .nf-dot-4 { -fx-background-radius: 999; }
+.nf-dot-0 { -fx-background-color: #A7F626; }
+.nf-dot-1 { -fx-background-color: #FFB020; }
+.nf-dot-2 { -fx-background-color: #7A35E8; }
+.nf-dot-3 { -fx-background-color: #FF4D4F; }
+.nf-dot-4 { -fx-background-color: #8A86A0; }
+.nf-donut-hole { -fx-fill: -nf-card-end; }
+.nf-donut-total { -fx-text-fill: -nf-text; -fx-font-size: 30px; -fx-font-weight: bold; }
+.nf-legend-name { -fx-text-fill: -nf-text; -fx-font-size: 14px; }
+.nf-legend-value { -fx-text-fill: -nf-muted; -fx-font-size: 14px; -fx-font-weight: bold; }
+.nf-bar-value { -fx-text-fill: -nf-muted; -fx-font-size: 12px; -fx-font-weight: bold; }
+.nf-bar-bubble {
+    -fx-background-color: #A7F626;
+    -fx-background-radius: 10;
+    -fx-text-fill: #0B0A12;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-padding: 3 9;
+}
+
+/* ======================= Mapa de calor ======================= */
+.nf-heat-empty { -fx-background-color: -nf-surface-alt; -fx-background-radius: 6; }
+.nf-heat-low { -fx-background-color: -nf-violet; -fx-background-radius: 6; }
+.nf-heat-cell { -fx-background-color: #A7F626; -fx-background-radius: 6; }
+
+/* ======================= Una sola escala de radios =======================
+ * Tarjetas y bloques grandes: 20.  Controles (campos, botones, listas desplegables): 12.
+ * Chips e insignias: totalmente redondos.  Celdas internas: 6 a 10. */
+.nf-card, .nf-card-feature, .nf-kpi-card, .nf-table, .nf-list, .nf-exercise-card, .nf-access-card, .nf-carnet, .nf-promo {
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+.nf-input, .nf-textarea, .nf-primary, .nf-primary-small, .nf-secondary, .nf-icon-button, .nf-nav, .nf-summary {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+.nf-receipt .content { -fx-background-radius: 12; }
+
+/* ======================= Controles con un mismo peso visual =======================
+ * Campos, filtros y botones secundarios comparten altura (44), borde y radio. El verde lima queda
+ * reservado para la acción principal, y el foco de los campos es violeta. */
+.nf-input, .nf-textarea {
+    -fx-background-color: -nf-surface-alt;
+    -fx-border-color: -nf-border;
+    -fx-border-width: 1;
+}
+.nf-input:focused, .nf-textarea:focused { -fx-border-color: -nf-violet-bright; -fx-border-width: 2; }
+.root.dark .nf-input, .root.dark .nf-textarea { -fx-background-color: rgba(255,255,255,0.05); }
+.root.light .nf-input, .root.light .nf-textarea { -fx-background-color: #FFFFFF; }
+.combo-box-base {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-pref-height: 44;
+    -fx-min-height: 44;
+}
+.nf-primary-small {
+    -fx-min-height: 44;
+    -fx-pref-height: 44;
+    -fx-padding: 0 20;
+    -fx-effect: null;
+    -fx-text-fill: #0B0A12;
+}
+.nf-secondary { -fx-min-height: 44; -fx-pref-height: 44; -fx-padding: 0 18; }
+.nf-icon-button { -fx-border-color: -nf-border; }
+.nf-field-label { -fx-text-fill: -nf-text; -fx-font-size: 13px; }
+.nf-muted-small { -fx-font-size: 13px; }
+.nf-nav { -fx-text-fill: -nf-muted; }
+.nf-nav:hover { -fx-text-fill: -nf-text; }
+
+/* ======================= Modo claro: lienzo firme y tarjetas bien separadas ======================= */
+.root.light .nf-card,
+.root.light .nf-kpi-card,
+.root.light .nf-table,
+.root.light .nf-list,
+.root.light .nf-exercise-card {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: -nf-border;
+    -fx-effect: dropshadow(gaussian, rgba(40, 20, 100, 0.16), 16, 0, 0, 4);
+}
+.root.light .nf-card-feature {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #E6DAFF, #FFFFFF);
+    -fx-border-color: #7A35E8;
+    -fx-effect: dropshadow(gaussian, rgba(90, 34, 184, 0.24), 20, 0, 0, 6);
+}
+.root.light .nf-kpi-card-lime {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #FFFFFF 35%, #DDF7A4);
+}
+.root.light .nf-sidebar { -fx-border-color: -nf-border; }
+.root.light .nf-nav:hover { -fx-background-color: #E0D5F8; }
+.root.light .nf-heat-empty { -fx-background-color: #DCD3F1; }
+.root.light .nf-table .column-header .label { -fx-text-fill: -nf-violet-text; }
+.root.light .chart-horizontal-grid-lines { -fx-stroke: #CFC5EA; }
+.root.light .axis { -fx-tick-label-fill: -nf-muted; }
+.root.light .nf-badge-violet { -fx-background-color: rgba(122, 53, 232, 0.18); }
+.root.light .nf-chip-up { -fx-background-color: rgba(90, 150, 10, 0.20); }
+.root.light .nf-bar-value, .root.light .nf-legend-value { -fx-text-fill: -nf-muted; }
+
+/* ======================= Pantalla de ingreso ======================= */
+.nf-brand-shade {
+    -fx-background-color: linear-gradient(to bottom, rgba(18, 8, 44, 0.30) 0%, rgba(40, 16, 96, 0.55) 45%, rgba(10, 6, 24, 0.96) 100%);
+}
+.nf-brand-name { -fx-text-fill: white; -fx-font-size: 48px; -fx-font-weight: bold; }
+.nf-brand-slogan { -fx-text-fill: #A7F626; -fx-font-size: 22px; -fx-font-weight: bold; }
+.nf-brand-text { -fx-text-fill: #E4DDF5; -fx-font-size: 16px; }
+.nf-brand-credit { -fx-text-fill: #C2BCDB; -fx-font-size: 12px; }
+.nf-brand-bar { -fx-background-color: linear-gradient(to right, #C4FF5A, #6DB21A); -fx-background-radius: 999; }
+.nf-login-card { -fx-padding: 40; }
+
+/* ======================= Reportes y cierre de caja ======================= */
+.nf-result-ok { -fx-text-fill: #7BD21B; -fx-font-weight: bold; }
+.nf-result-warn { -fx-text-fill: #FFB020; -fx-font-weight: bold; }
+.nf-result-bad { -fx-text-fill: #FF6B6D; -fx-font-weight: bold; }
+.root.light .nf-result-ok { -fx-text-fill: #2C5608; }
+.root.light .nf-result-warn { -fx-text-fill: #9A5B00; }
+.root.light .nf-result-bad { -fx-text-fill: #C62828; }
+.nf-bar-track { -fx-background-color: -nf-surface-alt; -fx-background-radius: 999; }
+.nf-bar-fill { -fx-background-radius: 999; }
+.date-picker { -fx-background-radius: 12; -fx-border-radius: 12; -fx-pref-height: 44; -fx-min-height: 44; }
+
+/* ======================= Fase 1: profundidad, brillos y fondos ======================= */
+/* Fondo de la ventana (la ventana principal es la raíz, por eso dos selectores): imagen con rayas de luz y resplandores (images/bg), sobre el color base. */
+.root.dark.nf-bg, .root.dark .nf-bg {
+    -fx-background-image: url("../images/bg/bg-dark.jpg");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
+.root.light.nf-bg, .root.light .nf-bg {
+    -fx-background-image: url("../images/bg/bg-light.jpg");
+    -fx-background-size: cover;
+    -fx-background-position: center;
+    -fx-background-repeat: no-repeat;
+}
+
+/* Tarjetas: capa 1 = borde de luz degradado (lima arriba a la izquierda), 2 = relleno, 3 = luz de arriba,
+   4 y 5 = brillos en las esquinas. Todas se apilan con inserciones para que el borde mida 1.5 px. */
+.root.dark .nf-card, .root.light .nf-card,
+.root.dark .nf-kpi-card, .root.light .nf-kpi-card,
+.root.dark .nf-exercise-card, .root.light .nf-exercise-card {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-ring-a, -nf-ring-b 38%, -nf-ring-c 68%, -nf-ring-b),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 60%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 50%, -nf-shine-b, -nf-shine-b-0);
+    -fx-background-insets: 0, 1.5, 1.5, 1.5, 1.5;
+    -fx-background-radius: 20, 18.5, 18.5, 18.5, 18.5;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, -nf-lift, 26, 0.04, 0, 10);
+}
+
+/* Tablas y listas: mismo borde de luz y relieve, sin brillos en las esquinas para no estorbar la lectura. */
+.root.dark .nf-table, .root.light .nf-table,
+.root.dark .nf-list, .root.light .nf-list {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-ring-a, -nf-ring-b 38%, -nf-ring-c 68%, -nf-ring-b),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 20%);
+    -fx-background-insets: 0, 1.5, 1.5;
+    -fx-background-radius: 20, 18.5, 18.5;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, -nf-lift, 22, 0.04, 0, 8);
+}
+
+/* Tarjeta protagonista: borde violeta vivo, fondo violeta profundo y brillo lima abajo a la derecha. */
+.root.dark .nf-card-feature, .root.light .nf-card-feature {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-violet-bright, -nf-ring-b 45%, -nf-violet-bright),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-violet-deep, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 65%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 55%, -nf-shine-b, -nf-shine-b-0);
+    -fx-background-insets: 0, 1.5, 1.5, 1.5, 1.5;
+    -fx-background-radius: 20, 18.5, 18.5, 18.5, 18.5;
+    -fx-border-color: transparent;
+    -fx-effect: dropshadow(gaussian, -nf-glow, 34, 0.08, 0, 12);
+}
+.root.light .nf-card-feature {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-violet, -nf-ring-b 45%, -nf-violet),
+        linear-gradient(from 0% 0% to 100% 100%, #E6DAFF, #FFFFFF),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 65%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 55%, -nf-shine-b, -nf-shine-b-0);
+}
+
+/* Indicador verde: el brillo lima de la esquina inferior es más fuerte. */
+.root.dark .nf-kpi-card-lime, .root.light .nf-kpi-card-lime {
+    -fx-background-color:
+        linear-gradient(from 0% 0% to 100% 100%, -nf-ring-a, -nf-ring-b 38%, -nf-ring-c 68%, -nf-ring-a),
+        linear-gradient(from 0% 0% to 100% 100%, -nf-card-start, -nf-card-end),
+        linear-gradient(to bottom, -nf-top-light, -nf-top-light-0 38%),
+        radial-gradient(center 0% 0%, radius 60%, -nf-shine-a, -nf-shine-a-0),
+        radial-gradient(center 100% 100%, radius 70%, rgba(167, 246, 38, 0.30), -nf-shine-b-0);
+}
+
+/* Elevación al pasar el mouse: las tarjetas con acción reaccionan (las animaciones llegan en la fase 2). */
+.nf-kpi-card:hover, .nf-exercise-card:hover {
+    -fx-effect: dropshadow(gaussian, -nf-glow, 32, 0.10, 0, 14);
+}
+
+/* Barra lateral: luz violeta desde abajo y borde fino con degradado. */
+.root.dark .nf-sidebar {
+    -fx-background-color:
+        radial-gradient(center 50% 100%, radius 70%, rgba(122, 53, 232, 0.38), rgba(122, 53, 232, 0)),
+        linear-gradient(to bottom, -nf-side-top, -nf-side-bottom);
+    -fx-border-color: linear-gradient(to bottom, rgba(167, 246, 38, 0.45), rgba(143, 85, 255, 0.30) 45%, rgba(64, 55, 106, 0.30));
+    -fx-border-width: 0 1.5 0 0;
+}
+
+/* Botones principales: lima con volumen y resplandor. */
+.nf-primary, .nf-primary-small {
+    -fx-background-color: linear-gradient(to bottom, #C4FF5A, #86D41A);
+    -fx-text-fill: #0B0A12;
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 16, 0.05, 0, 4);
+}
+.nf-primary:hover, .nf-primary-small:hover {
+    -fx-background-color: linear-gradient(to bottom, #D2FF7A, #9BE52B);
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 24, 0.12, 0, 5);
+}
+.nf-primary:pressed, .nf-primary-small:pressed {
+    -fx-background-color: linear-gradient(to bottom, #86D41A, #A7F626);
+    -fx-effect: dropshadow(gaussian, -nf-lime-glow, 10, 0, 0, 2);
+}
+.nf-primary:disabled, .nf-primary-small:disabled { -fx-effect: null; }
+
+/* Botones de icono (tema, salir): se iluminan en violeta. */
+.nf-icon-button:hover {
+    -fx-border-color: -nf-violet-bright;
+    -fx-effect: dropshadow(gaussian, rgba(143, 85, 255, 0.55), 16, 0.05, 0, 0);
+}
+.nf-avatar { -fx-effect: dropshadow(gaussian, -nf-lime-glow, 14, 0.05, 0, 0); }
+
+/* Imagen del atleta: sus bordes están difuminados (transparentes), así que en oscuro se funde con la barra lateral
+   sin tarjeta propia. En claro la barra es blanca, por eso allí conserva una tarjeta oscura donde fundirse. */
+.root.dark .nf-promo {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-effect: null;
+}
+.root.light .nf-promo {
+    -fx-background-color: linear-gradient(to bottom, #1B1036, #2C1566);
+    -fx-background-radius: 20;
+    -fx-border-color: transparent;
+}
+
+/* Dashboard and shared surfaces use the same dark violet base as the sign-in screen. */
+.root.dark.nf-bg {
+    -nf-bg: #0E091B;
+    -nf-surface: #170E29;
+    -nf-surface-alt: #241639;
+    -nf-card-end: #1B112F;
+    -nf-border: #503585;
+    -nf-muted: #CBBCE7;
+    -nf-violet-text: #D1B8FF;
+    -fx-background-color: -nf-bg;
+    -fx-background-image: none;
+}
+
+.nf-navigation {
+    -fx-background-color: -nf-surface;
+    -fx-border-color: transparent -nf-border transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+.root.dark .nf-navigation, .root.dark .nf-navigation > .viewport { -fx-background-color: #140C24; }
+.nf-nav-heading {
+    -fx-text-fill: -nf-violet-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 6 3 6;
+}
+.nf-sidebar .nf-nav {
+    -fx-min-height: 34;
+    -fx-pref-height: 34;
+    -fx-padding: 4 8;
+    -fx-font-size: 13px;
+}
+.nf-sidebar:collapsed .nf-nav {
+    -fx-alignment: CENTER;
+    -fx-content-display: GRAPHIC_ONLY;
+}
+.nf-navigation .nf-sidebar { -fx-border-width: 0; }
+.root.dark .nf-sidebar {
+    -fx-background-color: #140C24;
+    -fx-border-color: transparent -nf-border transparent transparent;
+}
+.root.dark .nf-sidebar .nf-nav .nf-icon { -fx-background-color: -nf-accent-text; }
+.root.dark .nf-sidebar .nf-nav.selected .nf-icon { -fx-background-color: #0E091B; }
+
+.root.dark.nf-bg .nf-card,
+.root.dark.nf-bg .nf-table,
+.root.dark.nf-bg .nf-list,
+.root.dark.nf-bg .nf-exercise-card,
+.root.dark.nf-bg .nf-access-card,
+.root.dark.nf-bg .nf-kpi-card,
+.root.dark.nf-bg .nf-card-feature {
+    -fx-background-color: -nf-card-end;
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-effect: null;
+}
+.root.dark.nf-bg .nf-input:focused,
+.root.dark.nf-bg .nf-textarea:focused {
+    -fx-border-color: -nf-accent;
+}
+.root.dark.nf-bg .nf-primary:disabled {
+    -fx-background-color: -nf-surface-alt;
+    -fx-text-fill: -nf-muted;
+    -fx-opacity: 0.72;
+}
+
+.nf-toolbar:dashboard {
+    -fx-min-height: 110;
+    -fx-background-radius: 12;
+}
+.root.dark .nf-toolbar:dashboard {
+    -fx-background-image: url("../images/banners/dashboard-header.jpg");
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-background-size: cover;
+    -fx-background-radius: 12;
+}
+
+.nf-dashboard .nf-kpi-card { -fx-min-height: 104; }
+.nf-dashboard .nf-kpi-card .nf-muted { -fx-text-fill: -nf-text; }
+.nf-dashboard .nf-kpi-card .nf-kpi-value-small {
+    -fx-font-size: 25px;
+    -fx-text-fill: -nf-accent-text;
+}
+.nf-dashboard .nf-kpi-card .nf-kpi-deco { -fx-opacity: 0; }
+.nf-dashboard .nf-kpi-card .nf-badge-violet .nf-icon { -fx-background-color: -nf-accent-text; }
+.nf-dashboard .nf-donut-total { -fx-text-fill: -nf-accent-text; }
+.root.dark .nf-dashboard .nf-card,
+.root.dark .nf-dashboard .nf-kpi-card { -fx-border-color: #8651D8; }
+.root.dark .nf-dashboard .default-color0.chart-series-area-line { -fx-stroke: -nf-accent; }
+.root.dark .nf-dashboard .default-color0.chart-bar { -fx-bar-fill: linear-gradient(to bottom, #9B5BFA, #7140D0); }
+.root.dark .nf-dashboard .chart-bar.nf-bar-today { -fx-bar-fill: linear-gradient(to bottom, #C4FF5A, #82CC25); }
+.root.dark .nf-dashboard .default-color2.chart-pie { -fx-pie-color: #50C5EC; }
+.root.dark .nf-dashboard .nf-dot-2 { -fx-background-color: #50C5EC; }
+.root.dark .nf-dashboard .default-color3.chart-pie { -fx-pie-color: #EF75AF; }
+.root.dark .nf-dashboard .nf-dot-3 { -fx-background-color: #EF75AF; }
+.root.dark .nf-dashboard .default-color4.chart-pie { -fx-pie-color: #BCA7E8; }
+.root.dark .nf-dashboard .nf-dot-4 { -fx-background-color: #BCA7E8; }
+.root.dark .nf-dashboard .nf-dashboard-members {
+    -fx-background-image: url("../images/banners/dashboard-cable.jpg");
+    -fx-background-position: right center;
+    -fx-background-size: 37% 100%;
+    -fx-background-repeat: no-repeat;
+}
+.root.dark .nf-dashboard .nf-dashboard-attendance {
+    -fx-background-image: url("../images/banners/dashboard-plates.jpg");
+    -fx-background-position: right center;
+    -fx-background-size: 34% 100%;
+    -fx-background-repeat: no-repeat;
+}
+
+.nf-dashboard .nf-kpi-content { -fx-padding: 12 14; -fx-spacing: 10; }
+.nf-dashboard .nf-kpi-content .nf-badge-violet {
+    -fx-min-width: 38;
+    -fx-max-width: 38;
+    -fx-min-height: 38;
+    -fx-max-height: 38;
+}
+.root.dark .nf-toolbar:dashboard .nf-title,
+.root.dark .nf-toolbar:dashboard .nf-muted {
+    -fx-effect: dropshadow(gaussian, #0E091B, 10, 0.8, 0, 1);
+}
+
+/* Status, numeric data and keyboard focus are shared across the workspace. */
+.nf-status-chip {
+    -fx-padding: 4 8;
+    -fx-background-color: -nf-violet-soft;
+    -fx-background-radius: 8;
+    -fx-text-fill: -nf-violet-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.nf-status-active { -fx-background-color: -nf-accent-soft; -fx-text-fill: -nf-success; }
+.nf-status-inactive { -fx-background-color: -nf-surface-alt; -fx-text-fill: -nf-muted; }
+.nf-access-feedback, .nf-inline-result {
+    -fx-background-color: -nf-surface-alt;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-color: -nf-border;
+    -fx-padding: 12 16;
+}
+.nf-access-feedback {
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -nf-text;
+}
+.nf-access-feedback:entry { -fx-border-color: -nf-success; -fx-text-fill: -nf-success; }
+.nf-access-feedback:exit { -fx-border-color: -nf-violet-bright; -fx-text-fill: -nf-violet-text; }
+.nf-access-feedback:denied { -fx-border-color: -nf-danger; -fx-text-fill: -nf-danger; }
+.nf-inline-result.nf-result-ok { -fx-border-color: -nf-success; }
+.nf-inline-result.nf-result-warn { -fx-border-color: -nf-warning; }
+.nf-inline-result.nf-result-bad { -fx-border-color: -nf-danger; }
+.nf-chat-pending { -fx-background-color: -nf-violet-soft; -fx-text-fill: -nf-violet-text; }
+.nf-table .table-cell.nf-table-number,
+.nf-table .column-header.nf-table-number .label { -fx-alignment: CENTER_RIGHT; }
+.nf-table .placeholder .label, .nf-list .placeholder .label {
+    -fx-text-fill: -nf-muted;
+    -fx-padding: 10;
+    -fx-wrap-text: true;
+}
+.nf-exercise-card:focused {
+    -fx-border-color: -nf-accent;
+    -fx-border-width: 2;
+}
+.nf-occupancy-view .nf-tv-percent {
+    -fx-font-size: 34px;
+    -fx-text-fill: -nf-accent-text;
+}
+.nf-login-error {
+    -fx-background-color: rgba(255, 77, 79, 0.10);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255, 107, 109, 0.55);
+    -fx-border-radius: 10;
+    -fx-padding: 9 12;
+}
+
+/* Use stronger ink colors and solid surfaces where the light theme needs contrast. */
+.root.light .nf-navigation,
+.root.light .nf-navigation > .viewport { -fx-background-color: #F4EFFC; }
+.root.light .nf-navigation .nf-sidebar { -fx-background-color: transparent; }
+.root.light .nf-dashboard .nf-card,
+.root.light .nf-dashboard .nf-kpi-card {
+    -fx-background-color: #FCFAFF;
+    -fx-background-insets: 0;
+    -fx-border-color: #C6B5E5;
+    -fx-border-radius: 12;
+    -fx-effect: null;
+}
+.root.light .nf-dashboard .default-color0.chart-series-area-line { -fx-stroke: #6334A6; }
+.root.light .nf-dashboard .default-color0.chart-area-symbol {
+    -fx-background-color: #6334A6, #FCFAFF;
+    -fx-effect: null;
+}
+.root.light .nf-summary {
+    -fx-background-color: #F3ECFC;
+    -fx-border-color: #C6B5E5;
+    -fx-border-radius: 12;
+}
+.root.light .nf-access-feedback:denied { -fx-text-fill: #9F263C; }

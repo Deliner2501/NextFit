@@ -6,10 +6,10 @@
 
 ![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)
 ![Maven](https://img.shields.io/badge/Maven-3.9+-C71A36?logo=apachemaven&logoColor=white)
-![Swing](https://img.shields.io/badge/UI-Swing%20%2B%20FlatLaf-blue)
-![Storage](https://img.shields.io/badge/Storage-CSV-green)
+![JavaFX](https://img.shields.io/badge/UI-JavaFX%20%2B%20AtlantaFX-blue)
+![Storage](https://img.shields.io/badge/Storage-Oracle%20%7C%20CSV-green)
 ![Tests](https://img.shields.io/badge/Tests-JUnit%205-25A162?logo=junit5&logoColor=white)
-![Version](https://img.shields.io/badge/version-0.7.0-lightgrey)
+![Version](https://img.shields.io/badge/version-1.0.0-7A35E8)
 
 Programación III · Universidad Popular del Cesar
 
@@ -42,33 +42,40 @@ Programación III · Universidad Popular del Cesar
 
 **NextFit** is a desktop application for managing a gym: members and their health data, membership plans and payments, attendance control, exercise catalog, routines and training sessions, all with a dashboard that summarizes the state of the gym.
 
-It is built with **Java 21** and **Swing** (with the FlatLaf look and feel), following a **layered architecture** and object-oriented design principles. Information is stored in **CSV files**; there is no database yet, so the application runs anywhere with nothing but a JDK.
+It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its own violet and lime design), following a **layered architecture** and object-oriented design principles. Information is stored in a shared **Oracle Cloud database** (through JDBC) or, when the database is not available, in local **CSV files**, so the application can also run anywhere with nothing but a JDK.
 
-> This repository is the course project of *Programación III*. The current delivery corresponds to the **70 % milestone**.
+> This repository is the course project of *Programación III*.
+>
+> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, entry with the face (camera, offline) or with a password, personal portal on the phone, AI assistant, churn risk, analytics, TV screen, reports and cash close, alerts, users, audit log and backup. NextFit works with Oracle Cloud and with local CSV storage.
 
 ---
 
 ## Features
 
-### 🔐 Access and users
+### 🔐 Access, users and security
 - Login screen with role-based access.
 - Passwords stored as hashes (never in plain text).
-- User administration (create, edit, activate / deactivate) with protections: you cannot deactivate your own account and at least one active administrator must always remain.
+- **Login lockout**: after 5 failed attempts the user is blocked for 5 minutes.
+- **Inactivity**: the session closes after 15 minutes without activity.
+- User administration (create, edit, reset password, activate / deactivate) with protections: you cannot deactivate your own account and at least one active administrator must always remain.
+- **Audit log**: sign-ins (successful, failed, lockouts), sign-outs, expired sessions, user changes, backups and restores are recorded, and the administrator reads them in the **Auditoría** screen ([details](docs/audit-and-security.md)).
 - A default administrator is created automatically on the first run.
 
 ### 👥 Members and health
-- Register, edit and deactivate members, with photo, emergency contact and validated personal data.
-- **Health profile**: height, blood type, medical conditions and allergies.
-- **Measurements history**: weight, waist, chest and hips, with automatic **BMI** calculation and category (underweight, normal, overweight, obesity).
-- **Attendance**: check-in / check-out of members, with the list of members currently inside the gym.
-- Detail panel per member with tabs for health, measurements and attendance.
+- **Members screen**: table with photo, document, phone and status, and a search box (name, document or phone).
+- Register, edit and deactivate members, with photo, emergency contact and validated personal data. The administrator and the reception can change data; the trainers can only read.
+- **Health profile** (height, blood type, medical conditions, allergies), **measurements history** with automatic **BMI** and category, and the member **detail panel** live in the **member file** (button *Ver ficha*), with the tabs *Salud*, *Mediciones*, *Asistencia* and *Logros* (streaks and badges).
+- **Attendance**: check-in / check-out of members, with the list of members currently inside the gym (see Access control).
+- **Global search**: Ctrl+K or the magnifier in the top bar finds members (name, document, phone) and sections, ignoring case and accents; every module can add its own results through `FxModule.search`.
+- **Alerts engine**: birthdays, memberships about to expire and members who stopped coming, each with a ready WhatsApp message (`service.alert`). The **Alertas** screen shows them in cards and a list, writes the message for the member and opens WhatsApp or copies the text (administrator and reception).
 
 ### 💳 Memberships and billing
 - Membership plans (name, duration, price) that can be activated or retired.
 - Sale of a membership to a member with a **payment method** (cash, card, transfer) and an optional **discount** (percentage or fixed amount).
 - Automatic receipt with its number, subtotal, discount and total.
 - Subscription list with computed status: *upcoming, active, expired, cancelled*, with days left; subscriptions can be cancelled.
-- Payment history.
+- Payment history, with the delivery state of each receipt email.
+- **Automatic email** through Gmail (off by default): the receipt is sent after each payment and a reminder three days before a membership expires. Test mode sends only to the developer's inbox; failed receipts can be retried from the *Pagos* tab. See [`docs/automatic-email.md`](docs/automatic-email.md).
 
 ### 🏃 Training
 - **Exercise catalog** with description, muscle group, difficulty and photo.
@@ -78,8 +85,41 @@ It is built with **Java 21** and **Swing** (with the FlatLaf look and feel), fol
 - Trainer management.
 
 ### 📊 Dashboard
-- Indicators for active members, memberships about to expire, members inside the gym and income.
-- Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line), with a photo banner.
+- Indicators for active memberships, memberships about to expire, today's attendance and the income of the month.
+- **Trend chips**: income compared with the same days of the previous month, and today's entries compared with yesterday.
+- Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line, in millions of pesos). They animate when the screen opens.
+
+### 🚪 Access control
+- Check-in and check-out are done by the member alone, with the **face** or with the **document and a password**.
+- **Personal portal**: the QR of the carnet opens on the phone the portal of the member (day to train, next days, last visits, body progress, membership). The QR is read-only and never registers an entry or an exit ([details](docs/phone-qr-access.md)).
+- **Dentro ahora**: list of the people inside the gym; the staff can close the visit of a member who forgot to mark the exit.
+- **Carnets**: each member has a credit-card sized carnet (front and back) that can be saved as an image or as a **PDF**; one more button makes a single PDF with every active member, four carnets per A4 page, ready to print and cut. The QR is drawn as vectors so it scans at any size.
+
+### 🤖 AI assistant and churn risk
+- **Churn risk** (*Riesgo de abandono*): each member gets a risk level (low, medium, high) from rules that look at the days away, the drop in frequency and the memberships about to expire (`service.churn`). New rules are new `ChurnRule` classes.
+- **Assistant** (*Asistente*): a chat for the staff that answers about the gym (members at risk, best hours, revenue, alerts) by calling safe read-only tools, and that can suggest routines. It uses the Claude API; the key goes in `nextfit.properties` (`ai.apiKey`), has a daily limit of tokens and is never stored in the repository.
+- **Member chat** in the personal portal, limited to the data of that member (`PortalChatService`).
+
+### 🏅 Achievements
+- Streaks of attendance, badges and a ranking of members (`service.gamification`).
+
+### 📈 Analytics and TV screen
+- **Analytics**: peak hour, average stay, renewal rate, members at risk of leaving, and a heat map of the busiest hours (last 8 weeks).
+- **TV screen** (*Pantalla TV*): live occupation of the gym (people inside, capacity, level, best hour to come), designed to be shown on a television in full screen.
+
+### 🧾 Reports and cash close
+- **Cash close** of any day: total collected, payments by method, discounts, expected cash and a cash count that tells if the drawer is balanced.
+- Reports of payments, attendance and members, exportable to **PDF** and **Excel** with the NextFit branding ([details](docs/reports-cash-close.md)).
+
+### 💾 Backup
+- NextFit makes a daily ZIP of the active data, carnet signing key and local pictures. It keeps the last 14 backups per storage mode.
+- The administrator can create or save a copy in either mode and restore files in CSV mode ([backup and restore guide](docs/backup-restore.md)).
+
+### 🎨 Interface
+- Dark and light themes with depth: gradient light borders, glows and background images.
+- Motion: cards enter in sequence, numbers count up, charts rise, buttons react when pressed.
+- Collapsible side menu (icons only), remembered between runs.
+- The design rules and the classes to build a new screen are in [`docs/ui-design.md`](docs/ui-design.md).
 
 ### 🧱 Quality
 - Typed exception hierarchy with a different message per kind of error (invalid data, business rule, resource not found, storage problem).
@@ -90,27 +130,61 @@ It is built with **Java 21** and **Swing** (with the FlatLaf look and feel), fol
 
 ## Screenshots
 
-> Screenshots live in [`docs/screenshots`](docs/screenshots). Add the images with the file names below and they will show up here.
+> Screenshots live in [`docs/screenshots`](docs/screenshots). The face in the *Rostro* picture and the local folder in the *Backup* picture are blurred.
 
-| Login | Dashboard |
+| Login | Dashboard (dark) |
 |:--:|:--:|
-| ![Login](docs/screenshots/login.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+| ![Login](docs/screenshots/login.png) | ![Dashboard (dark)](docs/screenshots/dashboard-dark.png) |
 
-| Members | Member detail |
+| Dashboard (light) | Members |
 |:--:|:--:|
-| ![Members](docs/screenshots/members.png) | ![Member detail](docs/screenshots/member-detail.png) |
+| ![Dashboard (light)](docs/screenshots/dashboard-light.png) | ![Members](docs/screenshots/members.png) |
 
-| Billing | Receipt |
+| Member file | Billing |
 |:--:|:--:|
-| ![Billing](docs/screenshots/billing.png) | ![Receipt](docs/screenshots/receipt.png) |
+| ![Member file](docs/screenshots/member-file.png) | ![Billing](docs/screenshots/billing.png) |
 
-| Exercise catalog | Routines and assignments |
+| Payments | Cash close |
 |:--:|:--:|
-| ![Exercises](docs/screenshots/exercises.png) | ![Routines](docs/screenshots/routines.png) |
+| ![Payments](docs/screenshots/billing-payments.png) | ![Cash close](docs/screenshots/cash-close.png) |
 
-| Users |
-|:--:|
-| ![Users](docs/screenshots/users.png) |
+| Exercises | Routine assignment |
+|:--:|:--:|
+| ![Exercises](docs/screenshots/training-exercises.png) | ![Routine assignment](docs/screenshots/training-assign.png) |
+
+| Inside now | Carnets |
+|:--:|:--:|
+| ![Inside now](docs/screenshots/access-inside.png) | ![Carnets](docs/screenshots/access-carnets.png) |
+
+| Face entry | Password entry |
+|:--:|:--:|
+| ![Face entry](docs/screenshots/access-face.png) | ![Password entry](docs/screenshots/access-password.png) |
+
+| Alerts | Churn risk |
+|:--:|:--:|
+| ![Alerts](docs/screenshots/alerts.png) | ![Churn risk](docs/screenshots/churn.png) |
+
+| AI assistant | Analytics |
+|:--:|:--:|
+| ![AI assistant](docs/screenshots/assistant.png) | ![Analytics](docs/screenshots/analytics.png) |
+
+| TV screen | Reports |
+|:--:|:--:|
+| ![TV screen](docs/screenshots/tv.png) | ![Reports](docs/screenshots/reports.png) |
+
+| Users | Audit log |
+|:--:|:--:|
+| ![Users](docs/screenshots/users.png) | ![Audit log](docs/screenshots/audit.png) |
+
+| Backup | Routines |
+|:--:|:--:|
+| ![Backup](docs/screenshots/backup.png) | ![Routines](docs/screenshots/training.png) |
+
+**Personal portal on the phone** (the QR of the carnet):
+
+| Today and membership | Chat and progress |
+|:--:|:--:|
+| <img src="docs/screenshots/portal-phone.png" width="260"> | <img src="docs/screenshots/portal-chat.png" width="260"> |
 
 ---
 
@@ -121,10 +195,19 @@ The sidebar only shows the modules that the logged-in role can use.
 | Module | Administrator | Reception | Trainer |
 |---|:--:|:--:|:--:|
 | Dashboard | ✅ | ✅ | ❌ |
-| Members (health, attendance) | ✅ | ✅ | ✅ |
+| Members | ✅ edit | ✅ edit | 👁️ read only |
 | Billing (plans, sales, payments) | ✅ | ✅ | ❌ |
 | Training (exercises, routines, assignments) | ✅ | ❌ | ✅ |
+| Access control (inside now, carnets, face, password) | ✅ | ✅ | ❌ |
+| Analytics | ✅ | ✅ | ❌ |
+| Churn risk | ✅ | ✅ | ❌ |
+| AI assistant | ✅ | ✅ | ❌ |
+| Alerts | ✅ | ✅ | ❌ |
+| TV screen | ✅ | ✅ | ❌ |
+| Reports and cash close | ✅ | ✅ | ❌ |
 | Users | ✅ | ❌ | ❌ |
+| Audit log | ✅ | ❌ | ❌ |
+| Backup | ✅ | ❌ | ❌ |
 
 ---
 
@@ -134,12 +217,22 @@ The sidebar only shows the modules that the logged-in role can use.
 |---|---|
 | **Java 21** | Language (records, `java.time`) |
 | **Maven** | Build, dependencies and tests |
-| **Swing** | Desktop user interface |
-| **FlatLaf** | Modern look and feel |
-| **MigLayout** | Layout manager for forms |
-| **CSV files** | Persistence (no database yet) |
+| **JavaFX 21** | Desktop user interface |
+| **AtlantaFX** | Base theme of the JavaFX controls, extended with the NextFit violet and lime design (`nextfit.css`, `nextfit-violet.css`) |
+| **ZXing** | QR codes of the carnets |
+| **JDK `HttpServer`** | Small web server for the phone access |
+| **Oracle Cloud + JDBC** | Shared relational database (`ojdbc11`, connection pool and schema installer in `persistence.jdbc`) |
+| **CSV files** | Local persistence and export format of the backups |
+| **H2** | In-memory database used only by the tests of the JDBC repositories |
+| **OpenCV** | Face recognition (YuNet detector and SFace recognizer), offline |
+| **Jakarta Mail (Angus)** | Automatic emails through Gmail (receipts and expiry reminders), behind the `MailDelivery` interface |
+| **Claude API** | Language model of the assistant, behind the `AiClient` interface |
+| **Own PDF and Excel writers** | Reports, with no extra dependency (`PdfExporter`, `XlsxWriter`) |
 | **JUnit 5** | Unit testing |
+| **GitHub Actions** | Build and tests on every pull request |
 | **Git / GitHub** | Version control, feature branches and pull requests |
+
+> The first version of the interface was written with Swing; it was replaced by JavaFX and removed from the code (it stays in the `v0.7-swing` tag).
 
 ---
 
@@ -149,7 +242,7 @@ NextFit is organized in layers. Each layer only depends on the ones below it, an
 
 ```text
 ┌──────────────────────────────────────────────┐
-│  UI  (ui, ui.members, ui.billing, ...)       │  Swing screens
+│  UI  (ui, ui.members, ui.billing, ...)       │  JavaFX screens
 └───────────────────────┬──────────────────────┘
                         ▼
 ┌──────────────────────────────────────────────┐
@@ -157,7 +250,7 @@ NextFit is organized in layers. Each layer only depends on the ones below it, an
 └───────────────────────┬──────────────────────┘
                         ▼
 ┌──────────────────────────────────────────────┐
-│  PERSISTENCE  (repositories + CSV)           │  interfaces and CSV implementations
+│  PERSISTENCE  (repositories)                 │  interfaces + Oracle (JDBC) and CSV
 └───────────────────────┬──────────────────────┘
                         ▼
 ┌──────────────────────────────────────────────┐
@@ -168,12 +261,16 @@ NextFit is organized in layers. Each layer only depends on the ones below it, an
 
 Key design decisions:
 
-- **Repositories behind interfaces**: services depend on `MemberRepository`, not on CSV. Replacing the CSV files by a database later only means adding new implementations.
+- **Repositories behind interfaces**: services depend on `MemberRepository`, not on CSV. The CSV files and the Oracle database are two implementations of the same interfaces (`Storage`), chosen at startup, so the services do not change.
 - **Dependency injection by constructor** with a composition root (`Main`), so every class is easy to test with fakes.
 - **Immutable model**: entities are never modified in place; `withX(...)` methods return a modified copy.
 - **Injected `Clock`**: services receive a `java.time.Clock`, which makes date-dependent rules testable.
 - **Computed state**: the status of a subscription is calculated from its dates, never stored.
-- **Modules as plugins of the window**: every screen implements `ModulePanel` and `MainWindow` hosts them; `BannerModule` decorates a module with a photo banner.
+- **Modules as plugins of the window**: every JavaFX screen implements `FxModule` (id, title, icon, view and which roles can open it) and `ShellView` builds the menu from them, so a new module appears without changing the window. The composition root (`Main`) lists them.
+- **Rules as plugins**: alerts are `AlertRule` objects and training suggestions are `SuggestionRule` objects; a new rule is a new class, not a change in the service.
+- **Security behind interfaces**: `AttemptLimiter` and `AuditLog` are interfaces, so each can be replaced by another implementation without touching the callers.
+- **Two storages, one contract**: `Storage` creates the repositories; `CsvStorage` and `JdbcStorage` implement it. If Oracle is disabled or unreachable the application starts with the CSV copy.
+- **Optional services behind interfaces**: the camera (`FaceCamera`) and the language model (`AiClient`) are interfaces, so the rest of the code does not know OpenCV or the Claude API and tests use fakes.
 - **Money as whole pesos** (`long`), avoiding floating point errors.
 
 The full diagrams (Mermaid) are in:
@@ -181,6 +278,9 @@ The full diagrams (Mermaid) are in:
 - 📦 [Package diagram by layers](docs/layers-diagram.md)
 - 🧩 [Domain class diagram](docs/domain-class-diagram.md)
 - 🗺️ [Integrated class diagram](docs/integrated-class-diagram.md)
+- 📚 [Class catalog](docs/class-catalog.md) and [class reference](docs/class-reference.md)
+
+The package diagram, the class diagrams and the catalogs are generated from the source code with `python3 docs/tools/generate_docs.py`, so they always match it.
 
 ### Domain model (summary)
 
@@ -210,11 +310,28 @@ classDiagram
 NextFit/
 ├── pom.xml
 ├── README.md
-├── data/                          # CSV files (created on first run)
+├── .github/workflows/             # CI: build and tests
+├── data/                          # CSV files, access key and pictures (created on first run)
+├── backups/                       # automatic and manual backups (git-ignored)
 ├── docs/
+│   ├── user-manual.md             # how to use every screen
+│   ├── ui-design.md               # design system and how to build a screen
+│   ├── audit-and-security.md
+│   ├── backup-restore.md
+│   ├── reports-cash-close.md
+│   ├── phone-qr-access.md
+│   ├── face-recognition.md
+│   ├── member-password.md
+│   ├── oracle-setup.md
+│   ├── er-model.md            # entity-relationship model
+│   ├── data-dictionary.md
+│   ├── sql/                   # schema and PL/SQL extras
 │   ├── layers-diagram.md
 │   ├── domain-class-diagram.md
 │   ├── integrated-class-diagram.md
+│   ├── class-catalog.md       # generated from the code
+│   ├── class-reference.md     # generated from the code
+│   ├── tools/                 # script that generates the diagrams and catalogs
 │   ├── principles-traceability.md # GRASP / SOLID per member
 │   ├── image-credits.md
 │   └── screenshots/
@@ -227,12 +344,31 @@ NextFit/
     │   │   ├── exceptions/        # typed exception hierarchy
     │   │   ├── model/             # domain entities and enums
     │   │   ├── persistence/       # repository interfaces + CSV implementations
+│   │   │   └── jdbc/          #   Oracle implementations, pool and schema installer
+│   │   ├── ai/                # assistant, Claude client and its read-only tools
     │   │   ├── service/           # business logic
+    │   │   │   ├── alert/         #   alerts engine
+    │   │   │   ├── audit/         #   audit log
+│   │   │   ├── churn/         #   risk of leaving
+│   │   │   ├── mail/          #   automatic Gmail receipts and reminders
+│   │   │   ├── face/          #   face recognition rules
+│   │   │   ├── gamification/  #   streaks, badges, ranking
+│   │   │   ├── portal/        #   data of the personal portal
+    │   │   │   ├── occupancy/     #   live occupation (TV screen)
+    │   │   │   ├── security/      #   login lockout and inactivity
+    │   │   │   └── suggest/       #   routine suggestions
     │   │   ├── validation/        # one validator per area
+    │   │   ├── export/            # PDF and Excel writers
+    │   │   ├── vision/            # OpenCV camera (the only class that knows OpenCV)
+│   │   ├── web/               # phone access server and personal portal
     │   │   ├── util/              # PasswordHasher, PhotoStorage
-    │   │   └── ui/                # screens: components, members,
-    │   │                          #   billing, training, dashboard, users
-    │   └── resources/images/      # logo, banners, login, exercises
+    │   │   └── ui/
+    │   │       ├── fx/            # JavaFX interface
+    │   │       ├── billing/       # ReceiptText, shared by the receipts
+    │   │       └── Formats.java   # how pesos and dates are written and read
+    │   └── resources/
+    │       ├── fx/                # nextfit.css and nextfit-violet.css
+    │       └── images/            # logo, backgrounds, banners, login, exercises
     └── test/java/com/nextfit/     # JUnit tests
 ```
 
@@ -269,7 +405,7 @@ mvn clean compile exec:java
 
 Or from the IDE: open the project as a Maven project and run the class `com.nextfit.Main`.
 
-> The application must be started from the project root, because the `data/` folder is created relative to the working directory.
+> The application must be started from the project root, because the `data/` and `backups/` folders are created relative to the working directory.
 
 ### Build a package
 
@@ -302,7 +438,11 @@ To make the application look alive from the very first run, `DemoData` fills an 
 
 ## Data storage
 
-Everything is stored as plain CSV files inside `data/`:
+NextFit can use a shared Oracle Cloud database or the local CSV files in `data/`. To use Oracle, follow the [team setup guide](docs/oracle-setup.md). If Oracle is disabled or unreachable at startup, the app opens with the local CSV data. That local copy is independent of later changes made in Oracle.
+
+Oracle shares the carnet signing key and caches it as `data/access.key` for offline use. Member photos and exercise images remain local. Copy the files privately with the same relative paths if the team needs them on more than one computer.
+
+The CSV format is also used in the ZIP exports from Oracle:
 
 | File | Content |
 |---|---|
@@ -319,7 +459,14 @@ Everything is stored as plain CSV files inside `data/`:
 | `routines.csv`, `routine_lines.csv` | Routines, their days and exercises |
 | `assignments.csv` | Routines assigned to members |
 | `training_sessions.csv` | Training sessions log |
+| `audit.csv` | Audit log (who did what and when) |
+| `member_credentials.csv` | Hashes of passwords for member self-access |
+| `face_templates.csv` | Numerical face templates |
+| `access.key` | Secret signing key for carnet QR codes |
+| `images/exercises/` | Pictures of the exercises |
 | `photos/` | Photos uploaded for members and trainers |
+
+Exports and local backups are kept in `backups/` (see [`docs/backup-restore.md`](docs/backup-restore.md)).
 
 Relations between entities are stored as identifiers (for example a subscription keeps the `memberId` and the `planId`). A shared `CsvStore` handles reading and writing, and one `CsvMapper` per entity converts between rows and objects.
 
@@ -337,6 +484,9 @@ Some of the rules enforced by the services (all of them covered by tests):
 - A member cannot check in twice without checking out, nor check out without an open entry. Inactive members cannot check in.
 - Usernames are unique; you cannot deactivate your own user, and at least one active administrator must remain.
 - Plan names are unique.
+- After 5 failed sign-ins a user is blocked for 5 minutes, and a session with no activity for 15 minutes is closed; both are written in the audit log.
+- A carnet code is not the document: it is an HMAC of it with a secret key, and the same code read twice in 10 seconds is counted once.
+- Restoring a backup first saves the current data, and refuses any zip that is not a NextFit backup or that has paths leaving the data folder.
 - Data validation, for example: age between 12 and 100 years, document between 5 and 12 digits, phone between 7 and 15 digits, height between 100 and 250 cm, weight between 20 and 400 kg, valid blood types only.
 
 ---
@@ -347,7 +497,7 @@ Some of the rules enforced by the services (all of them covered by tests):
 mvn test
 ```
 
-The suite covers services (members, health, attendance, plans, subscriptions, payments, exercises, routine assignments, training sessions, users, dashboard), the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. Services are tested with in-memory fake repositories, so the tests need no files and run fast.
+The suite covers services (members, health, attendance, access, plans, subscriptions, payments, cash close, reports, analytics, occupancy, alerts, churn, achievements, audit, security, exercises, routine assignments, training sessions, users, dashboard, backup), the face recognition rules, the assistant and its tools (with a fake model), the phone access server and portal, the PDF and Excel writers, the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. The JDBC repositories, the backup export and the CSV to Oracle migration are tested on an in-memory **H2** database built from `docs/sql/schema.sql`. The tests run on every pull request through GitHub Actions. Services are tested with in-memory fake repositories, so the tests need no files, no camera, no network and run fast.
 
 ---
 
@@ -368,7 +518,6 @@ Some examples:
 | **Creator / Controller** | `Main` composes the application; services coordinate each use case |
 | **Polymorphism** | `Discount.amountOff` and `Person.getPersonType` |
 | **Low coupling / High cohesion** | Layers with one-way dependencies (see the package diagram) |
-| **Decorator** | `BannerModule` adds a banner to any `ModulePanel` |
 
 ---
 
@@ -376,9 +525,23 @@ Some examples:
 
 | Document | Description |
 |---|---|
+| [User manual](docs/user-manual.md) | How to use every screen, by role |
+| [UI design guide](docs/ui-design.md) | Colors, depth, motion and how to build a new screen |
+| [Audit log and security](docs/audit-and-security.md) | Lockout, inactivity and what is recorded |
+| [Backup and restore](docs/backup-restore.md) | How the backups work and how to recover the data |
+| [Reports and cash close](docs/reports-cash-close.md) | The cash close and the PDF and Excel reports |
+| [Phone QR access](docs/phone-qr-access.md) | QR of the carnet: personal portal |
+| [Face recognition](docs/face-recognition.md) | How the face entry works and its safety checks |
+| [Member password](docs/member-password.md) | Entry with document and password |
+| [Automatic email](docs/automatic-email.md) | Gmail setup, test and live modes, delivery records and receipt retry |
+| [Oracle setup](docs/oracle-setup.md) | Connect the application to the shared Oracle database |
+| [Entity-relationship model](docs/er-model.md) | Tables and relations of the database |
+| [Data dictionary](docs/data-dictionary.md) | Every table and column with type and meaning |
 | [Layers diagram](docs/layers-diagram.md) | Package diagram by layers |
 | [Domain class diagram](docs/domain-class-diagram.md) | Business classes, inheritance and relations |
 | [Integrated class diagram](docs/integrated-class-diagram.md) | All the classes, split by module |
+| [Class catalog](docs/class-catalog.md) | Every class with its type and role |
+| [Class reference](docs/class-reference.md) | Attributes and public methods of every class |
 | [Principles traceability](docs/principles-traceability.md) | GRASP / SOLID applied per member and commit |
 | [Image credits](docs/image-credits.md) | Authors and sources of the photos |
 
@@ -405,7 +568,7 @@ Some examples:
 ## Credits
 
 - Photos from [Unsplash](https://unsplash.com) and [Pexels](https://www.pexels.com); the authors are listed in [`docs/image-credits.md`](docs/image-credits.md).
-- UI look and feel by [FlatLaf](https://www.formdev.com/flatlaf/).
+- UI controls by [JavaFX](https://openjfx.io) and the [AtlantaFX](https://github.com/mkpaz/atlantafx) theme.
 
 ---
 

@@ -11,8 +11,6 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `AuthService.login` | Sign-in rules live in the service, not in the window |
 | DIP | `AuthService` and `UserRepository` | The service depends on the interface, not on the CSV file |
 | GRASP Protected Variations | `CsvStore` | The file format is isolated in one class; moving to a database does not touch the services |
-| OCP | `ModulePanel` and `MainWindow` | A new module is added to the list without editing the main window |
-| GRASP Controller and low coupling | `LoginFrame` | The window collects input and delegates to `AuthService`; it holds no business rules |
 | GRASP Pure Fabrication | `PasswordHasher`, `Session` | They are not gym concepts, but they concentrate a technical task and reduce coupling |
 | Encapsulation | `User`, `PasswordHasher` | `final` attributes; the hash is one-way and never exposes the password |
 | ISP and DIP | `SubscriptionChecker` | Other modules depend on a one-method contract, not on the membership module |
@@ -27,52 +25,56 @@ Each row links a principle or pattern to the class or method where it is applied
 | DIP and testability | `Clock` injected in `SubscriptionService` and `PaymentService` | The rules can be tested on any date without waiting for real time |
 | GRASP Controller (use case) | `PaymentService.sellMembership` | One operation coordinates subscription and payment, and cancels the subscription if the payment cannot be stored |
 | GRASP Information Expert | `SubscriptionService.firstFreeDay`, `PaymentService.revenueByMonth` | The service that holds the data computes renewal dates and revenue totals |
-| SRP | `StatCard`, `DonutChart`, `BarChart` | Each class only draws; the screen decides which data to show and how to write it |
-| Low coupling and reuse | `DonutChart.Slice`, `BarChart.Bar` | The charts receive plain records and know nothing about memberships or payments, so any screen can reuse them |
-| Strategy (injected function) | `StatCard` constructor (`LongFunction`), `BarChart.setValueFormatter` | The way a number is written (pesos, count) is supplied from outside and the component does not change |
-| GRASP High cohesion | `DonutChart.drawRing`, `drawCenter`, `drawLegend`; `BarChart.drawGrid`, `drawBars`, `drawLabels`, `drawTooltip` | Each private method draws one part of the chart |
-| GRASP Information Expert | `BarChart.axisMax` | The chart owns the scale, so it rounds the axis to clean values itself |
 | SRP and GRASP Pure Fabrication | `Formats` | It is not a gym concept, but it concentrates how pesos and dates are written and read, so no screen repeats that code |
 | Testability | `FormatsTest` | The writing and reading rules are checked without opening any window |
-| GRASP Controller | `PlanListView`, `PlanFormDialog` | The screens collect clicks and typed text and delegate every rule to `MembershipPlanService`; they hold no business rules |
-| Low coupling | `PlanListView` and `MembershipPlanService` | The screen depends only on the service, never on repositories or CSV files |
-| High cohesion | `BillingPanel` | It only groups the screens of the module in tabs; each tab is its own class |
-| OCP | `BillingPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
-| GRASP Controller (use case) | `SaleView` | The screen collects member, plan, method and discount and delegates the sale to `PaymentService.sellMembership`; it holds no business rules |
-| OCP and polymorphism | `SaleView.buildDiscount` | The screen builds a `NoDiscount`, `PercentageDiscount` or `FixedDiscount` and passes it as a `Discount`; the service does not need to know which one |
-| SRP and testability | `ReceiptText`, `ReceiptTextTest` | One class only builds the receipt text, without Swing, so the window, the clipboard and the tests use the same text |
-| SRP | `ReceiptDialog` | It only shows the text and copies it; it never calculates amounts |
-| Low coupling | `SaleView` and `PaymentService`, `SubscriptionService`, `MembershipPlanService` | The screen depends only on services, never on repositories or CSV files |
-| Reuse | `MemberPickerPanel` in `SaleView` | The member search column built for training is reused instead of writing it again |
+| SRP and testability | `ReceiptText`, `ReceiptTextTest` | One class only builds the receipt text, independent of any screen toolkit, so the window, the clipboard and the tests use the same text |
 | GRASP Information Expert | `SubscriptionService.statusOf`, `daysLeftOf` | The service owns the clock, so "what state is it in today" is answered there and no screen reads the date itself |
 | GRASP Information Expert | `PaymentService.findSale` | The service that owns payments, subscriptions and plans rebuilds the sale; the screen does not chain three lookups |
-| GRASP Controller | `SubscriptionListView`, `PaymentListView` | The screens collect search text, filters and clicks and delegate to the services; they hold no business rules |
-| Low coupling | `SubscriptionListView`, `PaymentListView` and the services | Each screen depends only on services, never on repositories or CSV files |
-| Low coupling (callback) | `SaleView` `onSold` and `BillingPanel` | The sale screen only runs an action after selling; it does not know which other tabs need to refresh |
 | Testability | `SubscriptionServiceTest.statusAndDaysLeftAreWorkedOutFromToday`, `PaymentServiceTest.findSaleRebuildsTheSaleFromItsPayment` | The new service methods are checked with a fixed `Clock` and in-memory repositories |
 | GRASP Pure Fabrication | `DashboardService` | It is not a gym concept, but it gathers numbers from the membership, payment and attendance services so no screen does that math |
 | Encapsulation | `DashboardService.Summary` | One immutable record carries every number of the dashboard from the service to the screen |
-| Low coupling | `DashboardPanel` and `DashboardService` | The panel depends on one service and only draws; it knows nothing about repositories, CSV files or the other services |
 | DIP and testability | `DashboardServiceTest` | The summary is checked with a fixed `Clock` and in-memory repositories, with memberships in every state |
-| Reuse | `StatCard`, `DonutChart`, `BarChart`, `LineChart` in `DashboardPanel` | The components built with plain data are reused without any change |
-| OCP | `DashboardPanel` implements `ModulePanel` | The module replaces its placeholder in `Main`; the main window does not change |
-| Least privilege | `DashboardPanel.allowedFor` | The trainer role does not see the income numbers, because the screen is hidden from that role |
 | SRP | `UserService`, `UserValidator` | The validator only checks data; the service holds the account rules |
 | DIP | `UserService` and `UserRepository` | The service depends on the interface, not on the CSV file |
 | GRASP Information Expert | `UserService.ensureAnotherActiveAdmin` | The service that sees every account is the one that protects the last administrator |
-| OCP | `UsersPanel` implements `ModulePanel` | The module replaced its placeholder in `Main`; the main window did not change |
-| GRASP Controller | `UsersPanel`, `UserFormDialog` | The screens collect clicks and delegate every rule to `UserService` |
-| Security | `UserService.resetPassword`, `LoginFrame` | Only the hash is stored; the default credentials are no longer shown on screen |
-| SRP | `GymArt`, `MuscleArt`, `HeroBanner` | One only draws equipment, one only draws muscle groups, one only paints a banner |
-| Low coupling and reuse | `GymArt` | The login and the dashboard share the same drawings without knowing each other |
-| GRASP Protected Variations | `PictureSource` with the `art:` path | Screens ask for a picture by path; whether it is a photo or a drawing is hidden |
-| OCP | `MuscleArt` and `ImageCard` | The catalog gained illustrations without changing how `ImageCard` draws |
-| SRP | `CoverPhoto` | It only fits a photo into an area and keeps the scaled copy; screens decide where to use it |
-| Decorator | `BannerModule` | It adds a banner to any `ModulePanel` and forwards every call, so the modules stay unchanged |
-| GRASP Protected Variations | `HeroBanner`, `MuscleArt.pathFor` | A missing photo falls back to the drawing, so the screens never break |
 | DIP and reuse | `DemoData` | It creates the example data through the same services the screens use, so it follows the same rules and needs no special code path |
 | DIP and testability | `DemoData.at` with `Clock.fixed` | Each past day is reproduced with its own fixed clock, so "a membership must be valid to enter" holds on that day |
 | GRASP Protected Variations | `DemoData.isEmptyInstallation` | Example data is only created when nothing exists, so real data is never mixed with it |
+| GRASP Protected Variations | `FxTheme` and `nextfit.css` | Dark and light modes change only the values of the style sheet; no screen writes a color in code, so a new mode does not touch any screen |
+| DIP | `FxApp.run` | The JavaFX interface receives `AuthService`, `Session` and `DashboardService` from `Main` and never creates a repository; the interface never creates a repository, so the CSV files can be replaced by a database in `Main` only |
+| SRP and GRASP Information Expert | `DashboardView` | It only draws the `Summary` that `DashboardService` calculates; no business rule is repeated in the view |
+| OCP | `Main` (JavaFX only) | The interface was replaced without changing services, model or persistence |
+| SRP | `LoginView`, `ShellView`, `FxIcons`, `FxImages` | One class per concern: sign-in screen, main window, vector icons, photo areas |
+| OCP and polymorphism | `FxModule`, `DashboardModule`, `UsersModule`, `ChurnModule` | `ShellView` hosts any module through one contract; a new screen appears in the menu without changing the shell |
+| SRP and DIP | `UsersModule` | It only collects clicks and shows data; every rule (last administrator, own account, password strength) stays in `UserService` |
+| DRY and GRASP Pure Fabrication | `MemberPicker` | The member search column is one reusable class that any module (sales, training, members) can use instead of copying it |
+| SRP and DIP | `SalePane`, `PlansPane` | They only collect data and show the total; the discount math is the `Discount` hierarchy and the sale rules are in `PaymentService` |
+| OCP | `BillingModule` | The four tabs are added to one module; the subscriptions and payments tabs replace their placeholders without changing the module contract |
+| DRY and GRASP Pure Fabrication | `FxTables` | Text columns and colored state columns are built in one place; `UsersModule`, `PlansPane`, `SubscriptionsPane` and `PaymentsPane` no longer repeat the cell code |
+| SRP and DIP | `SubscriptionsPane`, `PaymentsPane` | They filter, search and show rows; the state of a membership (`statusOf`, `daysLeftOf`) and the receipt (`findSale`) come from the services |
+| DRY | `ReceiptText` reused by `FxDialogs.document` | The receipt text is built once and shown by the JavaFX dialogs and by the tests |
+| SRP | `CarnetCode`, `AccessService`, `AccessResult` | One class defines what the QR carries, one decides entry, exit or denial, and one carries the answer; none draws anything |
+| DIP and ISP | `MembershipExpiry` | The access service asks a one-method interface when the membership ends, so it does not know the membership module and is tested with a lambda |
+| GRASP Controller (use case) | `AccessService.process` | One operation turns a scan into an entry or an exit and reuses `AttendanceService` for the rules instead of repeating them |
+| GRASP Protected Variations | `CarnetCode.decode` | The scanner format (prefix, case, spaces, typed document) is normalized in one place, so a different reader does not change the service |
+| GRASP Low coupling | `AccessResult` | The kiosk shows a record with the outcome and the message; it never catches rule exceptions itself |
+| GRASP Pure Fabrication | `QrImage`, `MemberAvatar` | Small helpers that draw the QR and the photo, shared by the kiosk and the carnet screen |
+| Testability | `AccessServiceTest` | Entry, exit, denial, unknown code and the last day of the membership are tested with a fixed clock |
+| SRP | `AccessTokens`, `AccessKeyStore` | One class signs and checks the access code; the other only keeps the secret key in a file |
+| GRASP Protected Variations | `AccessTokens` | The code is derived from the document with a secret key, so the Member model and the CSV files do not change and a leaked carnet is revoked by changing the key |
+| GRASP Controller (use case) | `PhoneAccess.scan` | One operation turns a phone scan into an entry or exit, and returns the previous answer when the same code arrives twice in 10 seconds |
+| OCP and Observer | `AccessService.addListener` | The screens can subscribe to results, so a new way to scan (phone, reader, typed) needs no change in the screen |
+| SRP and Pure Fabrication | `AccessPage` | A pure function from a result to the phone page, tested without a server and with the member text escaped |
+| DIP | `AccessServer` | The web server depends on `PhoneAccess`, not on members, attendance or files; the port and the clock are injected |
+| Testability | `PhoneAccessTest`, `AccessServerTest`, `AccessPageTest`, `AccessTokensTest`, `AccessKeyStoreTest` | The server is tested for real on a free port with an HTTP client, like a phone would call it |
+| SRP | `OccupancyHeatmap`, `AnalyticsService` | One class only counts entries by weekday and hour; the other only joins attendance and memberships into a report; neither draws anything |
+| GRASP Information Expert | `OccupancyHeatmap` | The heatmap owns its counts, so it is the one that knows the maximum, the total and the peak slot |
+| GRASP Low coupling | `AnalyticsService.Report` | The screen receives one immutable report and never reads attendance or memberships itself |
+| GRASP Pure Fabrication | `OccupancyHeatmap` | It is not a gym concept, but it concentrates the counting so it can be tested without storage |
+| Encapsulation and immutability | `Report`, `AtRisk` | Records returned by a read-only service; the screen cannot change the numbers |
+| DIP and testability | `AnalyticsService` with `Clock` | Today is injected, so renewal and risk rules are tested with a fixed date |
+| OCP | `AnalyticsModule` | The screen is added as one more module in the list of `Main`; the shell does not change |
+| Testability | `AnalyticsServiceTest` | Heatmap window, average stay, renewal rate and at-risk members are tested with fake repositories |
 
 ## Ronald: members and health
 
@@ -87,24 +89,64 @@ Each row links a principle or pattern to the class or method where it is applied
 | ISP and DIP | `AttendanceService` and `SubscriptionChecker` | Attendance depends on a one-method contract, not on the membership module, and the tests use a fake one |
 | GRASP Low coupling | `HealthService`, `AttendanceService` and `MemberService.findById` | They ask the member service whether a member exists instead of reading the members file |
 | Dependency injection | `AttendanceService` constructor with `Clock` | The clock is received from outside so the tests can fix the time |
-| Low coupling and reuse | `LineChart` | The chart receives plain `Point(label, value)` data and knows nothing about members or payments, so any screen can reuse it |
-| SRP | `LineChart` | It only draws a chart; services provide the data and each screen decides what to show |
-| GRASP High cohesion | `LineChart.drawGrid`, `drawLineAndArea`, `drawPoints`, `drawTooltip` | Each private method draws one part of the chart |
-| GRASP Controller | `MembersPanel`, `MemberFormDialog` | The screens collect what the user types and delegate every rule to `MemberService`; they hold no business rules |
-| Low coupling | `MembersPanel` and `MemberService` | The screen depends only on the service, never on repositories or CSV files |
-| OCP | `MembersPanel` implements `ModulePanel` | The module joins the menu by replacing a placeholder in `Main`; the main window does not change |
 | SRP | `PhotoStorage`, `MemberAvatar` | One only copies photos into the data folder, the other only draws a picture or initials |
 | GRASP Pure Fabrication | `PhotoStorage` | It is not a gym concept, but it keeps file work out of the screens and the services |
-| GRASP Controller | `MemberDetailPanel`, `HealthTab`, `MeasurementsTab`, `AttendanceTab` | Each tab collects input and delegates to `HealthService` or `AttendanceService`; none holds business rules |
-| High cohesion | `HealthTab`, `MeasurementsTab`, `AttendanceTab` | The member record is split into one class per topic instead of one huge screen |
 | Information Expert | `BmiGauge` | It knows how an index maps to a colored position and asks `BmiCategory` for the category |
-| Low coupling and reuse | `MeasurementsTab` uses `LineChart` | The weight chart reuses the generic component without changing it |
 | DIP | `Main` | Services are created with their CSV repositories in one place, so a database only changes those lines |
 | Testability (DIP) | `BillingFakeRepositories` | The billing services are tested with in-memory repositories because they depend on interfaces, not on CSV files |
 | Testability (DIP) | `Clock.fixed` in `SubscriptionServiceTest`, `PaymentServiceTest` | The rules about dates (start, renewal, expiry, revenue by month) are checked on a known day |
 | GRASP Information Expert | `MembershipPlanServiceTest.endDateCountsTheStartingDayAsTheFirstDay` | The plan owns the duration, so the test checks the end date on the plan itself |
 | OCP and polymorphism | `PaymentServiceTest` with `PercentageDiscount`, `FixedDiscount` | The same sale code works with every kind of discount without changes |
 | GRASP Controller (use case) | `PaymentServiceTest.ifThePaymentCannotBeStoredTheSubscriptionIsCancelled` | The test proves that selling is one operation: no subscription is left without its payment |
+| OCP and polymorphism | `AlertRule`, `ExpiringMembershipRule`, `InactiveMemberRule`, `BirthdayRule` | Each kind of alert is one class that implements the same interface; a new kind of alert is a new class and `AlertService` does not change |
+| SRP | `AlertService`, `AlertMessages`, `WhatsAppLink` | The service only gathers the alerts, `AlertMessages` only writes the text and `WhatsAppLink` only formats a phone and a text; none of them draws a screen or sends anything |
+| GRASP Information Expert | `Alert`, `AlertType` | The alert is a plain value that carries what the screens need (type, member, days, date) and the type knows its own label and its order of importance |
+| High cohesion | `ExpiringMembershipRule`, `InactiveMemberRule`, `BirthdayRule` | Each rule contains only the logic of its own alert, including its edge cases (renewed membership, new membership, 29 February) |
+| DIP and dependency injection | `AlertService` constructor, `AlertRule`, `Clock` | The service receives its rules and the clock from outside, so tests choose the day and the alerts that run |
+| GRASP Creator | `AlertService.withStandardRules` | The service knows which rules it uses by default and builds them, so `Main` and the screens do not repeat that list |
+| Low coupling and reuse | `WhatsAppLink` | It receives a plain phone and a plain text and knows neither members nor alerts, so any screen can reuse it |
+| Protected Variations | `AlertMessages`, `WhatsAppLink` | The wording and the way of contacting the member are isolated; changing to SMS or email would replace these classes only |
+| Testability | `AlertServiceTest`, `AlertMessagesTest`, `WhatsAppLinkTest` | The rules are tested with a fixed clock and real CSV files in a temporary folder, including the edge cases of the dates |
+| GRASP Controller | `MembersPane`, `MemberForm` | They collect clicks and typed data and delegate to `MemberService`; no business rule lives on the screen |
+| OCP and polymorphism | `MembersModule` implements `FxModule` | The screen entered the menu by replacing one line in `Main`; `ShellView` did not change |
+| Low coupling | `MembersPane` receives a `BooleanSupplier` | The pane does not know the session or the roles; the module tells it whether the user may edit |
+| High cohesion | `MembersPane`, `MemberForm`, `MembersModule` | The list, the form and the module are separate classes with one job each |
+| Reuse | `MembersPane` uses `FxTables`, `FxDialogs` and `MemberAvatar` | The table cells, the dialogs and the photo come from the shared components, so no code is repeated |
+| GRASP Pure Fabrication | `MemberForm` and `PhotoStorage` | Copying the photo is delegated to `PhotoStorage`; the form only chooses the file |
+| SRP | `HealthPane`, `MeasurementsPane`, `AttendancePane` | Each tab shows one topic and asks one service; none of them holds a business rule |
+| GRASP Information Expert | `HealthService.currentBmi`, `AttendanceSummary` | The BMI is calculated by the service that knows the profile and the measurements; the visit numbers by the class that receives the visits |
+| GRASP Pure Fabrication | `BmiScale`, `AttendanceSummary`, `Decimals` | Plain classes without JavaFX, created so the arithmetic of the screens can be tested without a window |
+| Testability | `BmiScaleTest`, `AttendanceSummaryTest`, `DecimalsTest` | 15 tests on the logic of the member file that does not need a screen |
+| Low coupling | `MemberFicha`, `MembersModule` | The file receives a `Runnable` to go back and does not know the list; the module decides what to show |
+| Reuse | `HealthPane`, `AttendancePane` use `KpiCard`, `FxTables`, `FxDialogs`, `MemberAvatar` | The cards, tables, dialogs and photo are the shared components, so no style or code is repeated |
+| DIP | `HealthPane`, `MeasurementsPane`, `AttendancePane` | They depend on `HealthService` and `AttendanceService`, never on the CSV files, so the storage can change to JDBC without touching the screens |
+| SRP | `StreakCalculator`, `Badge`, `GamificationService` | The calculator knows weeks and streaks, each badge knows its own goal, and the service gathers the data of a member; none of them draws anything |
+| OCP | `Badge` | A new badge is a new constant with its goal; the service and the screens do not change |
+| GRASP Information Expert | `Badge.isEarnedBy`, `StreakCalculator` | The badge decides whether it is earned, and the calculator, which owns the rule of the week, decides what a streak is |
+| GRASP Pure Fabrication | `StreakCalculator` | A class without storage or clock, created so the streak rule can be tested with plain dates |
+| Low coupling | `GamificationService` | It only asks `MemberService` and `AttendanceService`, so it does not know how the visits are stored |
+| Protected Variations | `GamificationService.MIN_DAYS_PER_WEEK` | The weekly goal is one constant that the calculator receives as a parameter, so changing the goal touches one line |
+| Immutability | `Streak`, `Achievements`, `RankingEntry` | They are records: whoever receives a result cannot change it |
+| Testability | `StreakCalculatorTest`, `BadgeTest`, `GamificationServiceTest` | 30 tests with a fixed clock; the service test uses real CSV files in a temporary folder |
+| SRP | `AchievementsPane` | The tab only draws the numbers and the badges that `GamificationService` gives; it holds no rule about streaks or badges |
+| OCP | `AchievementsPane`, `Badge` | The tab draws one card for each constant of `Badge`, so a new badge appears on the screen without changing the tab |
+| DIP | `AchievementsPane`, `MemberFicha`, `MembersModule` | The service is received by constructor from `Main`; the screens never create it and never know where the visits are stored |
+| Low coupling | `AchievementsPane` | It does not know `AttendanceService` or the clock: it asks `achievementsOf` and shows the result |
+| Reuse | `AchievementsPane` uses `KpiCard`, `FxIcons`, `FxDialogs` and the classes of `nextfit.css` | The cards, the icons and the error dialog are the shared components; the only new styles are the three classes of the achievements block |
+| SRP | `AlertsPane`, `AlertsModule`, `AlertText` | The pane draws the cards, the list and the buttons, the module only decides who can open it, and `AlertText` only writes the detail line; none of them calculates an alert or writes the message for the member |
+| DIP | `AlertsPane`, `AlertsModule` | They receive `AlertService`, `AlertMessages` and `WhatsAppLink` by constructor from `Main`, so the screen does not know the CSV files, the rules of each alert or the clock |
+| OCP | `AlertsModule`, `Main` | The alert center enters the menu as one more `FxModule` with one line in `Main`; the main window does not change |
+| Reuse | `AlertsPane` uses `AlertService`, `AlertMessages`, `WhatsAppLink`, `KpiCard`, `FxTables`, `FxDialogs` | The alerts, the message and the link already existed; the screen only joins them, so no rule or text is repeated |
+| GRASP Pure Fabrication | `AlertText` | A plain class without JavaFX, created so the wording of the detail line can be tested without a window |
+| Low coupling | `AlertIcons` | The icons of this screen live in their own class, so the screen does not edit `FxIcons`, which every module shares |
+| Testability | `AlertTextTest` | 5 tests on the singular, plural and date of each kind of alert |
+| SRP | `MemberPortal`, `PortalPage`, `WorkoutPlanner` | `MemberPortal` only gathers what the member sees, `WorkoutPlanner` only decides which day of the routine comes next and `PortalPage` only turns the summary into HTML; none of them changes data |
+| GRASP Information Expert | `WorkoutPlanner` | The rule "the next day follows the last one logged and the routine starts again after its last day" lives in one plain class that knows the routine and the sessions, so it is tested without a server |
+| Protected Variations | `PortalSummary`, `PortalPage` | The summary is plain data and the page is a pure function of it; a mobile app or another page would replace `PortalPage` only |
+| DIP and dependency injection | `MemberPortal` constructor, `Main` | The portal receives `PhoneAccess` and the services of memberships, routines and gamification from `Main`; it does not know the CSV files or the clock |
+| OCP | `AccessServer` | The portal is one more route (`/m/CODE`) added with a second constructor; the old constructor and the routes of the entry control do not change, and without a portal the route does not exist |
+| Reuse | `MemberPortal`, `AccessPage` | The member is found with the same code of the carnet (`PhoneAccess`), the progress comes from `GamificationService` and the scan page only adds a link; no rule is repeated |
+| Testability | `WorkoutPlannerTest`, `PortalPageTest`, `MemberPortalTest`, `AccessPageTest` | 20 new tests: the rotation of the days, the wording and the escaping of the page, and the real server answering a phone with CSV files in a temporary folder |
 
 ## Santiago: training
 
@@ -129,11 +171,237 @@ Each row links a principle or pattern to the class or method where it is applied
 | GRASP Information Expert | `TrainingSessionService.log` | The service that records sessions knows which rules a session must satisfy |
 | DIP | `TrainingSessionService` and `TrainingSessionRepository`, `SubscriptionChecker` | The service depends on interfaces, not on CSV or the membership module |
 | Encapsulation | `TrainingSession` | `final` attributes; the only copy allowed is `withId` |
-| SRP and reuse | `PictureSource`, `Avatar`, `ImageCard` | Finding a picture, showing a person and showing an item are separate classes that any module can reuse |
 | Testability (DIP) | `RoutineAssignmentServiceTest`, `TrainingSessionServiceTest` | `SubscriptionChecker` is replaced by a lambda in tests because the services depend on an interface, not on the membership module |
-| GRASP Controller and low coupling | `ExerciseCatalogView`, `ExerciseFormDialog` | The screens collect input and delegate to `ExerciseService`; they hold no business rules |
-| OCP | `TrainingPanel` | A new tab (trainers, routines, sessions) is added to the panel without changing the existing tabs |
-| SRP | `RoutineFormDialog.DayPanel`, `RoutineFormDialog.LineRow` | Each nested class handles one level of the routine (a day, a line); the dialog only assembles the result and delegates saving to `RoutineService` |
-| GRASP Information Expert | `AssignmentView` and `RoutineAssignmentService.findCurrentFor` | The screen asks the service which routine is current instead of filtering assignments itself |
-| DRY and SRP | `MemberPickerPanel` | The member search column is one reusable class instead of being copied into each screen |
+| SRP | `SuggestionRequest`, `SuggestionSettings`, `WeeklySplit` | One class only carries what was asked, one only holds the adjustable settings and one only decides the days; none of them builds a routine |
+| OCP and ISP | `SuggestionRule`, `BmiRule`, `MedicalConditionRule` | A new rule is a new class that implements a one-method interface; `SuggestionService` does not change |
+| DIP | `SuggestionService` and `SuggestionRule`, `ExerciseService`, `HealthService` | The service receives its rules and collaborators through the constructor and depends on the interface, not on concrete rules |
+| GRASP Information Expert | `TrainingGoal` | Each goal knows its own sets, repetitions, rest and whether it needs cardio, so no chain of `if` is needed |
+| GRASP Information Expert | `SuggestionSettings.allows` | The settings own the limits, so they decide whether an exercise can be suggested |
+| Encapsulation and immutability | `SuggestionRequest`, `SuggestionSettings`, `SuggestedRoutine` | Records with copied collections; each rule returns a new copy instead of changing the previous one |
+| GRASP Controller (use case) | `SuggestionService.suggest` | One operation coordinates the rules, the weekly split and the catalog to build the draft; it holds no screen code and saves nothing |
+| GRASP Low coupling | `SuggestionRequest` | The rules read a BMI category and a text, not the member or the health service, so they are tested alone |
+| GRASP Protected Variations | `MedicalConditionRule.normalize` | The free text typed by people is normalized (case and accents) in one place, so the key words match however they were written |
+| GRASP Pure Fabrication | `WeeklySplit` | It is not a gym concept, but it concentrates the weekly layout so the service does not repeat it |
+| DIP and testability | `SuggestionService` with `Clock` | The creation date is checked with a fixed clock |
+| Testability | `SuggestionRulesTest`, `SuggestionServiceTest` | The rules are tested alone and the service with CSV files in a temporary folder |
+| SRP | `ExercisesPane`, `ExerciseForm` | One class shows the gallery and filters; the other only collects the form fields; neither holds business rules |
+| GRASP Controller | `ExercisesPane`, `ExerciseForm` | They collect the search text, the filters and the clicks, and delegate every rule to `ExerciseService` |
+| GRASP Low coupling | `ExercisesPane` and `ExerciseService` | The screen depends only on the service, never on repositories or CSV files |
+| GRASP Information Expert | `ExerciseService.search` used by `ExercisesPane` | The service owns the catalog, so it does the filtering; the screen only passes the text and the filters |
+| OCP | `TrainingFxModule` implements `FxModule` | The module replaces its placeholder in `Main`; the main window does not change and each new tab is added without touching the others |
+| GRASP Protected Variations | `ExercisesPane.pictureOf` | A missing or unreadable photo falls back to the picture of the muscle group, so the screen never breaks |
+| Reuse | `FxDialogs.form` and `FxDialogs.labeled` in `ExerciseForm` | The form reuses the shared dialog, which shows the business errors inside the window without repeating that code |
+| GRASP Protected Variations | `nf-exercise-card`, `nf-textarea` in `nextfit.css` | The colors live in the style sheet, so the screens only add style classes and work in light and dark mode |
+| SRP | `RoutineLineRow`, `RoutineDayPane`, `RoutineForm` | Each class handles one level of the routine form: one exercise line, one day, the whole routine. |
+| Information Expert | `RoutineDayPane` | Each day pane builds its own `RoutineDay` from the data it holds, so the form does not need to know its details. |
+| DIP | `RoutinesPane`, `RoutineForm` | They depend on the service classes, not on repositories or files; all rules stay in `RoutineService`. |
+| Low Coupling | `SuggestRoutineDialog` | It only asks `SuggestionService` for a draft and returns it; the form decides what to do with it. |
+| OCP | `Main` | The suggestion service is built here with its list of rules, so a new rule is added without changing the service. |
+| SRP | `AssignmentPane` | It only shows the member, the current routine and the history, and reports the clicks; it does not decide anything. |
+| Information Expert | `RoutineAssignmentService` | The rules (active member, valid membership, one active routine) stay in the service that owns the assignment data; the screen only shows its error messages. |
+| Low Coupling | `AssignmentPane`, `MemberPicker` | The pane reuses the shared member picker and only learns which member was chosen, so it does not know how the search works. |
+| SRP | `SessionsPane` | It only collects the day, date, minutes and notes and shows the history; it does not decide what is a valid session. |
+| Information Expert | `TrainingSessionService` | The rules for a session (active routine, valid data) stay in the service that owns the session data; the screen only shows its messages. |
+| Low Coupling | `SessionsPane`, `MemberPicker` | The pane reuses the shared member picker and only learns which member was chosen, so it does not know how the search works. |
+| SRP | `TrainersPane`, `TrainerForm` | The pane lists trainers and reports clicks; the form only collects the data of one trainer. Neither one decides what is valid. |
+| Information Expert | `TrainerService` | The rules to register, update, deactivate and reactivate a trainer stay in the service that owns the trainer data; the screens only show its messages. |
+| DIP | `TrainersPane`, `TrainerForm` | They depend on `TrainerService`, not on the CSV files, so the storage can change to the database without touching the screens. |
+| SRP | `OccupancyService` | It only calculates the picture of the gym (people inside, level, entries by hour, best hour to come); it does not draw it and never changes the attendance data. |
+| Information Expert | `OccupancyLevel` | Each level knows the percentage where it starts, so nobody else repeats those limits. |
+| Pure Fabrication | `OccupancySnapshot` | An immutable picture of the gym with no drawing logic, created so the TV screen only reads data. |
+| DIP | `OccupancyService` | It depends on `AttendanceService` and `MemberService`, and receives the capacity and the `Clock` by constructor, so tests can fix the time. |
+| Low Coupling | `OccupancyService` | It reuses `OccupancyForecastService` to get the best hour and the forecast of the day, so the TV and the member portal use the same rule and never disagree. | SRP | `OccupancyView`, `OccupancyModule` | The view only draws the picture it receives and refreshes itself; the module only hosts it and opens the full-screen window. The numbers come from `OccupancyService`. |
+| DIP | `OccupancyView` | It depends on `OccupancyService`, not on the attendance files, so the data source can change without touching the screen. |
+| Protected Variations | `nextfit.css` (`nf-level-*`) | The color of the occupancy bar changes with the level by a style class, so no color is written in code and the light and dark modes work without changes. |
+| SRP | `CashCloseService`, `ReportService` | The first one only gathers the payments of a day into a close; the second only builds report tables. Neither one draws or writes files. |
+| Information Expert | `CashClose` | The record that holds the lines and the totals also computes the expected cash and the difference with the cash counted, so no screen repeats that arithmetic. |
+| OCP | `ReportTable`, `PdfExporter`, `XlsxWriter` | A new report is only a new table; the exporters draw any table, so adding a report does not touch them. |
+| DIP | `PdfExporter`, `XlsxWriter` | The exporters depend on the plain `ReportTable` and `CashClose` values, not on services or repositories. |
+| Low Coupling | `CashClosePane`, `ReportsPane`, `FileExport` | The panes only show data and call `FileExport`, which owns the "save as" dialog and the messages, so no pane repeats that code. |
+| Protected Variations | `PdfDocument`, `PdfFonts` | The file formats are written with the JDK only. If a library such as POI or OpenPDF is used later, only the export package changes. |
+| OCP | `Main`, `ReportsModule` | The module is added to the list of `FxModule`; the main window does not change. |
+| SRP | `InMemoryAttemptLimiter`, `InactivityMonitor` | Each one only keeps the data of one rule (wrong attempts, last activity) and compares it with the clock; neither one knows screens, files or passwords. |
+| OCP | `AttemptLimiter` | `AuthService` asks the interface, so a new way of limiting (for example saved in the database) is a new class and the sign-in rules do not change. |
+| Polymorphism | `AttemptLimiter.NONE` | A limiter that never blocks lets `AuthService` work without a limit and keeps the older code unchanged, with no `if` to ask whether there is a limiter. |
+| DIP | `AuthService`, `IdleWatcher` | `AuthService` depends on the `AttemptLimiter` interface and `IdleWatcher` on `InactivityMonitor`; both receive them by constructor and the clock is injected, so tests can move the time. |
+| Controller | `FxApp` | It receives the "inactive for too long" event and decides to end the session and show the sign-in, so no screen has to know about the timer. |
+| SRP | `AuditService`, `AuditCsvMapper`, `AuditModule` | The service writes and reads events, the mapper only knows the CSV columns, and the screen only shows them; none of them does the work of another. |
+| OCP | `AuditRepository` | The service uses the interface, so the CSV log can be replaced by a database table without changing the service or the screen. |
+| Polymorphism | `AuditLog.NONE` | An audit log that writes nothing lets `AuthService`, `UserService` and `BackupService` work without audit and keeps the older code and tests unchanged, with no `if` to ask whether there is a log. |
+| DIP | `AuthService`, `UserService`, `BackupService` | They depend on the small `AuditLog` interface, not on `AuditService` or on the file, and receive it by constructor. |
+| Low coupling | `AuditLog`, `Supplier<String>` actor | The services only know "write this event" and "who is acting now", so none of them knows the session, the screen or the CSV. |
+| Information Expert | `AuditService` | It knows the clock and the entries, so it is the one that puts the time on each event and counts the events of today. |
+| Immutability | `AuditEntry` | A record that cannot change after it is created, and the repository only has `append`, so a line of the log can never be edited or removed. |
+| Controller | `AuthService.logout`, `AuthService.expire` | The sign-out and the idle close go through the service, so `FxApp` does not write audit events itself. |
+| SRP | `FrequencyDropRule`, `DaysAwayRule`, `ExpiringSoonRule` | Each rule looks for one sign of abandonment and gives its points and its reason; none knows the others, the services or the screen. |
+| OCP | `ChurnRule` | `ChurnService` asks the interface, so a new sign (for example a late payment) is a new class added to the list and the service does not change. |
+| Polymorphism | `ChurnRule` | The service treats every rule the same way, whatever it calculates, with no `if` for each kind of sign. |
+| Information Expert | `MemberActivity` | It holds the visit days and the membership, so it is the one that counts the visits of a range, the days away and the days left. |
+| Low coupling | `MemberActivity` | The rules receive this plain value and never ask the services, so they are tested without files or services. |
+| Protected Variations | `RiskLevel` | The limit and the action of each level live in one enum, so changing a limit touches no service or screen. |
+| Immutability | `ChurnFactor`, `ChurnRisk`, `MemberActivity` | Records that cannot change after they are created; the lists are copied. |
+| DIP | `ChurnService` | It depends on the `ChurnRule` interface and receives the rules, the services and the clock by constructor, so the tests choose the day. |
+| SRP | `ChurnModule` | It only shows what `ChurnService` calculates and decides who may open it. |
+| SRP | `OccupancyForecastService` | Only forecasts the people inside by hour; the current occupation stays in `OccupancyService`. |
+| Information Expert | `OccupancyForecast` | It owns the hours of the day, so it knows which are the quietest and the busiest. |
+| Information Expert | `OccupancyForecastService` | It reads the attendance and decides how a person counts between the entry and the exit. |
+| Protected Variations | `HourForecast`, `OccupancyLevel` | Screens use the percent and the level, so the way of forecasting can change without touching them. |
+| Low Coupling | `OccupancyForecastService` | It depends on `AttendanceService` and a clock only. |
+| SRP | `AiAssistant` | Only runs the question-and-tools loop; the service, the tools and the limit are other classes. |
+| OCP | `AiTool` | A new question the assistant can answer is a new tool class; the assistant does not change. |
+| DIP | `AiAssistant`, `AiClient` | The assistant depends on the `AiClient` interface, so Claude, another provider or a fake for tests are interchangeable. |
+| Polymorphism | `AiClient`, `AiTool` | The assistant treats every service and every tool through the same interface. |
+| Protected Variations | `AiClient` | A change of AI provider or model is isolated behind one interface. |
+| Information Expert | `DailyTokenBudget` | It owns the count of tokens, so it decides when the daily limit is reached. |
+| Information Expert | `AiConversation` | It owns the messages of a chat, so it can leave them as they were when a question fails. |
+| Low Coupling | `AiUser`, `AiAudience` | Tools decide what to answer from these two values, without knowing the screens or the session. |
+| SRP | `Json` | Only reads and writes JSON, so no library is needed and the AI code does not depend on one. |
+| SRP | `AiConfig` | Only reads the AI settings from the local file, and hides the key when printed. |
+| SRP | `ClaudeClient` | Only translates between the assistant's values and the Claude HTTPS API. |
+| Liskov | `ClaudeClient` | It can replace any other `AiClient`, such as the fake of the tests, without the assistant noticing. |
+| Protected Variations | `ClaudeClient` | The details of the provider (address, headers, JSON) stay in this class. |
+| OCP | `MembersAtRiskTool` | A new question for the assistant is a new tool class that implements `AiTool`; nothing existing changes. |
+| Information Expert | `MembersAtRiskTool` | It reuses `ChurnService`, which owns the risk, instead of recalculating it. |
+| Protected Variations | `RevenueSummaryTool` | Money is limited to the administrator by the tool itself, so no screen has to remember the rule. |
+| Low Coupling | `RevenueSummaryTool` | It depends on `PaymentService` and a clock only. |
+| SRP | `ToolInput` | Only reads the arguments that the AI sends, so every tool validates them the same way. |
+| OCP | `GymAlertsTool` | The alerts became available to the assistant as a new class; the assistant and the other tools did not change. |
+| SRP | `AssistantChat` | Only keeps the conversation and starts a new one when the user changes; the screen only draws. |
+| SRP | `AiSetup` | The only place that joins the key, the limit and the tools, so `Main` and the screens carry no AI logic. |
+| Pure Fabrication | `AiSetup`, `AssistantChat` | They do not exist in the gym domain; they were created to keep the screen and `Main` free of rules. |
+| Null Object | `AiSetup` (empty result) | Without a key the assistant is "off": the screen shows how to turn it on and the rest of NextFit works the same. |
+| Low Coupling | `AssistantModule` | The screen only knows `AssistantChat`; it does not know the service, the tools or the key. |
+| SRP | `BestTimesAdvisor` | Only decides which hours to recommend (today first, tomorrow when today has none); it does not calculate the forecast or draw it. |
+| DIP | `BestTimesAdvisor`, `MemberPortal` | The portal receives the advisor by constructor and a clock, so tests use a fixed day. |
+| Low Coupling | `PortalPage` | It only receives `PortalBestTimes` and does not know the forecast service or the attendance. |
+| Information Expert | `PortalBestTimes` | It owns the recommended hours and the day label that belong together. |
+| Single Responsibility | `PortalChatEndpoint` | Only validates the request of the chat and builds the answer; the web server only moves bytes and the chat service holds the rules. |
+| Single Responsibility | `PortalChatService` | Keeps the conversation and the hourly limit of each member; it does not know the web nor the AI provider. |
+| Low Coupling | `MemberSummaryLookup` | The member tools depend on a one-method interface, not on the portal service nor on the CSV files. |
+| Protected Variations | `MyMembershipTool`, `MyNextWorkoutTool`, `BestHoursTool` | The tools take no arguments, so the model cannot ask for the data of another member; the member comes from the carnet code. |
+| Dependency Inversion | `AccessServer` | Receives the chat as a `PortalChatEndpoint` that can be null, so the portal works the same with the assistant off. |
 
+## Face recognition screens
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `FaceEntryFlow`, `FaceSampleCollector` | One decides the steps to enter, the other collects the pictures to register; neither knows the camera or the screen |
+| DIP | `FacePane` | It receives `FaceAccessService` and `FaceEnrollmentService` from `Main` and reads the camera only through `FaceCamera` |
+| ISP | `FaceEntryFlow` | It receives a one-method function to find the member, not the whole service, so it is tested with a lambda |
+| Testability | `FaceEntryFlowTest`, `FaceSampleCollectorTest` | A hand-moved clock tests the time limits without waiting |
+
+## Dynamic QR
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `AccessTokens` | Only builds and checks codes: the fixed one of the carnet and the short-lived one that depends on the time |
+| Information Expert | `PhoneAccess` | It knows who used which code and when, so it decides if a code was already used |
+| OCP | `AccessService.processMember` | The rules to let in did not change: only the way the member is identified did |
+| Low Coupling | `QrSvg`, `AccessServer` | The web part draws the QR from `QrMatrix` and does not know the screen or the carnet PDF |
+| Testability | `AccessTokensTest`, `PhoneAccessTest` | A hand-moved clock tests the 30 seconds window and the one-use rule |
+
+## Entry and exit summary
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `VisitSummaryService` | Only decides what to show after an entry or an exit; it does not draw it nor read the CSV files |
+| DRY / Low Coupling | `VisitSummaryService` | It reuses what `MemberPortal` already gathers through a one-method function, so the portal and the summary never disagree |
+| SRP | `VisitSummaryHtml` | Only draws the block; the text of the trainer is escaped |
+| OCP | `AccessServer` | The summary is a new optional collaborator: without it the server works as before |
+| Testability | `VisitSummaryServiceTest`, `VisitSummaryHtmlTest` | The portal is replaced by a lambda and a hand-moved clock gives the time inside |
+
+## Entry with a password
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `MemberPasswordService`, `SelfAccessService` | One keeps and checks the passwords, the other turns a document and a password into an access |
+| DIP | `SelfAccessService` | It receives functions (find the member, admit, deny) and interfaces (`AttemptLimiter`, `AuditLog`), not the screens nor the files |
+| Reuse | `PasswordHasher`, `InMemoryAttemptLimiter`, `AuditLog` | The hashing, the block by attempts and the audit of the staff sign-in are used again |
+| OCP | `AccessService.processMember` | The rules to let in do not change: a new way to identify the member was added |
+| Information Expert | `MemberService.findByDocumentNumber` | The service that owns the members finds one by document |
+| Testability | `SelfAccessServiceTest`, `MemberPasswordServiceTest` | A hand-moved clock tests the block and its end; in-memory fakes replace the files |
+
+## Forecast on the TV screen
+
+| Principle | Where | How |
+|---|---|---|
+| Information Expert | `OccupancyForecastService` | The forecast rule (same weekday of the last 8 weeks) lives in one place; the TV and the portal ask it instead of repeating it |
+| Low Coupling | `OccupancyService` | It builds the forecast with its own capacity and clock, so the "best hour" and the forecast cannot disagree |
+| SRP | `OccupancySnapshot` | It only carries the forecast as data; it does not calculate it nor draw it |
+| OCP | `OccupancyView` | The forecast is a new card; the rest of the screen did not change, and it adds no CSS because it reuses the `nf-level-*` classes |
+| Testability | `OccupancyForecastOnTvTest` | The clock is fixed by hand and a fake attendance repository gives the history |
+
+## Routines of the AI
+
+| Principle | Where | How |
+|---|---|---|
+| Protected Variations | `RoutineDraftChecker` | The AI is never trusted: every exercise must exist and pass the same limits as the rules, and a draft that cannot be fixed is refused. |
+| SRP | `RoutineDraftChecker` | Only checks a proposed routine and builds the final one; it knows nothing about the AI nor the screen. |
+| DIP | `TextCompleter` | The routine service depends on a one-method interface, so it is tested with a lambda and any AI service can be used. |
+| Pure Fabrication | `AiRoutineService` | Coordinates the prompt, the AI and the checker; it is not a concept of the gym but it keeps the screen and the AI client simple. |
+| OCP | `SuggestionService.settingsFor` | New medical or body rules change the limits for the rules and for the AI without touching either of them. |
+| Testability | `RoutineDraftCheckerTest`, `AiRoutineServiceTest`, `AiAssistantCompleteTest` | A fake AI and a hand-fixed clock test the checker and the service without a key and without internet. |
+
+## QR as read-only portal
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `PhoneAccess` | Only links a carnet code with its member; it no longer registers entries, so the QR cannot let anybody in. |
+| Protected Variations | `AccessServer` | There is no route that registers an access; the only way in is face, password or staff. |
+| Information Expert | `ProgressReportService` | Reads each service that owns the data (routines, sessions, attendance, health) and builds the report. |
+| Low Coupling | `ProgressReport`, `PortalPage` | The report is a plain value; the page only draws it and the portal of Santiago (`MemberPortal`) is untouched. |
+| OCP | `PortalPage.render(..., Optional<ProgressReport>)` | A new overload adds the sections; the old one keeps working. |
+| Testability | `ProgressReportServiceTest`, `PortalPageTest`, `PhoneAccessTest` | CSV files in a temporary folder and a plain value for the page; no network. |
+
+## Polish of the AI
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `AiAssistant.writeAudit` | Only counts and writes how the assistant was used (who, tools, tokens); it never keeps the text of the question or of the answer |
+| DIP | `AiAssistant`, `AuditLog` | The assistant depends on the small `AuditLog` interface, not on the CSV file or the audit screen |
+| Null Object | `AuditLog.NONE` | The old constructor and the tests that do not audit use an audit log that writes nothing |
+| OCP | `AuditAction.AI_QUESTION`, `AiSetup` | A new kind of event and a new overload were added; the existing code and the audit screen filter did not change |
+| Protected Variations | `AiAssistant.writeAudit` | If the audit fails, the person still gets the answer: a storage problem does not break the assistant |
+| Testability | `AiAssistantAuditTest` | A recording lambda replaces the audit log and a fake AI client gives the replies |
+
+
+## Access screen simplified
+
+| Principle | Where | How |
+|---|---|---|
+| SRP | `InsidePane` | Only lists who is inside and lets the staff close a forgotten visit; the entry is done by `FacePane` and `PasswordPane`. |
+| Protected Variations | `InsidePane.closeVisit` | The exit rule stays in `AttendanceService.checkOut`; the screen asks for confirmation and shows any rule error. |
+| Low Coupling | `AccessModule` | It no longer needs `AccessService`; each tab receives only the services it uses. |
+
+## Labels of how each member enters
+
+| Principle | Where | How |
+|---|---|---|
+| OCP | `MemberPicker` | A new constructor receives the function that gives the labels; the old one keeps working, so the other screens did not change. |
+| Low Coupling | `AccessModule` | It builds the function from `FaceEnrollmentService` and `MemberPasswordService`; `MemberPicker` only draws the text it receives. |
+| SRP | `MemberPicker.refreshTags` | Only draws the labels again; the panes call it after they register or delete a face or a password. |
+
+## Ronald: Oracle database
+
+| Principle or pattern | Class or method | Justification |
+|---|---|---|
+| DIP | `Storage`, `CsvStorage`, `JdbcStorage`, the 15 `Jdbc...Repository` classes | The services depend on the repository interfaces. Oracle is one more implementation, so the services did not change when the database arrived. |
+| GRASP Protected Variations | `Storage`, `StorageSetup` | The point that changes (CSV files or Oracle) is behind one interface and chosen in one place; nothing else knows which storage is in use. |
+| OCP and polymorphism | `CsvStorage` and `JdbcStorage` implement `Storage` | A new kind of storage is a new class that implements `Storage`; the services, the screens and `Main` do not change. |
+| Liskov substitution | `JdbcMemberRepository`, `JdbcRoutineRepository` and the other repositories | Each one keeps the contract of its interface: `save` with id 0 assigns an identifier, `findBy...` returns empty or an empty list, so it can replace the CSV one. |
+| Data access pattern (DAO) | `Jdbc...Repository` | Each class is the only one that knows the SQL of its table and turns rows into objects and objects into rows. |
+| SRP | `JdbcAccessKeyStore`, `JdbcCsvBackup`, `CsvSnapshot`, `BackupService` | Key initialization, database snapshot, CSV formatting and ZIP management each have a dedicated owner. |
+| SRP | `DatabaseConfig`, `OracleConnectionProvider`, `PooledConnectionSource`, `JdbcSupport`, `StorageSetup` | One reason to change each: the settings file, how to reach Oracle, how connections are reused, the shared SQL helpers, and the choice of storage. |
+| GRASP Pure Fabrication | `JdbcSupport`, `PooledConnectionSource`, `StorageSetup` | They are not gym concepts; they exist so the repositories stay short and the application keeps low coupling. |
+| GRASP Low coupling | `ConnectionSource` and the `Jdbc...Repository` classes | The repositories receive a one-method contract that gives a connection; they do not know Oracle, the pool or the settings. |
+| ISP | `ConnectionSource` | A one-method interface: the repositories only depend on what they use. |
+| Dependency injection | constructors of the `Jdbc...Repository` classes and of `PooledConnectionSource` | The connections are received from outside, so the tests give them fake connections and the application gives them the pool. |
+| GRASP Creator | `CsvStorage`, `JdbcStorage`, `StorageSetup` | Each storage creates the repositories it contains, and `StorageSetup` creates the storage, so `Main` does not repeat that list. |
+| GRASP High cohesion | `DataMigration` and `CsvToOracleMigration` | One class knows what to copy and in which order; the other only runs it, shows the result and lines up the identity counters. |
+| Transaction (all or nothing) | `JdbcRoutineRepository.save`, `JdbcFaceTemplateRepository.replace` | A routine and its lines, or the faces of a member, are written in one transaction: if one write fails nothing is kept. |
+| GRASP Information Expert | `JdbcPaymentRepository.discountOf` | The discount is stored as the type and value that the `Discount` classes give, and rebuilt with those same classes, so the rule of each discount stays in its own class. |
+| Exception handling | `PersistenceException` in every `Jdbc...Repository`, `JdbcSupport` | Every `SQLException` is wrapped in the exception of the persistence layer with a message in Spanish, so the screens never see SQL errors. |
+| Fault tolerance | `StorageSetup` | If Oracle is not enabled, does not answer in 10 seconds or has no tables, NextFit keeps working with the CSV files and says why. |
+| Testability | `PooledConnectionSourceTest`, `StorageSetupTest`, `CsvStorageTest`, `JdbcRepositoriesCheck` | The pool and the choice of storage are tested with fake connections and temporary folders; `JdbcRepositoriesCheck` runs every repository against the real database and deletes its test data. |
+| SRP | `LoginView` | The sign-in screen only collects the credentials and shows the result; the rules stay in `AuthService`. |
+| Open/Closed (styles) | `.nf-login` and `.nf-table` in `nextfit.css` | The look of the sign-in screen and of the tables changes in the style sheet, with no change in the classes that use them. |

@@ -1,0 +1,205 @@
+package com.nextfit.ui.fx;
+
+import com.nextfit.ai.AiRoutineService;
+import com.nextfit.exceptions.NextFitException;
+import com.nextfit.model.Routine;
+import com.nextfit.service.ExerciseService;
+import com.nextfit.service.MemberService;
+import com.nextfit.service.RoutineService;
+import com.nextfit.service.TrainerService;
+import com.nextfit.service.suggest.SuggestedRoutine;
+import com.nextfit.service.suggest.SuggestionRequest;
+import com.nextfit.service.suggest.SuggestionService;
+import com.nextfit.ui.Formats;
+import javafx.concurrent.Task;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Screen with the routines of the gym: a table where the user can create, edit and
+ * ask for a suggested routine. The rules live in the services; this class only
+ * collects clicks and shows data.
+ */
+final class RoutinesPane extends VBox {
+
+    private final RoutineService service;
+    private final TrainerService trainers;
+    private final ExerciseService exercises;
+    private final MemberService members;
+    private final SuggestionService suggestions;
+    private final Optional<AiRoutineService> aiRoutines;
+    private final Button aiButton = new Button("Sugerir con IA");
+    private boolean aiBusy;
+    private final TableView<Routine> table = new TableView<>();
+    private final Label countLabel = new Label();
+
+    /**
+     * @param service     the service that manages the routines
+     * @param trainers    the service used to show and choose the trainers
+     * @param exercises   the service that lists the exercises to choose from
+     * @param members     the service that lists the members for a suggestion
+     * @param suggestions the service that builds suggested routines
+     * @param aiRoutines  the service that asks the AI for a routine; empty when the assistant is off
+     */
+    RoutinesPane(RoutineService service, TrainerService trainers, ExerciseService exercises,
+                 MemberService members, SuggestionService suggestions, Optional<AiRoutineService> aiRoutines) {
+        super(16);
+        this.service = service;
+        this.trainers = trainers;
+        this.exercises = exercises;
+        this.members = members;
+        this.suggestions = suggestions;
+        this.aiRoutines = aiRoutines;
+        getChildren().addAll(buildHeader(), buildTable());
+        VBox.setVgrow(table, Priority.ALWAYS);
+        refresh();
+    }
+
+    private Node buildHeader() {
+        Label title = new Label("Rutinas");
+        title.getStyleClass().add("nf-section-title");
+        countLabel.getStyleClass().add("nf-muted");
+        VBox titles = new VBox(2, title, countLabel);
+        HBox.setHgrow(titles, Priority.ALWAYS);
+
+        Button suggest = new Button("Sugerir rutina");
+        suggest.getStyleClass().add("nf-secondary");
+        suggest.setOnAction(e -> suggest());
+        aiButton.getStyleClass().add("nf-secondary");
+        aiButton.setOnAction(e -> suggestWithAi());
+        Button edit = new Button("Editar");
+        edit.getStyleClass().add("nf-secondary");
+        edit.setOnAction(e -> editSelected());
+        Button create = new Button("+ Nueva rutina");
+        create.getStyleClass().add("nf-primary-small");
+        create.setOnAction(e -> openForm(null));
+
+        HBox header = new HBox(10, titles, suggest);
+        // EXPLICACIÓN: sin clave de la IA el botón no existe, así que la pantalla queda como siempre
+        if (aiRoutines.isPresent()) {
+            header.getChildren().add(aiButton);
+        }
+        header.getChildren().addAll(edit, create);
+        header.setAlignment(Pos.CENTER_LEFT);
+        return header;
+    }
+
+    private Node buildTable() {
+        TableColumn<Routine, String> name = FxTables.column("Nombre", 260, Routine::getName);
+        TableColumn<Routine, String> objective = FxTables.column("Objetivo", 200, Routine::getObjective);
+        TableColumn<Routine, String> trainer = FxTables.column("Entrenador", 220, this::trainerName);
+        TableColumn<Routine, String> days = FxTables.column("Días", 90, r -> String.valueOf(r.getDays().size()));
+        TableColumn<Routine, String> sets = FxTables.column("Series totales", 140,
+                r -> String.valueOf(r.getTotalSets()));
+        TableColumn<Routine, String> created = FxTables.column("Creada", 140,
+                r -> Formats.date(r.getCreatedAt()));
+        table.getColumns().addAll(List.of(name, objective, trainer, days, sets, created));
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        table.setFixedCellSize(46);
+        table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        table.setPlaceholder(new Label("Aún no hay rutinas. Crea la primera con «+ Nueva rutina»."));
+        table.getStyleClass().add("nf-table");
+        table.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                editSelected();
+            }
+        });
+        table.setMinHeight(320);
+        return table;
+    }
+
+    /** Reloads the routines from the service. */
+    void refresh() {
+        table.getItems().setAll(service.findAll());
+        int total = table.getItems().size();
+        countLabel.setText(total == 1 ? "1 rutina" : total + " rutinas");
+    }
+
+    // Si el entrenador de la rutina ya no existe, se muestra un guion en vez de fallar.
+    private String trainerName(Routine routine) {
+        try {
+            return trainers.findById(routine.getTrainerId()).getFullName();
+        } catch (NextFitException e) {
+            return "-";
+        }
+    }
+
+    private void editSelected() {
+        Routine selected = table.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            FxDialogs.message(this, "Selecciona una rutina", "Elige una rutina de la tabla primero.");
+        } else {
+            openForm(selected);
+        }
+    }
+
+    // Abre el formulario para crear (routine null) o editar una rutina.
+    private void openForm(Routine routine) {
+        RoutineForm.open(this, service, trainers, exercises, routine, this::refresh);
+    }
+
+    // Pregunta qué sugerir y abre el borrador en el formulario para que el entrenador lo ajuste.
+    private void suggest() {
+        try {
+            SuggestRoutineDialog.ask(this, members, suggestions).ifPresent(suggestion ->
+                    RoutineForm.openDraft(this, service, trainers, exercises, suggestion, this::refresh));
+        } catch (NextFitException e) {
+            FxDialogs.error(this, e);
+        }
+    }
+
+    // Pregunta qué sugerir y le pide la rutina a la IA en otro hilo; el borrador se abre para que el entrenador lo revise.
+    private void suggestWithAi() {
+        if (aiBusy || aiRoutines.isEmpty()) {
+            return;
+        }
+        try {
+            SuggestRoutineDialog.askForAi(this, members, suggestions).ifPresent(this::runAi);
+        } catch (NextFitException e) {
+            FxDialogs.error(this, e);
+        }
+    }
+
+    private void runAi(SuggestionRequest request) {
+        setAiBusy(true);
+        // EXPLICACIÓN: la IA tarda segundos; se hace en otro hilo para no congelar la ventana
+        Task<SuggestedRoutine> task = new Task<>() {
+            @Override
+            protected SuggestedRoutine call() {
+                return aiRoutines.orElseThrow().propose(request);
+            }
+        };
+        task.setOnSucceeded(e -> {
+            setAiBusy(false);
+            RoutineForm.openDraft(this, service, trainers, exercises, task.getValue(), this::refresh);
+        });
+        task.setOnFailed(e -> {
+            setAiBusy(false);
+            if (task.getException() instanceof NextFitException error) {
+                FxDialogs.error(this, error);
+            } else {
+                FxDialogs.message(this, "No se pudo generar la rutina", "Ocurrió un error inesperado. Intenta de nuevo.");
+            }
+        });
+        Thread thread = new Thread(task, "ai-routine");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void setAiBusy(boolean value) {
+        aiBusy = value;
+        aiButton.setDisable(value);
+        aiButton.setText(value ? "Pensando…" : "Sugerir con IA");
+    }
+}
