@@ -32,10 +32,12 @@ nbproject/private/
 data/*.csv
 data/*.tmp
 data/access.key
+data/email/
 backups/
 
 # Local database settings and Oracle wallet: never commit them
 nextfit.properties
+nextfit-email.properties
 oracle-wallet/
 *.p12
 *.sso

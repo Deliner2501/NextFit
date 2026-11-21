@@ -6,8 +6,15 @@ import com.nextfit.model.Payment;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.MembershipSale;
 import com.nextfit.service.PaymentService;
+import com.nextfit.service.mail.EmailNotifications;
+import com.nextfit.service.mail.EmailNotifications.ReceiptStatus;
 import com.nextfit.ui.Formats;
 import com.nextfit.ui.billing.ReceiptText;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -20,6 +27,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,27 +42,43 @@ import java.util.Map;
 final class PaymentsPane extends VBox {
 
     /** One table row: the payment with the member name already looked up. */
-    private record Row(Payment payment, String member) {
+    private record Row(Payment payment, String member, ReadOnlyStringWrapper emailStatus) {
     }
 
     private final PaymentService payments;
     private final MemberService members;
+    private final EmailNotifications email;
     private final TableView<Row> table = new TableView<>();
     private final Label countLabel = new Label();
     private final Label totalLabel = new Label();
     private final TextField searchField = new TextField();
+    private final Timeline statusRefresh = new Timeline(new KeyFrame(Duration.seconds(5), e -> refreshEmailStatus()));
+    private boolean checkingEmail;
 
     /**
      * @param payments the service that knows the payments
      * @param members  the service used to show member names
+     * @param email    the email service, or null when disabled
      */
-    PaymentsPane(PaymentService payments, MemberService members) {
+    PaymentsPane(PaymentService payments, MemberService members, EmailNotifications email) {
         super(16);
         this.payments = payments;
         this.members = members;
+        this.email = email;
         getChildren().addAll(buildHeader(), buildTable(), buildFooter());
         VBox.setVgrow(table, Priority.ALWAYS);
         refresh();
+        if (email != null) {
+            statusRefresh.setCycleCount(Animation.INDEFINITE);
+            sceneProperty().addListener((observable, previous, scene) -> {
+                if (scene == null) {
+                    statusRefresh.stop();
+                } else {
+                    refreshEmailStatus();
+                    statusRefresh.play();
+                }
+            });
+        }
     }
 
     private Node buildHeader() {
@@ -85,7 +109,17 @@ final class PaymentsPane extends VBox {
         TableColumn<Row, String> total = FxTables.column("Total", 130, r -> Formats.money(r.payment().getTotal()));
         FxTables.alignNumbers(total);
         TableColumn<Row, String> by = FxTables.column("Atendido por", 140, r -> r.payment().getRegisteredBy());
-        table.getColumns().addAll(List.of(number, date, member, method, total, by));
+        TableColumn<Row, String> delivery = new TableColumn<>("Correo");
+        delivery.setPrefWidth(130);
+        delivery.setSortable(false);
+        delivery.setCellValueFactory(cell -> cell.getValue().emailStatus().getReadOnlyProperty());
+        FxTables.colorize(delivery, status -> switch (status) {
+            case "Enviado" -> "nf-state-on";
+            case "Pendiente" -> "nf-state-warn";
+            case "Fallido" -> "nf-state-bad";
+            default -> "nf-state-off";
+        });
+        table.getColumns().addAll(List.of(number, date, member, method, total, by, delivery));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setFixedCellSize(46);
         table.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
@@ -102,10 +136,49 @@ final class PaymentsPane extends VBox {
 
     private Node buildFooter() {
         totalLabel.getStyleClass().add("nf-footer-total");
-        HBox footer = new HBox(totalLabel);
+        HBox footer = new HBox(12, totalLabel);
+        if (email != null) {
+            Button retry = new Button("Reintentar correo");
+            retry.getStyleClass().add("nf-secondary");
+            retry.setOnAction(e -> retryEmail(retry));
+            footer.getChildren().add(0, retry);
+        }
         footer.setAlignment(Pos.CENTER_RIGHT);
         footer.setPadding(new Insets(0, 4, 0, 0));
         return footer;
+    }
+
+    /** Lets staff retry a failed email after checking that Gmail did not already send it. */
+    private void retryEmail(Button button) {
+        Row selected = table.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            FxDialogs.message(this, "Selecciona un pago", "Elige un pago de la tabla primero.");
+            return;
+        }
+        if (!FxDialogs.confirm(this, "Reintentar correo",
+                "Comprueba en Enviados de Gmail que el comprobante " + selected.payment().getReceiptNumber()
+                        + " no haya salido. ¿Quieres reintentar el correo de este pago?", "Reintentar")) {
+            return;
+        }
+        button.setDisable(true);
+        Task<String> task = new Task<>() {
+            @Override
+            protected String call() throws Exception {
+                return email.retryReceipt(selected.payment().getId());
+            }
+        };
+        task.setOnSucceeded(e -> {
+            button.setDisable(false);
+            refreshEmailStatus();
+            FxDialogs.message(this, "Correo del comprobante", task.getValue());
+        });
+        task.setOnFailed(e -> {
+            button.setDisable(false);
+            FxDialogs.message(this, "Correo del comprobante", "No se pudo consultar o actualizar el registro del envío.");
+        });
+        Thread thread = new Thread(task, "nextfit-retry-receipt");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     /** Reloads the payments from the service, applying the search text. */
@@ -124,12 +197,46 @@ final class PaymentsPane extends VBox {
                     && !p.getReceiptNumber().toLowerCase().contains(wanted)) {
                 continue;
             }
-            rows.add(new Row(p, name));
+            rows.add(new Row(p, name, new ReadOnlyStringWrapper(email == null ? "Desactivado" : "Consultando…")));
             sum += p.getTotal();
         }
         table.getItems().setAll(rows);
         countLabel.setText(rows.size() == 1 ? "1 pago" : rows.size() + " pagos");
         totalLabel.setText("Total listado: " + Formats.money(sum));
+        refreshEmailStatus();
+    }
+
+    /** Reads delivery records in the background while leaving table selection intact. */
+    private void refreshEmailStatus() {
+        if (email == null || getScene() == null || checkingEmail || table.getItems().isEmpty()) {
+            return;
+        }
+        List<Row> rows = List.copyOf(table.getItems());
+        checkingEmail = true;
+        Task<List<ReceiptStatus>> task = new Task<>() {
+            @Override
+            protected List<ReceiptStatus> call() {
+                return rows.stream().map(row -> email.receiptStatus(row.payment())).toList();
+            }
+        };
+        task.setOnSucceeded(e -> {
+            checkingEmail = false;
+            List<ReceiptStatus> statuses = task.getValue();
+            for (int index = 0; index < rows.size(); index++) {
+                String label = switch (statuses.get(index)) {
+                    case SENT -> "Enviado";
+                    case FAILED -> "Fallido";
+                    case PENDING -> "Pendiente";
+                    case NOT_ATTEMPTED -> "Sin intento";
+                    case UNAVAILABLE -> "No disponible";
+                };
+                rows.get(index).emailStatus().set(label);
+            }
+        });
+        task.setOnFailed(e -> checkingEmail = false);
+        Thread thread = new Thread(task, "nextfit-receipt-status");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void showReceipt() {

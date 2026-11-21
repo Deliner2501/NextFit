@@ -27,6 +27,7 @@ import com.nextfit.service.alert.AlertMessages;
 import com.nextfit.service.alert.AlertService;
 import com.nextfit.service.alert.WhatsAppLink;
 import com.nextfit.service.gamification.GamificationService;
+import com.nextfit.service.mail.EmailNotifications;
 import com.nextfit.service.suggest.BmiRule;
 import com.nextfit.service.suggest.MedicalConditionRule;
 import com.nextfit.service.suggest.RoutineDraftChecker;
@@ -254,25 +255,29 @@ public final class Main {
         Supplier<String> phoneUrl = () -> "http://" + LanAddress.find() + ":" + accessServer.port();
 
         // The modules are built by a supplier because JavaFX controls can only be created after the toolkit starts.
-        FxApp.run(auth, session, () -> List.of(
-                new DashboardModule(dashboardService),
-                new MembersModule(memberService, healthService, attendanceService, gamificationService,
-                        new PhotoStorage(DATA_DIR.resolve("photos")), session),
-                new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
-                new ChurnModule(churnService),
-                new AssistantModule(assistantChat),
-                new BillingModule(planService, subscriptionService, paymentService, memberService, session),
-                new TrainingFxModule(training, suggestionService,
-                        DATA_DIR.resolve("images").resolve("exercises"), aiRoutines),
-                new AccessModule(attendanceService, memberService, subscriptionService,
-                        phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
-                        selfAccess, memberPasswords),
-                new AnalyticsModule(analyticsService, memberService),
-                new OccupancyModule(occupancyService),
-                new ReportsModule(cashCloseService, reportService),
-                new UsersModule(userService, session),
-                new AuditModule(auditService),
-                new BackupModule(backups)));
-        accessServer.stop();
+        try (EmailNotifications email = EmailNotifications.start(
+                DATA_DIR, paymentService, subscriptionService, memberService, Clock.systemDefaultZone())) {
+            FxApp.run(auth, session, () -> List.of(
+                    new DashboardModule(dashboardService),
+                    new MembersModule(memberService, healthService, attendanceService, gamificationService,
+                            new PhotoStorage(DATA_DIR.resolve("photos")), session),
+                    new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
+                    new ChurnModule(churnService),
+                    new AssistantModule(assistantChat),
+                    new BillingModule(planService, subscriptionService, paymentService, memberService, session, email),
+                    new TrainingFxModule(training, suggestionService,
+                            DATA_DIR.resolve("images").resolve("exercises"), aiRoutines),
+                    new AccessModule(attendanceService, memberService, subscriptionService,
+                            phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
+                            selfAccess, memberPasswords),
+                    new AnalyticsModule(analyticsService, memberService),
+                    new OccupancyModule(occupancyService),
+                    new ReportsModule(cashCloseService, reportService),
+                    new UsersModule(userService, session),
+                    new AuditModule(auditService),
+                    new BackupModule(backups)));
+        } finally {
+            accessServer.stop();
+        }
     }
 }
