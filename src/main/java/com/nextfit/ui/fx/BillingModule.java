@@ -6,6 +6,7 @@ import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.PaymentService;
 import com.nextfit.service.Session;
 import com.nextfit.service.SubscriptionService;
+import com.nextfit.service.mail.EmailNotifications;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Tab;
@@ -32,12 +33,14 @@ public final class BillingModule implements FxModule {
      * @param paymentService      the service that sells memberships
      * @param memberService       the service used to find members
      * @param session             the session, to know who is selling
+     * @param email               the email service, or null when disabled
      */
     public BillingModule(MembershipPlanService planService, SubscriptionService subscriptionService,
-                         PaymentService paymentService, MemberService memberService, Session session) {
+                         PaymentService paymentService, MemberService memberService, Session session,
+                         EmailNotifications email) {
         this.plans = new PlansPane(planService);
         this.subscriptions = new SubscriptionsPane(subscriptionService, planService, memberService);
-        this.payments = new PaymentsPane(paymentService, memberService);
+        this.payments = new PaymentsPane(paymentService, memberService, email);
         this.sale = new SalePane(planService, subscriptionService, paymentService, memberService, session,
                 () -> {
                     subscriptions.refresh();
