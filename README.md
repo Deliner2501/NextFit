@@ -129,39 +129,61 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 ## Screenshots
 
-> Screenshots live in [`docs/screenshots`](docs/screenshots).
+> Screenshots live in [`docs/screenshots`](docs/screenshots). The face in the *Rostro* picture and the local folder in the *Backup* picture are blurred.
 
 | Login | Dashboard (dark) |
 |:--:|:--:|
-| ![Login](docs/screenshots/login.png) | ![Dashboard](docs/screenshots/dashboard.png) |
+| ![Login](docs/screenshots/login.png) | ![Dashboard (dark)](docs/screenshots/dashboard-dark.png) |
 
-| Dashboard (light) | Dashboard charts |
+| Dashboard (light) | Members |
 |:--:|:--:|
-| ![Dashboard light](docs/screenshots/dashboard-light.png) | ![Dashboard charts](docs/screenshots/dashboard-charts.png) |
+| ![Dashboard (light)](docs/screenshots/dashboard-light.png) | ![Members](docs/screenshots/members.png) |
 
-| Members | Billing |
+| Member file | Billing |
 |:--:|:--:|
-| ![Members](docs/screenshots/members.png) | ![Billing](docs/screenshots/billing.png) |
+| ![Member file](docs/screenshots/member-file.png) | ![Billing](docs/screenshots/billing.png) |
 
-| Training | Access control |
+| Payments | Cash close |
 |:--:|:--:|
-| ![Exercises](docs/screenshots/exercises.png) | ![Access](docs/screenshots/access.png) |
+| ![Payments](docs/screenshots/billing-payments.png) | ![Cash close](docs/screenshots/cash-close.png) |
 
-| Analytics | TV screen |
+| Exercises | Routine assignment |
 |:--:|:--:|
-| ![Analytics](docs/screenshots/analytics.png) | ![TV](docs/screenshots/tv.png) |
+| ![Exercises](docs/screenshots/training-exercises.png) | ![Routine assignment](docs/screenshots/training-assign.png) |
 
-| Reports | Cash close |
+| Inside now | Carnets |
 |:--:|:--:|
-| ![Reports](docs/screenshots/reports.png) | ![Cash close](docs/screenshots/cash-close.png) |
+| ![Inside now](docs/screenshots/access-inside.png) | ![Carnets](docs/screenshots/access-carnets.png) |
+
+| Face entry | Password entry |
+|:--:|:--:|
+| ![Face entry](docs/screenshots/access-face.png) | ![Password entry](docs/screenshots/access-password.png) |
+
+| Alerts | Churn risk |
+|:--:|:--:|
+| ![Alerts](docs/screenshots/alerts.png) | ![Churn risk](docs/screenshots/churn.png) |
+
+| AI assistant | Analytics |
+|:--:|:--:|
+| ![AI assistant](docs/screenshots/assistant.png) | ![Analytics](docs/screenshots/analytics.png) |
+
+| TV screen | Reports |
+|:--:|:--:|
+| ![TV screen](docs/screenshots/tv.png) | ![Reports](docs/screenshots/reports.png) |
 
 | Users | Audit log |
 |:--:|:--:|
-| ![Users](docs/screenshots/users.png) | ![Audit](docs/screenshots/audit.png) |
+| ![Users](docs/screenshots/users.png) | ![Audit log](docs/screenshots/audit.png) |
 
-| Backup | Collapsed menu |
+| Backup | Routines |
 |:--:|:--:|
-| ![Backup](docs/screenshots/backup.png) | ![Collapsed menu](docs/screenshots/sidebar-collapsed.png) |
+| ![Backup](docs/screenshots/backup.png) | ![Routines](docs/screenshots/training.png) |
+
+**Personal portal on the phone** (the QR of the carnet):
+
+| Today and membership | Chat and progress |
+|:--:|:--:|
+| <img src="docs/screenshots/portal-phone.png" width="260"> | <img src="docs/screenshots/portal-chat.png" width="260"> |
 
 ---
 
