@@ -41,6 +41,7 @@ import java.util.function.Function;
  * only collects data and shows the total; the rules live in {@link PaymentService}.
  */
 final class SalePane extends HBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private enum DiscountKind {
         NONE("Sin descuento"), PERCENT("Porcentaje (%)"), FIXED("Monto fijo ($)");
@@ -94,24 +95,25 @@ final class SalePane extends HBox {
         Node form = buildForm();
         HBox.setHgrow(form, Priority.ALWAYS);
         getChildren().addAll(picker, form);
-        refresh();
     }
 
     /** Reloads the plans on sale and the member list. */
     void refresh() {
-        MembershipPlan keep = planBox.getValue();
-        planBox.getItems().setAll(plans.findActive());
-        planBox.setValue(null);
-        for (MembershipPlan plan : planBox.getItems()) {
-            if (keep != null && keep.getId() == plan.getId()) {
-                planBox.setValue(plan);
-            }
-        }
-        if (planBox.getValue() == null && !planBox.getItems().isEmpty()) {
-            planBox.setValue(planBox.getItems().get(0));
-        }
         picker.reload();
-        updateSummary();
+        MembershipPlan keep = planBox.getValue();
+        dataLoader.load(this, plans::findActive, found -> {
+            planBox.getItems().setAll(found);
+            planBox.setValue(null);
+            for (MembershipPlan plan : planBox.getItems()) {
+                if (keep != null && keep.getId() == plan.getId()) {
+                    planBox.setValue(plan);
+                }
+            }
+            if (planBox.getValue() == null && !planBox.getItems().isEmpty()) {
+                planBox.setValue(planBox.getItems().get(0));
+            }
+            updateSummary();
+        });
     }
 
     private Node buildForm() {

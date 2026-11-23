@@ -3,6 +3,7 @@ package com.nextfit.ui.fx;
 import com.nextfit.service.DashboardService;
 import com.nextfit.service.DashboardService.Summary;
 import com.nextfit.ui.Formats;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ComboBox;
@@ -27,15 +28,18 @@ final class DashboardView extends VBox {
     private final DashboardService service;
     private final GridPane indicators = new GridPane();
     private final GridPane charts = new GridPane();
+    private final Label loadingStatus = new Label();
     private List<KpiCard> keyFigures = List.of();
     private Region income;
     private Region memberships;
+    private boolean loading;
 
     /** @param service the source of the dashboard summary */
     DashboardView(DashboardService service) {
         super(16);
         this.service = service;
         getStyleClass().add("nf-dashboard");
+        loadingStatus.getStyleClass().add("nf-muted");
         setPadding(new Insets(0, 0, 16, 0));
         for (GridPane grid : List.of(indicators, charts)) {
             grid.setHgap(16);
@@ -50,7 +54,33 @@ final class DashboardView extends VBox {
 
     /** Reloads the business data and displays the same figures in either layout. */
     void refresh() {
-        Summary summary = service.summary();
+        if (loading) {
+            return;
+        }
+        loading = true;
+        loadingStatus.setText("Cargando datos del panel…");
+        getChildren().remove(loadingStatus);
+        getChildren().add(0, loadingStatus);
+        Task<Summary> task = new Task<>() {
+            @Override
+            protected Summary call() {
+                return service.summary();
+            }
+        };
+        task.setOnSucceeded(event -> {
+            loading = false;
+            display(task.getValue());
+        });
+        task.setOnFailed(event -> {
+            loading = false;
+            loadingStatus.setText("No se pudieron cargar los datos del panel. Vuelve a entrar en Panel para reintentar.");
+        });
+        Thread worker = new Thread(task, "dashboard-load");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private void display(Summary summary) {
         long valid = Math.max(0, summary.activeSubscriptions() - summary.expiringSoon());
         KpiCard revenue = figure("Ingresos del mes", "", FxIcons.ANALYTICS,
                 summary.incomeThisMonth(), Formats::money);

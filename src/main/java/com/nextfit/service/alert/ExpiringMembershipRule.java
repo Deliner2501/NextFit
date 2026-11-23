@@ -45,14 +45,15 @@ public class ExpiringMembershipRule implements AlertRule {
             }
         }
         Map<Long, Alert> byMember = new LinkedHashMap<>();
-        for (Subscription subscription : subscriptions.findAll()) {
+        List<Subscription> allSubscriptions = subscriptions.findAll();
+        for (Subscription subscription : allSubscriptions) {
             Member member = activeMembers.get(subscription.getMemberId());
             if (member == null || !subscription.isActiveOn(today)) {
                 continue;
             }
             long left = subscription.daysLeftOn(today);
-            boolean renewed = subscriptions.hasActiveSubscription(member.getId(),
-                    subscription.getEndDate().plusDays(1));
+            boolean renewed = allSubscriptions.stream().anyMatch(s -> s.getMemberId() == member.getId()
+                    && s.isActiveOn(subscription.getEndDate().plusDays(1)));
             if (left <= days && !renewed) {
                 Alert alert = new Alert(AlertType.EXPIRING, member, left, subscription.getEndDate());
                 byMember.merge(member.getId(), alert,

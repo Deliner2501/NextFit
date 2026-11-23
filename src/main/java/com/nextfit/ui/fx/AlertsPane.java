@@ -39,6 +39,8 @@ import java.util.Optional;
  * them on screen and sends nothing by itself.
  */
 final class AlertsPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private static final String ALL = "Todas las alertas";
     private static final String COPY_TEXT = "Copiar mensaje";
@@ -92,18 +94,13 @@ final class AlertsPane extends VBox {
 
     /** Asks the service for the alerts of today again and updates the cards and the list. */
     void refresh() {
-        Map<AlertType, Long> counts;
-        try {
-            all = alerts.findAll();
-            counts = alerts.countByType();
-        } catch (NextFitException e) {
-            FxDialogs.error(this, e);
-            return;
-        }
-        expiringCard.value().setText(String.valueOf(counts.get(AlertType.EXPIRING)));
-        inactiveCard.value().setText(String.valueOf(counts.get(AlertType.INACTIVE)));
-        birthdayCard.value().setText(String.valueOf(counts.get(AlertType.BIRTHDAY)));
-        showRows();
+        dataLoader.load(this, alerts::findAll, found -> {
+            all = found;
+            expiringCard.value().setText(String.valueOf(all.stream().filter(item -> item.type() == AlertType.EXPIRING).count()));
+            inactiveCard.value().setText(String.valueOf(all.stream().filter(item -> item.type() == AlertType.INACTIVE).count()));
+            birthdayCard.value().setText(String.valueOf(all.stream().filter(item -> item.type() == AlertType.BIRTHDAY).count()));
+            showRows();
+        });
     }
 
     private Node buildHeader() {

@@ -34,6 +34,7 @@ import java.util.List;
  * {@link OccupancyService} calculates.
  */
 final class OccupancyView extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private static final int REFRESH_SECONDS = 5;
 
@@ -160,22 +161,18 @@ final class OccupancyView extends VBox {
 
     // Pide la foto al servicio y la dibuja; si falla la lectura de datos, se deja lo que ya se veía.
     private void refresh() {
-        OccupancySnapshot snapshot;
-        try {
-            snapshot = service.snapshot();
-        } catch (NextFitException e) {
-            return;
-        }
-        people.value().setText(snapshot.inside() + " / " + snapshot.capacity());
-        level.value().setText(snapshot.level().getLabel());
-        bestHour.value().setText(snapshot.quietestHour() < 0
-                ? "Sin datos" : String.format("%02d:00", snapshot.quietestHour()));
-        percentLabel.setText(snapshot.percent() + " % del aforo");
-        bar.setProgress(snapshot.percent() / 100.0);
-        showLevel(snapshot.level());
-        showVisitors(snapshot);
-        showForecast(snapshot);
-        showChart(snapshot);
+        dataLoader.load(this, () -> service.snapshot(), snapshot -> {
+            people.value().setText(snapshot.inside() + " / " + snapshot.capacity());
+            level.value().setText(snapshot.level().getLabel());
+            bestHour.value().setText(snapshot.quietestHour() < 0
+            ? "Sin datos" : String.format("%02d:00", snapshot.quietestHour()));
+            percentLabel.setText(snapshot.percent() + " % del aforo");
+            bar.setProgress(snapshot.percent() / 100.0);
+            showLevel(snapshot.level());
+            showVisitors(snapshot);
+            showForecast(snapshot);
+            showChart(snapshot);
+        });
     }
 
     // El color de la barra lo pone la hoja de estilos según el nivel; aquí solo se cambia la clase.

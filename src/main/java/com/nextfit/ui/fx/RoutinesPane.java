@@ -32,7 +32,10 @@ import java.util.Optional;
  * collects clicks and shows data.
  */
 final class RoutinesPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
+
+    private java.util.Map<Long, String> trainerNames = java.util.Map.of();
     private final RoutineService service;
     private final TrainerService trainers;
     private final ExerciseService exercises;
@@ -63,7 +66,6 @@ final class RoutinesPane extends VBox {
         this.aiRoutines = aiRoutines;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
-        refresh();
     }
 
     private Node buildHeader() {
@@ -121,18 +123,24 @@ final class RoutinesPane extends VBox {
 
     /** Reloads the routines from the service. */
     void refresh() {
-        table.getItems().setAll(service.findAll());
-        int total = table.getItems().size();
-        countLabel.setText(total == 1 ? "1 rutina" : total + " rutinas");
+        dataLoader.load(this, () -> {
+            var names = new java.util.HashMap<Long, String>();
+            for (var trainer : trainers.findAll()) names.put(trainer.getId(), trainer.getFullName());
+            return new LoadedRoutines(service.findAll(), names);
+        }, found -> {
+            trainerNames = found.names();
+            table.getItems().setAll(found.routines());
+            table.refresh();
+            int total = table.getItems().size();
+            countLabel.setText(total == 1 ? "1 rutina" : total + " rutinas");
+        });
     }
 
     // Si el entrenador de la rutina ya no existe, se muestra un guion en vez de fallar.
+    private record LoadedRoutines(List<Routine> routines, java.util.Map<Long, String> names) {}
+
     private String trainerName(Routine routine) {
-        try {
-            return trainers.findById(routine.getTrainerId()).getFullName();
-        } catch (NextFitException e) {
-            return "-";
-        }
+        return trainerNames.getOrDefault(routine.getTrainerId(), "-");
     }
 
     private void editSelected() {

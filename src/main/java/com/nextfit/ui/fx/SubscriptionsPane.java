@@ -33,6 +33,7 @@ import java.util.Map;
  * rules live in {@link SubscriptionService}; this class only shows data.
  */
 final class SubscriptionsPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private static final int SOON_DAYS = 7;
     private static final String SOON = "Por vencer";
@@ -72,7 +73,6 @@ final class SubscriptionsPane extends VBox {
         this.members = members;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
-        refresh();
     }
 
     private Node buildHeader() {
@@ -145,36 +145,39 @@ final class SubscriptionsPane extends VBox {
 
     /** Reloads the memberships from the service, applying the search text and the filter. */
     void refresh() {
-        Map<Long, Member> memberById = new HashMap<>();
-        for (Member member : members.findAll()) {
-            memberById.put(member.getId(), member);
-        }
-        Map<Long, MembershipPlan> planById = new HashMap<>();
-        for (MembershipPlan plan : plans.findAll()) {
-            planById.put(plan.getId(), plan);
-        }
         String wanted = searchField.getText().trim().toLowerCase();
         Filter filter = filterBox.getValue();
-
-        List<Row> rows = new java.util.ArrayList<>();
-        for (Subscription s : subscriptions.findAll()) {
-            Member member = memberById.get(s.getMemberId());
-            String name = member == null ? "Socio #" + s.getMemberId() : member.getFullName();
-            String document = member == null ? "" : member.getDocumentNumber();
-            if (!wanted.isEmpty() && !name.toLowerCase().contains(wanted) && !document.contains(wanted)) {
-                continue;
+        dataLoader.load(this, () -> {
+            Map<Long, Member> memberById = new HashMap<>();
+            for (Member member : members.findAll()) {
+                memberById.put(member.getId(), member);
             }
-            if (!matches(s, filter)) {
-                continue;
+            Map<Long, MembershipPlan> planById = new HashMap<>();
+            for (MembershipPlan plan : plans.findAll()) {
+                planById.put(plan.getId(), plan);
             }
-            MembershipPlan plan = planById.get(s.getPlanId());
-            SubscriptionStatus status = subscriptions.statusOf(s);
-            long daysLeft = subscriptions.daysLeftOf(s);
-            rows.add(new Row(s, name, plan == null ? "Plan #" + s.getPlanId() : plan.getName(), stateText(s),
-                    status == SubscriptionStatus.ACTIVE ? String.valueOf(daysLeft) : "-"));
-        }
-        table.getItems().setAll(rows);
-        countLabel.setText(rows.size() == 1 ? "1 suscripción" : rows.size() + " suscripciones");
+            List<Row> rows = new java.util.ArrayList<>();
+            for (Subscription s : subscriptions.findAll()) {
+                Member member = memberById.get(s.getMemberId());
+                String name = member == null ? "Socio #" + s.getMemberId() : member.getFullName();
+                String document = member == null ? "" : member.getDocumentNumber();
+                if (!wanted.isEmpty() && !name.toLowerCase().contains(wanted) && !document.contains(wanted)) {
+                    continue;
+                }
+                if (!matches(s, filter)) {
+                    continue;
+                }
+                MembershipPlan plan = planById.get(s.getPlanId());
+                SubscriptionStatus status = subscriptions.statusOf(s);
+                long daysLeft = subscriptions.daysLeftOf(s);
+                rows.add(new Row(s, name, plan == null ? "Plan #" + s.getPlanId() : plan.getName(), stateText(s),
+                status == SubscriptionStatus.ACTIVE ? String.valueOf(daysLeft) : "-"));
+            }
+            return rows;
+        }, rows -> {
+            table.getItems().setAll(rows);
+            countLabel.setText(rows.size() == 1 ? "1 suscripción" : rows.size() + " suscripciones");
+        });
     }
 
     private boolean matches(Subscription s, Filter filter) {

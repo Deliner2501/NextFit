@@ -112,10 +112,13 @@ public final class AccessModule implements FxModule {
     }
 
     private void refreshTabs() {
-        inside.refresh();
-        carnets.refresh();
-        face.refresh();
-        password.refresh();
+        switch (tabs.getSelectionModel().getSelectedIndex()) {
+            case 0 -> inside.refresh();
+            case 1 -> carnets.refresh();
+            case 2 -> face.refresh();
+            case 3 -> password.refresh();
+            default -> {}
+        }
     }
 
     private static Tab tab(String title, Node content) {
