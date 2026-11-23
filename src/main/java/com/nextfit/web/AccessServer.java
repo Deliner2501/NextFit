@@ -1,5 +1,6 @@
 package com.nextfit.web;
 
+import com.nextfit.ai.Json;
 import com.nextfit.model.Member;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.portal.MemberPortal;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -176,24 +178,43 @@ public final class AccessServer {
     }
 
     private void sendChat(HttpExchange exchange, String token) throws IOException {
+        Optional<Member> member = phone.findMember(token);
+        Optional<String> restriction = member.flatMap(portal::accessRestriction);
+        if (member.isEmpty() || restriction.isPresent()) {
+            String message = restriction.orElse("Código no válido");
+            send(exchange, member.isEmpty() ? 404 : 403, "application/json; charset=utf-8",
+                    Json.write(Map.of("error", message)).getBytes(StandardCharsets.UTF_8));
+            return;
+        }
         // At most MAX+1 bytes are read; the endpoint rejects bigger bodies without loading them all.
         byte[] raw = exchange.getRequestBody().readNBytes(PortalChatEndpoint.MAX_BODY_CHARS + 1);
         String body = new String(raw, StandardCharsets.UTF_8);
         PortalChatEndpoint.Response response = chat.post(token,
                 exchange.getRequestHeaders().getFirst("Content-Type"), body);
+        chat.dailyQuota(member.get().getId()).ifPresent(quota -> {
+            exchange.getResponseHeaders().set("X-Questions-Remaining", Integer.toString(quota.remaining()));
+        });
         send(exchange, response.status(), "application/json; charset=utf-8",
                 response.json().getBytes(StandardCharsets.UTF_8));
     }
 
     private void sendPortal(HttpExchange exchange, String token) throws IOException {
-        Optional<PortalSummary> summary = portal.summaryFor(token);
-        if (summary.isEmpty()) {
+        Optional<Member> member = phone.findMember(token);
+        if (member.isEmpty()) {
             sendHtml(exchange, 404, PortalPage.invalid());
             return;
         }
+        Optional<String> restriction = portal.accessRestriction(member.get());
+        if (restriction.isPresent()) {
+            sendHtml(exchange, 403, PortalPage.membershipRequired(restriction.get()));
+            return;
+        }
+        PortalSummary summary = portal.summaryOf(member.get());
         Optional<ProgressReport> report = progress == null ? Optional.empty()
-                : Optional.of(progress.of(summary.get().member()));
-        sendHtml(exchange, 200, PortalPage.render(summary.get(), token, chat != null, report));
+                : Optional.of(progress.of(summary.member()));
+        var quota = chat == null ? Optional.<com.nextfit.ai.PortalChatService.DailyQuota>empty()
+                : chat.dailyQuota(summary.member().getId());
+        sendHtml(exchange, 200, PortalPage.render(summary, token, chat != null, report, quota));
     }
 
     private void sendLogo(HttpExchange exchange) throws IOException {
@@ -207,7 +228,8 @@ public final class AccessServer {
     }
 
     private void sendPhoto(HttpExchange exchange, String token) throws IOException {
-        Optional<Member> member = phone.findMember(token);
+        Optional<Member> member = portal == null ? Optional.empty()
+                : phone.findMember(token).filter(person -> portal.accessRestriction(person).isEmpty());
         Path file = member.map(Member::getPhotoPath).filter(p -> !p.isBlank()).map(Path::of).orElse(null);
         if (file == null || !Files.isRegularFile(file) || Files.size(file) > MAX_PHOTO_BYTES) {
             send(exchange, 404, "text/plain; charset=utf-8", new byte[0]);

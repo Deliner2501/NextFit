@@ -1,6 +1,7 @@
 package com.nextfit.service.portal;
 
 import com.nextfit.service.occupancy.HourForecast;
+import com.nextfit.service.occupancy.OccupancyForecast;
 import com.nextfit.service.occupancy.OccupancyForecastService;
 import com.nextfit.service.occupancy.OccupancyService;
 
@@ -40,13 +41,16 @@ public class BestTimesAdvisor {
      */
     public Optional<PortalBestTimes> advise() {
         LocalDateTime now = LocalDateTime.now(clock);
-        List<HourForecast> today = forecast.forecastFor(now.toLocalDate())
-                .bestHours(now.getHour() + 1, HOURS_TO_RECOMMEND);
-        if (!today.isEmpty()) {
-            return Optional.of(new PortalBestTimes("Hoy", today));
+        return adviseFor("Hoy", forecast.forecastFor(now.toLocalDate()), now.getHour() + 1)
+                .or(() -> adviseFor("Mañana", forecast.forecastFor(now.toLocalDate().plusDays(1)),
+                        OccupancyService.OPEN_HOUR));
+    }
+
+    private Optional<PortalBestTimes> adviseFor(String day, OccupancyForecast prediction, int fromHour) {
+        List<HourForecast> quiet = prediction.bestHours(fromHour, HOURS_TO_RECOMMEND);
+        if (quiet.isEmpty()) {
+            return Optional.empty();
         }
-        List<HourForecast> tomorrow = forecast.forecastFor(now.toLocalDate().plusDays(1))
-                .bestHours(OccupancyService.OPEN_HOUR, HOURS_TO_RECOMMEND);
-        return tomorrow.isEmpty() ? Optional.empty() : Optional.of(new PortalBestTimes("Mañana", tomorrow));
+        return Optional.of(new PortalBestTimes(day, quiet, prediction.busiest()));
     }
 }

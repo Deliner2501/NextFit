@@ -1,12 +1,15 @@
 package com.nextfit.web;
 
 import com.nextfit.ai.Json;
+import com.nextfit.ai.PortalChatService.DailyQuota;
 import com.nextfit.exceptions.AiException;
 import com.nextfit.exceptions.NextFitException;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.LongFunction;
 
 /**
  * What happens when the phone of a member sends a question to the chat of the portal. It checks
@@ -31,6 +34,7 @@ public final class PortalChatEndpoint {
     }
 
     private final BiFunction<String, String, String> asker;
+    private final LongFunction<DailyQuota> quotas;
 
     /**
      * Creates the endpoint.
@@ -38,7 +42,24 @@ public final class PortalChatEndpoint {
      * @param asker answers a question: it receives the access code and the question, and returns the answer
      */
     public PortalChatEndpoint(BiFunction<String, String, String> asker) {
+        this(asker, memberId -> null);
+    }
+
+    /**
+     * @param asker answers a question using the member's access code
+     * @param quotas supplies the daily quota for the authenticated member
+     */
+    public PortalChatEndpoint(BiFunction<String, String, String> asker, LongFunction<DailyQuota> quotas) {
         this.asker = asker;
+        this.quotas = quotas;
+    }
+
+    /**
+     * @param memberId the authenticated member
+     * @return the daily quota, when tracking is configured
+     */
+    public Optional<DailyQuota> dailyQuota(long memberId) {
+        return Optional.ofNullable(quotas.apply(memberId));
     }
 
     /**

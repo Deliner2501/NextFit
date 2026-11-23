@@ -32,6 +32,7 @@ nbproject/private/
 data/*.csv
 data/*.tmp
 data/access.key
+data/gym-capacity.txt
 data/email/
 backups/
 

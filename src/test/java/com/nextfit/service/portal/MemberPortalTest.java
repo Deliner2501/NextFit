@@ -27,6 +27,7 @@ import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.validation.MemberValidator;
 import com.nextfit.validation.MembershipPlanValidator;
 import com.nextfit.web.AccessServer;
+import com.nextfit.web.PortalChatEndpoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -104,13 +105,18 @@ class MemberPortalTest {
     }
 
     @Test
-    void aMemberWithNothingStillGetsASummary() {
-        PortalSummary summary = portal.summaryFor(phone.tokenOf(ana)).orElseThrow();
+    void aMemberWithoutAPlanGetsNoSummary() {
+        assertTrue(portal.summaryFor(phone.tokenOf(ana)).isEmpty());
+        assertTrue(portal.accessRestriction(ana).orElseThrow().contains("activa una membresía en recepción"));
+    }
 
-        assertEquals("Ana Gómez", summary.member().getFullName());
-        assertTrue(summary.membership().isEmpty());
-        assertTrue(summary.workout().isEmpty());
-        assertEquals(0, summary.achievements().trainingDays());
+    @Test
+    void anUpcomingPlanExplainsWhenPortalAccessStarts() {
+        MembershipPlan plan = plans.create(new MembershipPlan(0, "Mensual", "Acceso por un mes", 30, 80000, true));
+        subscriptions.subscribe(ana.getId(), plan.getId(), LocalDate.now(CLOCK).plusDays(1));
+
+        assertTrue(portal.summaryFor(phone.tokenOf(ana)).isEmpty());
+        assertTrue(portal.accessRestriction(ana).orElseThrow().contains("Tu membresía comienza el"));
     }
 
     @Test
@@ -174,6 +180,36 @@ class MemberPortalTest {
             assertTrue(page.body().contains("Sentadilla"));
             assertEquals(404, invalid.statusCode());
             assertTrue(invalid.body().contains("Código no válido"));
+        } finally {
+            server.stop();
+        }
+    }
+
+    @Test
+    void membershipIsCheckedOnEveryPortalAndChatRequest() throws Exception {
+        PortalChatEndpoint chat = new PortalChatEndpoint((token, question) -> "Respuesta de prueba");
+        AccessServer server = new AccessServer(phone, portal, chat, 0);
+        server.start();
+        try {
+            String page = "/m/" + phone.tokenOf(ana);
+            HttpRequest question = HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + server.port() + page + "/chat"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString("{\"question\":\"¿Qué me toca hoy?\"}"))
+                    .build();
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpResponse<String> restricted = get(server, page);
+            assertEquals(403, restricted.statusCode());
+            assertTrue(restricted.body().contains("activa una membresía en recepción"));
+            assertEquals(403, client.send(question, HttpResponse.BodyHandlers.ofString()).statusCode());
+
+            subscribe();
+            assertEquals(200, get(server, page).statusCode());
+            assertEquals(200, client.send(question, HttpResponse.BodyHandlers.ofString()).statusCode());
+
+            subscriptions.cancel(subscriptions.findCurrentFor(ana.getId()).orElseThrow().getId());
+            assertEquals(403, get(server, page).statusCode());
+            assertEquals(403, client.send(question, HttpResponse.BodyHandlers.ofString()).statusCode());
         } finally {
             server.stop();
         }

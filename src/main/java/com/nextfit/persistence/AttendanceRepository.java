@@ -18,6 +18,16 @@ public interface AttendanceRepository {
      */
     List<AttendanceRecord> findAll();
 
+    /** @return the records with no registered exit */
+    default List<AttendanceRecord> findOpen() {
+        return findAll().stream().filter(AttendanceRecord::isOpen).toList();
+    }
+
+    /** @return how many visitors are currently inside */
+    default long countOpen() {
+        return findOpen().size();
+    }
+
     /**
      * Returns every visit of a member, from the oldest to the newest.
      *

@@ -5,6 +5,8 @@ import com.nextfit.model.Routine;
 import com.nextfit.model.RoutineAssignment;
 import com.nextfit.model.RoutineDay;
 import com.nextfit.model.TrainingSession;
+import com.nextfit.model.Subscription;
+import com.nextfit.model.SubscriptionStatus;
 import com.nextfit.service.ExerciseService;
 import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.PhoneAccess;
@@ -14,7 +16,10 @@ import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.TrainingSessionService;
 import com.nextfit.service.gamification.GamificationService;
 
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -64,19 +69,42 @@ public class MemberPortal {
     }
 
     /**
-     * Builds the summary of the member that owns an access code.
-     *
      * @param token the access code of the carnet
-     * @return the summary, or empty when the code belongs to nobody
-     */
-    /**
-     * Builds the summary of the member that owns an access code.
-     *
-     * @param token the access code of the carnet
-     * @return the summary, or empty when the code belongs to nobody
+     * @return the summary when the code identifies a member with access
      */
     public Optional<PortalSummary> summaryFor(String token) {
-        return phone.findMember(token).map(this::summaryOf);
+        return phone.findMember(token).filter(member -> accessRestriction(member).isEmpty()).map(this::summaryOf);
+    }
+
+    /**
+     * Checks the account and membership before exposing personal portal data.
+     *
+     * @param member the member identified by the carnet
+     * @return the reason to show on the phone, or empty when access is allowed
+     */
+    public Optional<String> accessRestriction(Member member) {
+        if (!member.isActive()) {
+            return Optional.of("Tu cuenta de socio está inactiva. Consulta en recepción.");
+        }
+        List<Subscription> history = subscriptions.findByMember(member.getId());
+        if (history.stream().anyMatch(plan -> subscriptions.statusOf(plan) == SubscriptionStatus.ACTIVE)) {
+            return Optional.empty();
+        }
+        Optional<Subscription> upcoming = history.stream()
+                .filter(plan -> subscriptions.statusOf(plan) == SubscriptionStatus.UPCOMING)
+                .min(Comparator.comparing(Subscription::getStartDate));
+        if (upcoming.isPresent()) {
+            DateTimeFormatter date = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' uuuu", Locale.forLanguageTag("es-CO"));
+            return Optional.of("Tu membresía comienza el " + upcoming.get().getStartDate().format(date)
+                    + ". Podrás acceder desde esa fecha.");
+        }
+        if (history.isEmpty()) {
+            return Optional.of("Para acceder al portal móvil, activa una membresía en recepción.");
+        }
+        if (subscriptions.statusOf(history.getFirst()) == SubscriptionStatus.EXPIRED) {
+            return Optional.of("Tu membresía venció. Renuévala para recuperar el acceso al portal.");
+        }
+        return Optional.of("Tu membresía fue cancelada. Consulta en recepción para activar una nueva.");
     }
 
     /**

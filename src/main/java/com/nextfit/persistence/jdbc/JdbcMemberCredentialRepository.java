@@ -44,6 +44,12 @@ public final class JdbcMemberCredentialRepository implements MemberCredentialRep
 
     /** Replaces the credential the member had: it updates the row and inserts it when there was none. */
     @Override
+    public java.util.Set<Long> credentialIds(java.util.List<Long> members) {
+        return java.util.Set.copyOf(JdbcSupport.query(connections, "SELECT member_id FROM member_credentials",
+                null, rows -> rows.getLong(1)));
+    }
+
+    @Override
     public void save(MemberCredential credential) {
         try (Connection connection = connections.open()) {
             if (write(connection, UPDATE, credential) == 0) {

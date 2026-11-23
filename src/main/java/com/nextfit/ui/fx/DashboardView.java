@@ -1,6 +1,8 @@
 package com.nextfit.ui.fx;
 
+import com.nextfit.service.AttendanceService;
 import com.nextfit.service.DashboardService;
+import com.nextfit.service.occupancy.GymCapacity;
 import com.nextfit.service.DashboardService.Summary;
 import com.nextfit.ui.Formats;
 import javafx.concurrent.Task;
@@ -25,7 +27,12 @@ final class DashboardView extends VBox {
     private static final String LAST_3 = "Últimos 3 meses";
     private static final String LAST_6 = "Últimos 6 meses";
     private static final double WIDE_LAYOUT = 1010;
+    private static final double FIVE_CARD_LAYOUT = 1200;
     private final DashboardService service;
+    private final AttendanceService attendanceService;
+    private final GymCapacity capacity;
+
+    private record DashboardData(Summary summary, long inside, int limit) {}
     private final GridPane indicators = new GridPane();
     private final GridPane charts = new GridPane();
     private final Label loadingStatus = new Label();
@@ -36,7 +43,18 @@ final class DashboardView extends VBox {
 
     /** @param service the source of the dashboard summary */
     DashboardView(DashboardService service) {
+        this(service, null, null);
+    }
+
+    /**
+     * @param service the source of the dashboard summary
+     * @param attendanceService the source of current visits
+     * @param capacity the configured admission limit
+     */
+    DashboardView(DashboardService service, AttendanceService attendanceService, GymCapacity capacity) {
         super(16);
+        this.attendanceService = attendanceService;
+        this.capacity = capacity;
         this.service = service;
         getStyleClass().add("nf-dashboard");
         loadingStatus.getStyleClass().add("nf-muted");
@@ -46,7 +64,10 @@ final class DashboardView extends VBox {
             grid.setVgap(16);
         }
         widthProperty().addListener((obs, old, width) -> {
-            if (income != null && (old.doubleValue() >= WIDE_LAYOUT) != (width.doubleValue() >= WIDE_LAYOUT)) {
+            double before = old.doubleValue();
+            double after = width.doubleValue();
+            if (income != null && ((before >= WIDE_LAYOUT) != (after >= WIDE_LAYOUT)
+                    || (before >= FIVE_CARD_LAYOUT) != (after >= FIVE_CARD_LAYOUT))) {
                 arrange();
             }
         });
@@ -61,10 +82,13 @@ final class DashboardView extends VBox {
         loadingStatus.setText("Cargando datos del panel…");
         getChildren().remove(loadingStatus);
         getChildren().add(0, loadingStatus);
-        Task<Summary> task = new Task<>() {
+        Task<DashboardData> task = new Task<>() {
             @Override
-            protected Summary call() {
-                return service.summary();
+            protected DashboardData call() {
+                Summary summary = service.summary();
+                return new DashboardData(summary,
+                        attendanceService == null ? 0 : attendanceService.countInside(),
+                        capacity == null ? 0 : capacity.limit());
             }
         };
         task.setOnSucceeded(event -> {
@@ -80,7 +104,8 @@ final class DashboardView extends VBox {
         worker.start();
     }
 
-    private void display(Summary summary) {
+    private void display(DashboardData data) {
+        Summary summary = data.summary();
         long valid = Math.max(0, summary.activeSubscriptions() - summary.expiringSoon());
         KpiCard revenue = figure("Ingresos del mes", "", FxIcons.ANALYTICS,
                 summary.incomeThisMonth(), Formats::money);
@@ -101,7 +126,16 @@ final class DashboardView extends VBox {
                     "Frente a ayer (" + summary.checkInsYesterday() + ")");
         }
 
-        keyFigures = List.of(revenue, active, expiring, today);
+        if (data.limit() > 0) {
+            long spots = Math.max(0, data.limit() - data.inside());
+            String availability = spots == 0 ? "Aforo completo"
+                    : spots == 1 ? "1 cupo libre" : spots + " cupos libres";
+            KpiCard occupancy = figure("Aforo actual", availability, FxIcons.ACCESS,
+                    data.inside(), count -> count + " de " + data.limit());
+            keyFigures = List.of(revenue, active, expiring, today, occupancy);
+        } else {
+            keyFigures = List.of(revenue, active, expiring, today);
+        }
         income = incomeCard(summary);
         memberships = card("Estado de las membresías", null, DashboardCharts.statusDonut(valid, summary));
         Region attendance = card("Asistencia por día de la semana", null,
@@ -114,7 +148,7 @@ final class DashboardView extends VBox {
     /** Keeps figures and legends readable when the sidebar is open in a narrow window. */
     private void arrange() {
         boolean wide = getWidth() >= WIDE_LAYOUT;
-        int columns = wide ? 4 : 2;
+        int columns = getWidth() >= FIVE_CARD_LAYOUT ? keyFigures.size() : 2;
         indicators.getChildren().clear();
         indicators.getColumnConstraints().clear();
         for (int columnIndex = 0; columnIndex < columns; columnIndex++) {
