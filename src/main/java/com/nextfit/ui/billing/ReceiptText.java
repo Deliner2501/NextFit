@@ -4,6 +4,7 @@ import com.nextfit.model.Member;
 import com.nextfit.model.MembershipPlan;
 import com.nextfit.model.Payment;
 import com.nextfit.model.PercentageDiscount;
+import com.nextfit.model.RenewalDiscount;
 import com.nextfit.model.Subscription;
 import com.nextfit.service.MembershipSale;
 import com.nextfit.ui.Formats;
@@ -50,6 +51,9 @@ public final class ReceiptText {
     }
 
     private static String discountLabel(Payment payment) {
+        if (payment.getDiscount() instanceof RenewalDiscount benefit) {
+            return "Beneficio " + benefit.label() + " (" + benefit.getValue() + "%)";
+        }
         if (PercentageDiscount.TYPE.equals(payment.getDiscount().getType())) {
             return "Descuento (" + payment.getDiscount().getValue() + "%)";
         }

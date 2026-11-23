@@ -3,6 +3,7 @@ package com.nextfit.ui.fx;
 import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.MembershipPlan;
 import com.nextfit.service.MembershipPlanService;
+import com.nextfit.service.Session;
 import com.nextfit.ui.Formats;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -29,6 +30,7 @@ final class PlansPane extends VBox {
     private static final String ON_SALE = "En venta";
 
     private final MembershipPlanService service;
+    private final Session session;
     private final TableView<MembershipPlan> table = new TableView<>();
     private final Label countLabel = new Label();
     private final Button toggleButton = new Button("Retirar de la venta");
@@ -36,9 +38,10 @@ final class PlansPane extends VBox {
     /**
      * @param service the service that manages the plans
      */
-    PlansPane(MembershipPlanService service) {
+    PlansPane(MembershipPlanService service, Session session) {
         super(16);
         this.service = service;
+        this.session = session;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
     }
@@ -132,6 +135,7 @@ final class PlansPane extends VBox {
             return;
         }
         try {
+            session.requireAdmin();
             if (selected.isActive()) {
                 service.deactivate(selected.getId());
             } else {
@@ -158,6 +162,7 @@ final class PlansPane extends VBox {
                 FxDialogs.labeled("Descripción", descriptionField), numbers);
 
         FxDialogs.form(this, existing == null ? "Nuevo plan" : "Editar plan", "Guardar", fields, () -> {
+            session.requireAdmin();
             MembershipPlan plan = new MembershipPlan(
                     existing == null ? 0 : existing.getId(),
                     nameField.getText().trim(),

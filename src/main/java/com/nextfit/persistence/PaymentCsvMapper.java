@@ -7,6 +7,7 @@ import com.nextfit.model.NoDiscount;
 import com.nextfit.model.Payment;
 import com.nextfit.model.PaymentMethod;
 import com.nextfit.model.PercentageDiscount;
+import com.nextfit.model.RenewalDiscount;
 
 import java.time.LocalDateTime;
 
@@ -67,6 +68,9 @@ public final class PaymentCsvMapper {
     }
 
     private static Discount discountOf(String type, long value) {
+        if (type != null && type.startsWith(RenewalDiscount.PREFIX)) {
+            return new RenewalDiscount(type.substring(RenewalDiscount.PREFIX.length()), Math.toIntExact(value));
+        }
         return switch (type) {
             case NoDiscount.TYPE -> new NoDiscount();
             case PercentageDiscount.TYPE -> new PercentageDiscount((int) value);

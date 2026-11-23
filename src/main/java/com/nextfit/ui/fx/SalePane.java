@@ -2,12 +2,11 @@ package com.nextfit.ui.fx;
 
 import com.nextfit.exceptions.NextFitException;
 import com.nextfit.model.Discount;
-import com.nextfit.model.FixedDiscount;
 import com.nextfit.model.Member;
 import com.nextfit.model.MembershipPlan;
 import com.nextfit.model.NoDiscount;
 import com.nextfit.model.PaymentMethod;
-import com.nextfit.model.PercentageDiscount;
+import com.nextfit.model.RenewalDiscount;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.MembershipSale;
@@ -24,7 +23,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -43,15 +41,9 @@ import java.util.function.Function;
 final class SalePane extends HBox {
     private final FxLoader dataLoader = new FxLoader();
 
-    private enum DiscountKind {
-        NONE("Sin descuento"), PERCENT("Porcentaje (%)"), FIXED("Monto fijo ($)");
-
-        private final String label;
-
-        DiscountKind(String label) {
-            this.label = label;
-        }
-    }
+    private static final Discount NO_BENEFIT = new NoDiscount();
+    private final FxLoader benefitsLoader = new FxLoader();
+    private boolean checkingBenefits;
 
     private final MembershipPlanService plans;
     private final SubscriptionService subscriptions;
@@ -65,8 +57,7 @@ final class SalePane extends HBox {
     private final ComboBox<MembershipPlan> planBox = new ComboBox<>();
     private final DatePicker startPicker = new DatePicker();
     private final ComboBox<PaymentMethod> methodBox = new ComboBox<>();
-    private final ComboBox<DiscountKind> discountBox = new ComboBox<>();
-    private final TextField discountField = new TextField();
+    private final ComboBox<Discount> discountBox = new ComboBox<>();
     private final Label subtotalLabel = new Label("$ 0");
     private final Label discountLabel = new Label("$ 0");
     private final Label totalLabel = new Label("$ 0");
@@ -127,24 +118,18 @@ final class SalePane extends HBox {
         methodBox.getItems().addAll(PaymentMethod.values());
         methodBox.setConverter(converter(method -> method == null ? "" : method.getLabel()));
         methodBox.setValue(PaymentMethod.CASH);
-        discountBox.getItems().addAll(DiscountKind.values());
-        discountBox.setConverter(converter(kind -> kind == null ? "" : kind.label));
-        discountBox.setValue(DiscountKind.NONE);
+        discountBox.getItems().setAll(NO_BENEFIT);
+        discountBox.setConverter(converter(discount -> discount instanceof RenewalDiscount benefit
+                ? benefit.label() + " · " + benefit.getValue() + " %" : "Sin beneficio"));
+        discountBox.setValue(NO_BENEFIT);
         startPicker.setPromptText("Hoy");
-        discountField.setPromptText("Valor del descuento");
-        discountField.getStyleClass().add("nf-input");
-        discountField.setDisable(true);
-        for (Region control : new Region[] {planBox, methodBox, discountBox, startPicker, discountField}) {
+        for (Region control : new Region[] {planBox, methodBox, discountBox, startPicker}) {
             control.setMaxWidth(Double.MAX_VALUE);
             control.setPrefHeight(44);
         }
 
         planBox.valueProperty().addListener((obs, old, now) -> updateSummary());
-        discountBox.valueProperty().addListener((obs, old, now) -> {
-            discountField.setDisable(now == DiscountKind.NONE);
-            updateSummary();
-        });
-        discountField.textProperty().addListener((obs, old, now) -> updateSummary());
+        discountBox.valueProperty().addListener((obs, old, now) -> updateSummary());
 
         totalLabel.getStyleClass().add("nf-total");
         messageLabel.getStyleClass().add("nf-error");
@@ -173,8 +158,7 @@ final class SalePane extends HBox {
 
         HBox startAndMethod = twoColumns(FxDialogs.labeled("Fecha de inicio", startPicker),
                 FxDialogs.labeled("Método de pago", methodBox));
-        HBox discounts = twoColumns(FxDialogs.labeled("Descuento", discountBox),
-                FxDialogs.labeled("Valor", discountField));
+        VBox discounts = FxDialogs.labeled("Beneficio de renovación", discountBox);
 
         VBox card = new VBox(14, new VBox(4, memberLabel, memberInfo), FxDialogs.labeled("Plan", planBox),
                 startAndMethod, discounts, messageLabel, summary);
@@ -236,6 +220,9 @@ final class SalePane extends HBox {
     }
 
     private void showMember(Member member) {
+        checkingBenefits = member != null;
+        discountBox.getItems().setAll(NO_BENEFIT);
+        discountBox.setValue(NO_BENEFIT);
         refreshChargeAvailability(member);
         saleRecipient.setText(member == null ? "Selecciona un socio" : member.getFullName());
         messageLabel.setText(" ");
@@ -254,9 +241,20 @@ final class SalePane extends HBox {
                         .append("; la nueva empieza a continuación"),
                 () -> info.append("  ·  Sin membresía vigente"));
         memberInfo.setText(info.toString());
+        benefitsLoader.load(() -> payments.availableBenefits(member.getId()), options -> {
+            Member current = picker.selected();
+            if (current != null && current.getId() == member.getId()) {
+                checkingBenefits = false;
+                discountBox.getItems().addAll(options);
+                if (!options.isEmpty()) {
+                    discountBox.setValue(options.getFirst());
+                }
+                updateSummary();
+            }
+        }, error -> showError("No se pudieron consultar los beneficios. Vuelve a seleccionar el socio."));
     }
 
-    // Recalculates the three amounts. A discount that is still being typed counts as zero.
+    // Recalculates the amount for the selected plan and eligible benefit.
     private void updateSummary() {
         MembershipPlan plan = planBox.getValue();
         refreshChargeAvailability(picker.selected());
@@ -275,18 +273,12 @@ final class SalePane extends HBox {
 
     /** Keeps the primary action disabled until a member and a plan can be charged. */
     private void refreshChargeAvailability(Member member) {
-        chargeButton.setDisable(member == null || !member.isActive() || planBox.getValue() == null);
+        chargeButton.setDisable(checkingBenefits || member == null || !member.isActive() || planBox.getValue() == null);
     }
 
     private Discount buildDiscount() {
-        DiscountKind kind = discountBox.getValue();
-        if (kind == null || kind == DiscountKind.NONE) {
-            return new NoDiscount();
-        }
-        if (kind == DiscountKind.PERCENT) {
-            return new PercentageDiscount(Formats.parseWholeNumber("descuento", discountField.getText()));
-        }
-        return new FixedDiscount(Formats.parseMoney("descuento", discountField.getText()));
+        Discount selected = discountBox.getValue();
+        return selected == null ? NO_BENEFIT : selected;
     }
 
     private void charge() {
@@ -322,8 +314,7 @@ final class SalePane extends HBox {
 
     private void clearForm() {
         startPicker.setValue(null);
-        discountBox.setValue(DiscountKind.NONE);
-        discountField.setText("");
+        discountBox.setValue(NO_BENEFIT);
         methodBox.setValue(PaymentMethod.CASH);
         messageLabel.setText(" ");
         updateSummary();
