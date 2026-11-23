@@ -34,6 +34,8 @@ import java.util.List;
  * them and starts the export.
  */
 final class ReportsPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private static final String PAYMENTS = "Pagos";
     private static final String ATTENDANCE = "Asistencia";
@@ -73,7 +75,6 @@ final class ReportsPane extends VBox {
         });
         getChildren().addAll(buildHeader(), buildFilters(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
-        refresh();
     }
 
     private static StringConverter<LocalDate> converter() {
@@ -143,12 +144,13 @@ final class ReportsPane extends VBox {
 
     /** The table of the report that is chosen now. */
     private ReportTable currentTable() {
-        String type = typeBox.getValue();
+        return currentTable(typeBox.getValue(), fromPicker.getValue(), toPicker.getValue());
+    }
+
+    private ReportTable currentTable(String type, LocalDate from, LocalDate to) {
         if (MEMBERS.equals(type)) {
             return reports.members();
         }
-        LocalDate from = fromPicker.getValue();
-        LocalDate to = toPicker.getValue();
         if (from == null || to == null) {
             throw new InvalidDataException("Fechas", "elige el día inicial y el final");
         }
@@ -160,22 +162,17 @@ final class ReportsPane extends VBox {
 
     /** Builds the report again and shows it. */
     void refresh() {
-        table.getColumns().clear();
-        table.getItems().clear();
-        try {
-            ReportTable data = currentTable();
-            for (int c = 0; c < data.headers().size(); c++) {
-                table.getColumns().add(column(data, c));
-            }
+        String type = typeBox.getValue();
+        LocalDate from = fromPicker.getValue();
+        LocalDate to = toPicker.getValue();
+        countLabel.setText("Cargando reporte…");
+        dataLoader.load(() -> currentTable(type, from, to), data -> {
+            table.getColumns().clear();
+            for (int c = 0; c < data.headers().size(); c++) table.getColumns().add(column(data, c));
             table.getItems().setAll(data.rows());
             countLabel.setText(data.rows().size() == 1 ? "1 registro" : data.rows().size() + " registros");
             countLabel.getStyleClass().remove("nf-result-bad");
-        } catch (NextFitException e) {
-            countLabel.setText(e.getMessage());
-            if (!countLabel.getStyleClass().contains("nf-result-bad")) {
-                countLabel.getStyleClass().add("nf-result-bad");
-            }
-        }
+        }, error -> countLabel.setText(error.getMessage()));
     }
 
     private static TableColumn<List<Object>, String> column(ReportTable data, int index) {

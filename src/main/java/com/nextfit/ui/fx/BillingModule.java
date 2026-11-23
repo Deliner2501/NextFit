@@ -91,10 +91,13 @@ public final class BillingModule implements FxModule {
     }
 
     private void refreshTabs() {
-        sale.refresh();
-        subscriptions.refresh();
-        payments.refresh();
-        plans.refresh();
+        switch (tabs.getSelectionModel().getSelectedIndex()) {
+            case 0 -> sale.refresh();
+            case 1 -> subscriptions.refresh();
+            case 2 -> payments.refresh();
+            case 3 -> plans.refresh();
+            default -> {}
+        }
     }
 
     private static Tab tab(String title, Node content) {

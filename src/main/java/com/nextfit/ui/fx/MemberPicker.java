@@ -22,6 +22,8 @@ import java.util.function.Function;
  * by the modules that work on one member at a time (sales, training).
  */
 public final class MemberPicker extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private final MemberService members;
     private final Consumer<Member> onSelected;
@@ -29,6 +31,8 @@ public final class MemberPicker extends VBox {
     private final TextField search = new TextField();
     private final ListView<Member> list = new ListView<>();
     private boolean reloading;
+    private List<Member> loadedMembers = List.of();
+    private java.util.Map<Long, List<String>> loadedTags = java.util.Map.of();
 
     /**
      * @param title      the title above the search box
@@ -57,7 +61,7 @@ public final class MemberPicker extends VBox {
         search.setPromptText("Buscar por nombre o documento...");
         search.getStyleClass().add("nf-input");
         search.setPrefHeight(44);
-        search.textProperty().addListener((obs, old, now) -> reload());
+        search.textProperty().addListener((obs, old, now) -> filterLoaded());
 
         list.getStyleClass().add("nf-list");
         list.setPlaceholder(new Label("No hay socios para mostrar"));
@@ -78,7 +82,7 @@ public final class MemberPicker extends VBox {
                 // The labels go next to the document, so the name keeps the whole first line.
                 HBox second = new HBox(8, document);
                 second.setAlignment(Pos.CENTER_LEFT);
-                for (String tag : MemberPicker.this.tags.apply(member)) {
+                for (String tag : loadedTags.getOrDefault(member.getId(), List.of())) {
                     Label chip = new Label(tag);
                     chip.getStyleClass().add("nf-tag");
                     // Also inline, so the label is visible even if the style sheet was not reloaded.
@@ -106,16 +110,34 @@ public final class MemberPicker extends VBox {
         setPrefWidth(340);
         setMinWidth(300);
         setMaxWidth(340);
-        reload();
     }
 
     /** Reloads the list with the current search text, keeping the selected member if it is still listed. */
     public void reload() {
+        list.setPlaceholder(new Label("Cargando socios…"));
+        dataLoader.load(this, () -> {
+            List<Member> found = members.findAll();
+            java.util.Map<Long, List<String>> labels = new java.util.HashMap<>();
+            for (Member member : found) labels.put(member.getId(), List.copyOf(tags.apply(member)));
+            return new LoadedMembers(found, labels);
+        }, found -> {
+            list.setPlaceholder(new Label("No hay socios para mostrar"));
+            loadedMembers = found.members();
+            loadedTags = found.tags();
+            filterLoaded();
+        });
+    }
+
+    private record LoadedMembers(List<Member> members, java.util.Map<Long, List<String>> tags) {}
+
+    private void filterLoaded() {
         Member previous = selected();
         long keepId = previous == null ? -1 : previous.getId();
         reloading = true;
-        list.getItems().setAll(members.search(search.getText()));
-        reloading = false;
+        String wanted = search.getText().trim().toLowerCase();
+        list.getItems().setAll(loadedMembers.stream().filter(m -> wanted.isEmpty()
+                || m.getFullName().toLowerCase().contains(wanted)
+                || m.getDocumentNumber().contains(wanted) || m.getPhone().contains(wanted)).toList());
         boolean found = false;
         for (int i = 0; i < list.getItems().size(); i++) {
             if (list.getItems().get(i).getId() == keepId) {
@@ -123,6 +145,7 @@ public final class MemberPicker extends VBox {
                 found = true;
             }
         }
+        reloading = false;
         if (previous != null && !found) {
             onSelected.accept(null);
         }
@@ -130,7 +153,7 @@ public final class MemberPicker extends VBox {
 
     /** Draws the labels of every member again, after one of them changed. */
     public void refreshTags() {
-        list.refresh();
+        reload();
     }
 
     /**

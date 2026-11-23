@@ -35,6 +35,7 @@ import java.util.List;
  * text, the filters and the clicks, and shows the result.
  */
 final class ExercisesPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private static final double CARD_WIDTH = 220;
     private static final double PICTURE_HEIGHT = 140;
@@ -63,7 +64,6 @@ final class ExercisesPane extends VBox {
         scroll.getStyleClass().add("nf-scroll");
         getChildren().addAll(buildHeader(), scroll);
         VBox.setVgrow(scroll, Priority.ALWAYS);
-        refresh();
     }
 
     private Node buildHeader() {
@@ -112,20 +112,20 @@ final class ExercisesPane extends VBox {
         int difficultyIndex = difficultyFilter.getSelectionModel().getSelectedIndex();
         MuscleGroup group = groupIndex <= 0 ? null : MuscleGroup.values()[groupIndex - 1];
         Difficulty difficulty = difficultyIndex <= 0 ? null : Difficulty.values()[difficultyIndex - 1];
-
-        List<Exercise> shown = service.search(searchField.getText(), group, difficulty);
-        countLabel.setText(shown.size() == 1 ? "1 ejercicio" : shown.size() + " ejercicios");
-
-        grid.getChildren().clear();
-        if (shown.isEmpty()) {
-            Label empty = new Label("No hay ejercicios con esos filtros. Crea uno con «+ Nuevo ejercicio».");
-            empty.getStyleClass().add("nf-muted");
-            grid.getChildren().add(empty);
-            return;
-        }
-        for (Exercise exercise : shown) {
-            grid.getChildren().add(card(exercise));
-        }
+        String wanted = searchField.getText();
+        dataLoader.load(this, () -> service.search(wanted, group, difficulty), shown -> {
+            countLabel.setText(shown.size() == 1 ? "1 ejercicio" : shown.size() + " ejercicios");
+            grid.getChildren().clear();
+            if (shown.isEmpty()) {
+                Label empty = new Label("No hay ejercicios con esos filtros. Crea uno con «+ Nuevo ejercicio».");
+                empty.getStyleClass().add("nf-muted");
+                grid.getChildren().add(empty);
+                return;
+            }
+            for (Exercise exercise : shown) {
+                grid.getChildren().add(card(exercise));
+            }
+        });
     }
 
     // Abre el formulario para crear (exercise null) o editar un ejercicio.

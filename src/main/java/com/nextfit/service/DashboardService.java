@@ -8,6 +8,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalDouble;
 
@@ -106,6 +107,10 @@ public class DashboardService {
      */
     public Summary summary() {
         LocalDate today = LocalDate.now(clock);
+        Map<LocalDate, Long> checkInsByDate = new HashMap<>();
+        for (var record : attendance.findAll()) {
+            checkInsByDate.merge(record.getCheckIn().toLocalDate(), 1L, Long::sum);
+        }
         Map<SubscriptionStatus, Long> byStatus = countByStatus();
         return new Summary(today,
                 byStatus.get(SubscriptionStatus.ACTIVE),
@@ -114,11 +119,11 @@ public class DashboardService {
                 byStatus.get(SubscriptionStatus.EXPIRED),
                 byStatus.get(SubscriptionStatus.CANCELLED),
                 payments.revenueBetween(today.withDayOfMonth(1), today),
-                attendance.countCheckInsOn(today),
+                checkInsByDate.getOrDefault(today, 0L),
                 payments.revenueByMonth(INCOME_MONTHS),
-                checkInsByWeekday(today),
+                checkInsByWeekday(today, checkInsByDate),
                 lastMonthToDate(today),
-                attendance.countCheckInsOn(today.minusDays(1)));
+                checkInsByDate.getOrDefault(today.minusDays(1), 0L));
     }
 
     // The same stretch of the previous month: its first day up to the day with today's number (or its last day).
@@ -138,14 +143,14 @@ public class DashboardService {
         return counts;
     }
 
-    private Map<DayOfWeek, Long> checkInsByWeekday(LocalDate today) {
+    private Map<DayOfWeek, Long> checkInsByWeekday(LocalDate today, Map<LocalDate, Long> checkInsByDate) {
         Map<DayOfWeek, Long> counts = new EnumMap<>(DayOfWeek.class);
         for (DayOfWeek day : DayOfWeek.values()) {
             counts.put(day, 0L);
         }
         for (int i = 0; i < ATTENDANCE_DAYS; i++) {
             LocalDate day = today.minusDays(i);
-            counts.merge(day.getDayOfWeek(), attendance.countCheckInsOn(day), Long::sum);
+            counts.merge(day.getDayOfWeek(), checkInsByDate.getOrDefault(day, 0L), Long::sum);
         }
         return counts;
     }

@@ -24,6 +24,7 @@ import java.util.List;
  * {@link MembershipPlanService}; this class only collects clicks and shows data.
  */
 final class PlansPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private static final String ON_SALE = "En venta";
 
@@ -40,7 +41,6 @@ final class PlansPane extends VBox {
         this.service = service;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
-        refresh();
     }
 
     private Node buildHeader() {
@@ -90,18 +90,20 @@ final class PlansPane extends VBox {
 
     /** Reloads the plans from the service. */
     void refresh() {
-        MembershipPlan keep = table.getSelectionModel().getSelectedItem();
-        table.getItems().setAll(service.findAll());
-        if (keep != null) {
-            for (MembershipPlan plan : table.getItems()) {
-                if (plan.getId() == keep.getId()) {
-                    table.getSelectionModel().select(plan);
+        dataLoader.load(this, service::findAll, found -> {
+            MembershipPlan keep = table.getSelectionModel().getSelectedItem();
+            table.getItems().setAll(found);
+            if (keep != null) {
+                for (MembershipPlan plan : table.getItems()) {
+                    if (plan.getId() == keep.getId()) {
+                        table.getSelectionModel().select(plan);
+                    }
                 }
             }
-        }
-        int total = table.getItems().size();
-        countLabel.setText(total == 1 ? "1 plan" : total + " planes");
-        updateToggleText();
+            int total = table.getItems().size();
+            countLabel.setText(total == 1 ? "1 plan" : total + " planes");
+            updateToggleText();
+        });
     }
 
     private void updateToggleText() {

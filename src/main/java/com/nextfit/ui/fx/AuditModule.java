@@ -26,6 +26,8 @@ import java.util.List;
  * The numbers and the list come from {@link AuditService}; this class only shows them.
  */
 public final class AuditModule implements FxModule {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private static final DateTimeFormatter MOMENT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final String ALL = "Todos los eventos";
@@ -136,11 +138,15 @@ public final class AuditModule implements FxModule {
 
     // Reads the log again and updates the numbers and the list.
     private void refresh() {
-        entries = service.findAll();
-        today.value().setText(String.valueOf(service.countToday(null)));
-        failed.value().setText(String.valueOf(service.countToday(AuditAction.LOGIN_FAILED)));
-        locked.value().setText(String.valueOf(service.countToday(AuditAction.LOCKOUT)));
-        showRows();
+        var day = java.time.LocalDate.now();
+        dataLoader.load(view, service::findAll, found -> {
+            entries = found;
+            var todays = entries.stream().filter(entry -> entry.timestamp().toLocalDate().equals(day)).toList();
+            today.value().setText(String.valueOf(todays.size()));
+            failed.value().setText(String.valueOf(todays.stream().filter(entry -> entry.action() == AuditAction.LOGIN_FAILED).count()));
+            locked.value().setText(String.valueOf(todays.stream().filter(entry -> entry.action() == AuditAction.LOCKOUT).count()));
+            showRows();
+        });
     }
 
     // Applies the chosen filter to the list that is already loaded.

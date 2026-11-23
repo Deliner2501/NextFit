@@ -99,11 +99,14 @@ public final class TrainingFxModule implements FxModule {
     }
 
     private void refreshTabs() {
-        exercises.refresh();
-        routines.refresh();
-        assignments.refresh();
-        sessions.refresh();
-        trainers.refresh();
+        switch (tabs.getSelectionModel().getSelectedIndex()) {
+            case 0 -> exercises.refresh();
+            case 1 -> routines.refresh();
+            case 2 -> assignments.refresh();
+            case 3 -> sessions.refresh();
+            case 4 -> trainers.refresh();
+            default -> {}
+        }
     }
 
     private static Tab tab(String title, Node content) {
