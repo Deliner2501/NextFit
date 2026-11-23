@@ -6,7 +6,6 @@ import com.nextfit.util.PhotoStorage;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -35,7 +34,7 @@ final class MemberForm {
     private final TextField documentField = new TextField();
     private final TextField phoneField = new TextField();
     private final TextField emailField = new TextField();
-    private final DatePicker birthPicker = new DatePicker();
+    private final BirthDateField birthPicker = new BirthDateField();
     private final TextField emergencyField = new TextField();
     private final Label photoLabel = new Label();
     private Path chosenPhoto;
@@ -73,7 +72,6 @@ final class MemberForm {
         }
         birthPicker.setPrefHeight(44);
         birthPicker.setMaxWidth(Double.MAX_VALUE);
-        birthPicker.setPromptText("AAAA-MM-DD");
 
         // When editing, the form starts with the data of the member.
         if (existing != null) {
@@ -81,7 +79,7 @@ final class MemberForm {
             documentField.setText(existing.getDocumentNumber());
             phoneField.setText(existing.getPhone());
             emailField.setText(existing.getEmail());
-            birthPicker.setValue(existing.getBirthDate());
+            birthPicker.setDate(existing.getBirthDate());
             emergencyField.setText(existing.getEmergencyContact());
         }
         photoLabel.getStyleClass().add("nf-muted");
@@ -139,7 +137,7 @@ final class MemberForm {
                 document,
                 phoneField.getText().trim(),
                 emailField.getText().trim(),
-                birthPicker.getValue(),     // empty: the validator answers "is required"
+                birthPicker.readDate(),     // empty: the validator answers "is required"
                 existing == null ? LocalDate.now() : existing.getJoinDate(),
                 photoPath,
                 emergencyField.getText().trim(),
