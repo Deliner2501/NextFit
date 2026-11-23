@@ -26,6 +26,8 @@ import java.time.DayOfWeek;
  * this class only decides how to draw them.
  */
 final class AnalyticsView extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private static final String[] DAYS = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
     private static final int DEFAULT_FIRST_HOUR = 5;
@@ -44,13 +46,23 @@ final class AnalyticsView extends VBox {
 
     /** Works out the report again and redraws the whole screen. */
     void refresh() {
-        Report report = service.report();
+        dataLoader.load(this, () -> {
+            Report report = service.report();
+            java.util.Map<Long, Member> memberById = new java.util.HashMap<>();
+            for (Member member : members.findAll()) memberById.put(member.getId(), member);
+            return new LoadedReport(report, memberById);
+        }, loaded -> display(loaded.report(), loaded.members()));
+    }
+
+    private record LoadedReport(Report report, java.util.Map<Long, Member> members) {}
+
+    private void display(Report report, java.util.Map<Long, Member> memberById) {
         Label subtitle = new Label("Cuándo se llena el gimnasio y a quién hay que recuperar");
         subtitle.getStyleClass().add("nf-muted");
         getChildren().setAll(subtitle,
                 kpiRow(peakCard(report.heatmap()), stayCard(report), renewalCard(report), riskCard(report)),
                 heatmapCard(report.heatmap()),
-                atRiskCard(report));
+                atRiskCard(report, memberById));
     }
 
     /** The first card (the busiest hour) is the protagonist: it is wider than the other three. */
@@ -183,7 +195,7 @@ final class AnalyticsView extends VBox {
         return cell;
     }
 
-    private Region atRiskCard(Report report) {
+    private Region atRiskCard(Report report, java.util.Map<Long, Member> memberById) {
         VBox list = new VBox(10);
         if (report.atRisk().isEmpty()) {
             Label none = new Label("Todos los socios con membresía vigente han venido en los últimos "
@@ -199,7 +211,8 @@ final class AnalyticsView extends VBox {
                 list.getChildren().add(more);
                 break;
             }
-            Member member = members.findById(risk.memberId());
+            Member member = memberById.get(risk.memberId());
+            if (member == null) continue;
             Label name = new Label(member.getFullName());
             name.getStyleClass().add("nf-list-name");
             Label since = new Label(sinceText(risk));

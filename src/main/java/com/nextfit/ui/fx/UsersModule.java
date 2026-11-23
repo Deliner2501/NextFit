@@ -29,6 +29,7 @@ import java.util.List;
  * The rules live in {@link UserService}; this class only collects clicks.
  */
 public final class UsersModule implements FxModule {
+    private final FxLoader dataLoader = new FxLoader();
 
     private final UserService service;
     private final Session session;
@@ -134,10 +135,12 @@ public final class UsersModule implements FxModule {
     }
 
     private void refresh() {
-        table.getItems().setAll(service.findAll());
-        int total = table.getItems().size();
-        countLabel.setText(total == 1 ? "1 usuario" : total + " usuarios");
-        updateToggleText();
+        dataLoader.load(view, service::findAll, found -> {
+            table.getItems().setAll(found);
+            int total = table.getItems().size();
+            countLabel.setText(total == 1 ? "1 usuario" : total + " usuarios");
+            updateToggleText();
+        });
     }
 
     private void updateToggleText() {

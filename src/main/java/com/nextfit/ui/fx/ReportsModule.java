@@ -71,8 +71,11 @@ public final class ReportsModule implements FxModule {
     }
 
     private void refresh() {
-        cashClose.refresh();
-        reports.refresh();
+        switch (tabs.getSelectionModel().getSelectedIndex()) {
+            case 0 -> cashClose.refresh();
+            case 1 -> reports.refresh();
+            default -> {}
+        }
     }
 
     /**

@@ -41,6 +41,8 @@ import java.util.Map;
  */
 final class PaymentsPane extends VBox {
 
+    private final FxLoader dataLoader = new FxLoader();
+
     /** One table row: the payment with the member name already looked up. */
     private record Row(Payment payment, String member, ReadOnlyStringWrapper emailStatus) {
     }
@@ -67,7 +69,6 @@ final class PaymentsPane extends VBox {
         this.email = email;
         getChildren().addAll(buildHeader(), buildTable(), buildFooter());
         VBox.setVgrow(table, Priority.ALWAYS);
-        refresh();
         if (email != null) {
             statusRefresh.setCycleCount(Animation.INDEFINITE);
             sceneProperty().addListener((observable, previous, scene) -> {
@@ -183,27 +184,31 @@ final class PaymentsPane extends VBox {
 
     /** Reloads the payments from the service, applying the search text. */
     void refresh() {
-        Map<Long, Member> memberById = new HashMap<>();
-        for (Member member : members.findAll()) {
-            memberById.put(member.getId(), member);
-        }
         String wanted = searchField.getText().trim().toLowerCase();
-        List<Row> rows = new ArrayList<>();
-        long sum = 0;
-        for (Payment p : payments.findAll()) {
-            Member member = memberById.get(p.getMemberId());
-            String name = member == null ? "Socio #" + p.getMemberId() : member.getFullName();
-            if (!wanted.isEmpty() && !name.toLowerCase().contains(wanted)
-                    && !p.getReceiptNumber().toLowerCase().contains(wanted)) {
-                continue;
+        dataLoader.load(this, () -> {
+            Map<Long, Member> memberById = new HashMap<>();
+            for (Member member : members.findAll()) {
+                memberById.put(member.getId(), member);
             }
-            rows.add(new Row(p, name, new ReadOnlyStringWrapper(email == null ? "Desactivado" : "Consultando…")));
-            sum += p.getTotal();
-        }
-        table.getItems().setAll(rows);
-        countLabel.setText(rows.size() == 1 ? "1 pago" : rows.size() + " pagos");
-        totalLabel.setText("Total listado: " + Formats.money(sum));
-        refreshEmailStatus();
+            List<Row> rows = new ArrayList<>();
+            for (Payment payment : payments.findAll()) {
+                Member member = memberById.get(payment.getMemberId());
+                String name = member == null ? "Socio #" + payment.getMemberId() : member.getFullName();
+                if (!wanted.isEmpty() && !name.toLowerCase().contains(wanted)
+                        && !payment.getReceiptNumber().toLowerCase().contains(wanted)) {
+                    continue;
+                }
+                rows.add(new Row(payment, name,
+                        new ReadOnlyStringWrapper(email == null ? "Desactivado" : "Consultando…")));
+            }
+            return rows;
+        }, rows -> {
+            table.getItems().setAll(rows);
+            countLabel.setText(rows.size() == 1 ? "1 pago" : rows.size() + " pagos");
+            long total = rows.stream().mapToLong(row -> row.payment().getTotal()).sum();
+            totalLabel.setText("Total listado: " + Formats.money(total));
+            refreshEmailStatus();
+        });
     }
 
     /** Reads delivery records in the background while leaving table selection intact. */

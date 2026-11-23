@@ -22,6 +22,7 @@ import java.util.List;
  * class only collects clicks and shows data.
  */
 final class TrainersPane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private final TrainerService service;
     private final TableView<Trainer> table = new TableView<>();
@@ -34,7 +35,6 @@ final class TrainersPane extends VBox {
         this.service = service;
         getChildren().addAll(buildHeader(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
-        refresh();
     }
 
     private Node buildHeader() {
@@ -85,18 +85,20 @@ final class TrainersPane extends VBox {
 
     /** Reloads the trainers from the service, keeping the selected one if it is still listed. */
     void refresh() {
-        Trainer previous = table.getSelectionModel().getSelectedItem();
-        table.getItems().setAll(service.findAll());
-        if (previous != null) {
-            for (Trainer trainer : table.getItems()) {
-                if (trainer.getId() == previous.getId()) {
-                    table.getSelectionModel().select(trainer);
+        dataLoader.load(this, service::findAll, found -> {
+            Trainer previous = table.getSelectionModel().getSelectedItem();
+            table.getItems().setAll(found);
+            if (previous != null) {
+                for (Trainer trainer : table.getItems()) {
+                    if (trainer.getId() == previous.getId()) {
+                        table.getSelectionModel().select(trainer);
+                    }
                 }
             }
-        }
-        int total = table.getItems().size();
-        countLabel.setText(total == 1 ? "1 entrenador" : total + " entrenadores");
-        updateToggleText();
+            int total = table.getItems().size();
+            countLabel.setText(total == 1 ? "1 entrenador" : total + " entrenadores");
+            updateToggleText();
+        });
     }
 
     private void updateToggleText() {

@@ -42,6 +42,8 @@ import java.util.function.Supplier;
  * services goes back to the JavaFX thread.
  */
 final class FacePane extends HBox {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private static final String CONSENT = """
             Se guardará únicamente un código numérico de tu rostro (no la foto) para dejarte entrar sin carnet.
@@ -93,7 +95,7 @@ final class FacePane extends HBox {
     /** Called when the screen is shown again. */
     void refresh() {
         say("");
-        access.refresh();
+        dataLoader.load(this, () -> { access.refresh(); return true; }, ignored -> {});
         picker.reload();
         updateStatus();
     }
@@ -189,7 +191,7 @@ final class FacePane extends HBox {
         if (camera.isEmpty()) {
             return;
         }
-        access.refresh();
+        dataLoader.load(this, () -> { access.refresh(); return true; }, ignored -> {});
         running = true;
         entryButton.setText("Detener cámara");
         enrollButton.setDisable(true);
@@ -259,7 +261,7 @@ final class FacePane extends HBox {
         stop();
         try {
             enrollment.enroll(member, samples, actor.get());
-            access.refresh();
+            dataLoader.load(this, () -> { access.refresh(); return true; }, ignored -> {});
             say("Rostro registrado: " + member.getFullName());
         } catch (NextFitException e) {
             say("");
@@ -275,7 +277,7 @@ final class FacePane extends HBox {
             return;
         }
         enrollment.remove(member, actor.get());
-        access.refresh();
+        dataLoader.load(this, () -> { access.refresh(); return true; }, ignored -> {});
         say("Rostro eliminado: " + member.getFullName());
         updateStatus();
     }

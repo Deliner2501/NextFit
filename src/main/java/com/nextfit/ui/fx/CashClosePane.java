@@ -40,6 +40,7 @@ import java.util.Locale;
  * counted by the user lives only on this screen and travels to the exported file.
  */
 final class CashClosePane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private static final DateTimeFormatter PICKER_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter LONG_DAY = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy",
@@ -75,7 +76,6 @@ final class CashClosePane extends VBox {
         getChildren().addAll(buildHeader(), buildKpis(), buildMiddle(), buildTable());
         VBox.setVgrow(table, Priority.ALWAYS);
         setPadding(new Insets(0, 4, 24, 0));
-        refresh();
     }
 
     private void configurePicker() {
@@ -229,24 +229,26 @@ final class CashClosePane extends VBox {
     /** Loads the close of the chosen day again. */
     void refresh() {
         LocalDate day = picker.getValue() == null ? LocalDate.now() : picker.getValue();
-        current = service.closeOf(day);
-        dayLabel.setText(capital(LONG_DAY.format(day)));
-        totalCard.value().setText(Formats.money(current.total()));
-        totalCard.hint().setText(current.count() == 0 ? "Sin pagos este día" : "Todos los métodos");
-        countCard.value().setText(String.valueOf(current.count()));
-        countCard.hint().setText(current.count() == 1 ? "Pago registrado" : "Pagos registrados");
-        discountCard.value().setText(Formats.money(current.discounts()));
-        discountCard.hint().setText("Descontado en las ventas");
-        cashCard.value().setText(Formats.money(current.expectedCash()));
-        expectedLabel.setText(Formats.money(current.expectedCash()));
-        long max = Math.max(1, current.total());
-        for (MethodRow row : methodRows) {
-            long amount = current.byMethod().getOrDefault(row.method, 0L);
-            long count = current.lines().stream().filter(l -> l.method() == row.method).count();
-            row.update(amount, count, (double) amount / max);
-        }
-        table.getItems().setAll(current.lines());
-        readCounted();
+        dataLoader.load(this, () -> service.closeOf(day), found -> {
+            current = found;
+            dayLabel.setText(capital(LONG_DAY.format(day)));
+            totalCard.value().setText(Formats.money(current.total()));
+            totalCard.hint().setText(current.count() == 0 ? "Sin pagos este día" : "Todos los métodos");
+            countCard.value().setText(String.valueOf(current.count()));
+            countCard.hint().setText(current.count() == 1 ? "Pago registrado" : "Pagos registrados");
+            discountCard.value().setText(Formats.money(current.discounts()));
+            discountCard.hint().setText("Descontado en las ventas");
+            cashCard.value().setText(Formats.money(current.expectedCash()));
+            expectedLabel.setText(Formats.money(current.expectedCash()));
+            long max = Math.max(1, current.total());
+            for (MethodRow row : methodRows) {
+                long amount = current.byMethod().getOrDefault(row.method, 0L);
+                long count = current.lines().stream().filter(l -> l.method() == row.method).count();
+                row.update(amount, count, (double) amount / max);
+            }
+            table.getItems().setAll(current.lines());
+            readCounted();
+        });
     }
 
     private void readCounted() {

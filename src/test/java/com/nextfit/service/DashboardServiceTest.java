@@ -35,8 +35,18 @@ class DashboardServiceTest {
 
     private FakeSubscriptionRepository subscriptionRepository;
     private FakePaymentRepository paymentRepository;
-    private FakeAttendanceRepository attendanceRepository;
+    private CountingAttendanceRepository attendanceRepository;
     private DashboardService service;
+
+    private static class CountingAttendanceRepository extends FakeAttendanceRepository {
+        private int reads;
+
+        @Override
+        public java.util.List<AttendanceRecord> findAll() {
+            reads++;
+            return super.findAll();
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -47,7 +57,7 @@ class DashboardServiceTest {
                 new MembershipPlanValidator());
         subscriptionRepository = new FakeSubscriptionRepository();
         paymentRepository = new FakePaymentRepository();
-        attendanceRepository = new FakeAttendanceRepository();
+        attendanceRepository = new CountingAttendanceRepository();
         SubscriptionService subscriptions = new SubscriptionService(subscriptionRepository, plans, members, clock);
         PaymentService payments = new PaymentService(paymentRepository, subscriptions, plans,
                 new PaymentValidator(), clock);
@@ -144,5 +154,14 @@ class DashboardServiceTest {
         assertEquals(3L, summary.checkInsByWeekday().get(DayOfWeek.TUESDAY));
         assertEquals(1L, summary.checkInsByWeekday().get(DayOfWeek.MONDAY));
         assertEquals(0L, summary.checkInsByWeekday().get(DayOfWeek.SUNDAY));
+    }
+
+    @Test
+    void eachSummaryReadsAttendanceOnlyOnceAndRefreshesOnTheNextCall() {
+        attendanceRepository.reads = 0;
+        service.summary();
+        assertEquals(1, attendanceRepository.reads);
+        service.summary();
+        assertEquals(2, attendanceRepository.reads);
     }
 }

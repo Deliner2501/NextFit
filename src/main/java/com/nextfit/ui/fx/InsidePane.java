@@ -24,6 +24,7 @@ import java.util.Locale;
  * who forgot to mark the exit.
  */
 final class InsidePane extends VBox {
+    private final FxLoader dataLoader = new FxLoader();
 
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm", Locale.forLanguageTag("es-CO"));
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("d/MM", Locale.forLanguageTag("es-CO"));
@@ -85,10 +86,11 @@ final class InsidePane extends VBox {
 
     /** Reloads the list of members inside. */
     void refresh() {
-        var current = attendance.findInside();
-        inside.getItems().setAll(current);
-        title.setText("Dentro ahora (" + current.size() + ")");
-        forceExit.setDisable(true);
+        dataLoader.load(this, () -> attendance.findInside(), current -> {
+            inside.getItems().setAll(current);
+            title.setText("Dentro ahora (" + current.size() + ")");
+            forceExit.setDisable(true);
+        });
     }
 
     private void closeVisit() {

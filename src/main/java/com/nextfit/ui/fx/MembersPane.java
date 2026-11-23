@@ -7,6 +7,7 @@ import com.nextfit.ui.Formats;
 import com.nextfit.util.PhotoStorage;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.geometry.Pos;
+import javafx.concurrent.Task;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -32,6 +33,8 @@ import java.util.function.Consumer;
 final class MembersPane extends VBox {
 
     private static final String ACTIVE = "Activo";
+    private List<Member> loadedMembers = List.of();
+    private boolean loading;
 
     private final MemberService service;
     private final PhotoStorage photoStorage;
@@ -73,7 +76,7 @@ final class MembersPane extends VBox {
         searchField.getStyleClass().add("nf-input");
         searchField.setPrefSize(280, 44);
         searchField.setMinWidth(120);
-        searchField.textProperty().addListener((obs, old, now) -> refresh());
+        searchField.textProperty().addListener((obs, old, now) -> filterMembers());
         fichaButton.getStyleClass().add("nf-secondary");
         fichaButton.setOnAction(e -> openFicha());
         editButton.getStyleClass().add("nf-secondary");
@@ -128,12 +131,40 @@ final class MembersPane extends VBox {
 
     /** Reloads the members from the service, keeping the selected one if it is still listed. */
     void refresh() {
+        if (loading) {
+            return;
+        }
+        loading = true;
+        countLabel.setText("Cargando socios…");
+        Task<List<Member>> task = new Task<>() {
+            @Override
+            protected List<Member> call() {
+                return service.findAll();
+            }
+        };
+        task.setOnSucceeded(event -> {
+            loading = false;
+            loadedMembers = task.getValue();
+            long active = loadedMembers.stream().filter(Member::isActive).count();
+            countLabel.setText(loadedMembers.size() + " socios · " + active + " activos");
+            filterMembers();
+        });
+        task.setOnFailed(event -> {
+            loading = false;
+            countLabel.setText("No se pudieron cargar los socios. Vuelve a entrar para reintentar.");
+        });
+        Thread worker = new Thread(task, "members-load");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private void filterMembers() {
         Member previous = table.getSelectionModel().getSelectedItem();
-        List<Member> all = service.findAll();
-        long active = all.stream().filter(Member::isActive).count();
-        countLabel.setText(all.size() + (all.size() == 1 ? " socio · " : " socios · ")
-                + active + (active == 1 ? " activo" : " activos"));
-        table.getItems().setAll(service.search(searchField.getText()));
+        String wanted = searchField.getText().trim().toLowerCase();
+        table.getItems().setAll(loadedMembers.stream()
+                .filter(m -> wanted.isEmpty() || m.getFullName().toLowerCase().contains(wanted)
+                        || m.getDocumentNumber().contains(wanted) || m.getPhone().contains(wanted))
+                .toList());
         if (previous != null) {
             for (Member member : table.getItems()) {
                 if (member.getId() == previous.getId()) {

@@ -29,6 +29,8 @@ import javafx.scene.control.Tooltip;
  * reasons and the action come from {@link ChurnService}; this class only shows them.
  */
 public final class ChurnModule implements FxModule {
+    private final FxLoader dataLoader = new FxLoader();
+
 
     private static final String ALL = "Todos los niveles";
 
@@ -173,18 +175,13 @@ public final class ChurnModule implements FxModule {
     
     // Asks the service again and updates the cards and the list.
     private void refresh() {
-        Map<RiskLevel, Long> counts;
-        try {
-            all = service.findAll();
-            counts = service.countByLevel();
-        } catch (NextFitException e) {
-            FxDialogs.error(view, e);
-            return;
-        }
-        high.value().setText(String.valueOf(counts.get(RiskLevel.HIGH)));
-        medium.value().setText(String.valueOf(counts.get(RiskLevel.MEDIUM)));
-        low.value().setText(String.valueOf(counts.get(RiskLevel.LOW)));
-        showRows();
+        dataLoader.load(view, service::findAll, found -> {
+            all = found;
+            high.value().setText(String.valueOf(all.stream().filter(item -> item.level() == RiskLevel.HIGH).count()));
+            medium.value().setText(String.valueOf(all.stream().filter(item -> item.level() == RiskLevel.MEDIUM).count()));
+            low.value().setText(String.valueOf(all.stream().filter(item -> item.level() == RiskLevel.LOW).count()));
+            showRows();
+        });
     }
 
     // Applies the chosen level to the list that is already loaded.

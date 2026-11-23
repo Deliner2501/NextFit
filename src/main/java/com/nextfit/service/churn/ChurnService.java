@@ -150,7 +150,8 @@ public class ChurnService {
         }
         LocalDate start = current.stream().map(Subscription::getStartDate).max(Comparator.naturalOrder()).orElseThrow();
         LocalDate end = current.stream().map(Subscription::getEndDate).max(Comparator.naturalOrder()).orElseThrow();
-        boolean renewed = subscriptions.hasActiveSubscription(member.getId(), end.plusDays(1));
+        boolean renewed = allSubscriptions.stream().anyMatch(s -> s.getMemberId() == member.getId()
+                && s.isActiveOn(end.plusDays(1)));
         return Optional.of(new MemberActivity(today, visits.getOrDefault(member.getId(), List.of()),
                 start, end, renewed));
     }
