@@ -30,6 +30,12 @@ public class CsvMemberCredentialRepository implements MemberCredentialRepository
     }
 
     @Override
+    public synchronized java.util.Set<Long> credentialIds(List<Long> members) {
+        return store.readAll().stream().map(row -> Long.parseLong(row[0].strip()))
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
+    @Override
     public synchronized void save(MemberCredential credential) {
         List<String[]> rows = rowsWithout(credential.memberId());
         rows.add(toRow(credential));

@@ -3,7 +3,6 @@ package com.nextfit.ui.fx;
 import com.nextfit.model.Trainer;
 import com.nextfit.service.TrainerService;
 import javafx.scene.Node;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -26,7 +25,7 @@ final class TrainerForm {
     private final TextField documentField = new TextField();
     private final TextField phoneField = new TextField();
     private final TextField emailField = new TextField();
-    private final DatePicker birthPicker = new DatePicker();
+    private final BirthDateField birthPicker = new BirthDateField();
     private final TextField specialtyField = new TextField();
 
     private TrainerForm(TrainerService service, Trainer existing, Runnable onSaved) {
@@ -59,7 +58,6 @@ final class TrainerForm {
         }
         birthPicker.setPrefHeight(44);
         birthPicker.setMaxWidth(Double.MAX_VALUE);
-        birthPicker.setPromptText("AAAA-MM-DD");
 
         // EXPLICACIÓN: si se edita, el formulario arranca con los datos del entrenador.
         if (existing != null) {
@@ -67,7 +65,7 @@ final class TrainerForm {
             documentField.setText(existing.getDocumentNumber());
             phoneField.setText(existing.getPhone());
             emailField.setText(existing.getEmail());
-            birthPicker.setValue(existing.getBirthDate());
+            birthPicker.setDate(existing.getBirthDate());
             specialtyField.setText(existing.getSpecialty());
         }
 
@@ -93,7 +91,7 @@ final class TrainerForm {
 
     // Lo llama el botón Guardar; un error de reglas lo muestra FxDialogs dentro del formulario.
     private void save() {
-        LocalDate birthDate = birthPicker.getValue();   // vacía: el validador responde "es obligatoria"
+        LocalDate birthDate = birthPicker.readDate();   // vacía: el validador responde "es obligatoria"
         Trainer trainer = new Trainer(
                 existing == null ? 0 : existing.getId(),
                 nameField.getText().trim(),

@@ -73,7 +73,7 @@ final class FacePane extends HBox {
     private Thread worker;
 
     FacePane(FaceAccessService access, FaceEnrollmentService enrollment, MemberService members,
-             Path dataDir, Supplier<String> actor, Function<Member, List<String>> tags) {
+             Path dataDir, Supplier<String> actor, Function<List<Member>, java.util.Map<Long, List<String>>> tags) {
         super(24);
         this.access = access;
         this.enrollment = enrollment;

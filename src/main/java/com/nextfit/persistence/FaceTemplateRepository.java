@@ -10,6 +10,12 @@ public interface FaceTemplateRepository {
     /** @return every stored template */
     List<FaceTemplate> findAll();
 
+    /** @return distinct members with registered templates */
+    default java.util.Set<Long> enrolledIds() {
+        return findAll().stream().map(FaceTemplate::memberId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     /**
      * Replaces every template of the member with the given vectors.
      *

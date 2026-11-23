@@ -34,6 +34,18 @@ public final class JdbcAttendanceRepository implements AttendanceRepository {
     }
 
     @Override
+    public List<AttendanceRecord> findOpen() {
+        return JdbcSupport.query(connections, SELECT + " WHERE check_out IS NULL ORDER BY check_in DESC",
+                null, JdbcAttendanceRepository::toEntity);
+    }
+
+    @Override
+    public long countOpen() {
+        return JdbcSupport.query(connections, "SELECT COUNT(*) FROM attendance WHERE check_out IS NULL",
+                null, rows -> rows.getLong(1)).getFirst();
+    }
+
+    @Override
     public List<AttendanceRecord> findByMemberId(long memberId) {
         return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY id",
                 statement -> statement.setLong(1, memberId), JdbcAttendanceRepository::toEntity);

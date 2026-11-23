@@ -26,6 +26,8 @@ public final class BillingModule implements FxModule {
     private final SubscriptionsPane subscriptions;
     private final PaymentsPane payments;
     private final PlansPane plans;
+    private final Tab plansTab;
+    private final Session session;
 
     /**
      * @param planService         the service that manages the plans
@@ -38,8 +40,10 @@ public final class BillingModule implements FxModule {
     public BillingModule(MembershipPlanService planService, SubscriptionService subscriptionService,
                          PaymentService paymentService, MemberService memberService, Session session,
                          EmailNotifications email) {
-        this.plans = new PlansPane(planService);
-        this.subscriptions = new SubscriptionsPane(subscriptionService, planService, memberService);
+        this.session = session;
+        this.plans = new PlansPane(planService, session);
+        this.plansTab = tab("Planes", plans);
+        this.subscriptions = new SubscriptionsPane(subscriptionService, planService, memberService, session);
         this.payments = new PaymentsPane(paymentService, memberService, email);
         this.sale = new SalePane(planService, subscriptionService, paymentService, memberService, session,
                 () -> {
@@ -48,8 +52,7 @@ public final class BillingModule implements FxModule {
                 });
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
         tabs.getStyleClass().add("nf-tabs");
-        tabs.getTabs().addAll(tab("Venta", sale), tab("Suscripciones", subscriptions), tab("Pagos", payments),
-                tab("Planes", plans));
+        tabs.getTabs().addAll(tab("Venta", sale), tab("Suscripciones", subscriptions), tab("Pagos", payments));
         // A plan created, edited or withdrawn in one tab must show up in the other.
         tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, now) -> refreshTabs());
     }
@@ -81,6 +84,16 @@ public final class BillingModule implements FxModule {
 
     @Override
     public void onShow() {
+        if (session.hasRole(Role.ADMIN)) {
+            if (!tabs.getTabs().contains(plansTab)) {
+                tabs.getTabs().add(plansTab);
+            }
+        } else if (tabs.getTabs().contains(plansTab)) {
+            if (tabs.getSelectionModel().getSelectedItem() == plansTab) {
+                tabs.getSelectionModel().selectFirst();
+            }
+            tabs.getTabs().remove(plansTab);
+        }
         refreshTabs();
     }
 

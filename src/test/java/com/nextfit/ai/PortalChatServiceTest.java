@@ -135,6 +135,23 @@ class PortalChatServiceTest {
     }
 
     @Test
+    void theDailyQuotaResetsOnTheNextCalendarDay() {
+        chat = service(30);
+        int limit = PortalChatService.QUESTIONS_PER_DAY;
+        for (int i = 0; i < limit; i++) {
+            chat.ask("ANA-CODE", "Pregunta " + i);
+        }
+        long memberId = findMember("ANA-CODE").orElseThrow().getId();
+        assertEquals(0, chat.dailyQuota(memberId).remaining());
+        assertThrows(BusinessRuleException.class, () -> chat.ask("ANA-CODE", "Otra pregunta"));
+
+        clock.advance(Duration.ofDays(1));
+        assertEquals(limit, chat.dailyQuota(memberId).remaining());
+        assertEquals("ok", chat.ask("ANA-CODE", "Pregunta de un nuevo día"));
+        assertEquals(limit - 1, chat.dailyQuota(memberId).remaining());
+    }
+
+    @Test
     void afterAnHourTheMemberMayAskAgain() {
         chat = service(1);
         chat.ask("ANA-CODE", "uno");

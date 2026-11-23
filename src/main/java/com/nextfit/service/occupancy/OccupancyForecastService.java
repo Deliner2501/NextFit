@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntSupplier;
 import java.util.stream.IntStream;
 
 /**
@@ -24,7 +25,7 @@ public class OccupancyForecastService {
     public static final int HISTORY_WEEKS = 8;
 
     private final AttendanceService attendance;
-    private final int capacity;
+    private final IntSupplier capacity;
     private final Clock clock;
 
     /**
@@ -45,6 +46,15 @@ public class OccupancyForecastService {
      * @param clock      the source of today's date
      */
     public OccupancyForecastService(AttendanceService attendance, int capacity, Clock clock) {
+        this(attendance, () -> capacity, clock);
+    }
+
+    /**
+     * @param attendance the entries and exits
+     * @param capacity the source of the current capacity
+     * @param clock the source of today's date
+     */
+    public OccupancyForecastService(AttendanceService attendance, IntSupplier capacity, Clock clock) {
         this.attendance = attendance;
         this.capacity = capacity;
         this.clock = clock;
@@ -76,9 +86,10 @@ public class OccupancyForecastService {
                 .filter(hours -> IntStream.of(hours).sum() > 0)
                 .toList();
         List<HourForecast> forecasts = new ArrayList<>();
+        int limit = capacity.getAsInt();
         for (int hour = OccupancyService.OPEN_HOUR; hour < OccupancyService.CLOSE_HOUR; hour++) {
             double expected = averageAt(daysWithVisits, hour);
-            int percent = (int) Math.min(100, Math.round(expected * 100.0 / capacity));
+            int percent = (int) Math.min(100, Math.round(expected * 100.0 / limit));
             forecasts.add(new HourForecast(hour, expected, percent, OccupancyLevel.of(percent)));
         }
         return new OccupancyForecast(day, forecasts, daysWithVisits.size());

@@ -30,6 +30,12 @@ public class RoutineAssignmentService {
         this.subscriptions = subscriptions;
     }
 
+    /** @return member IDs for the training list filters */
+    public java.util.Set<Long> activeMemberIds() {
+        return assignments.findAll().stream().filter(a -> a.getStatus() == AssignmentStatus.ACTIVE).map(RoutineAssignment::getMemberId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     /**
      * Contract used by other modules: the routine the member is following now.
      *

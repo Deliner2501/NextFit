@@ -1,6 +1,12 @@
 package com.nextfit.service;
 
 import com.nextfit.exceptions.InvalidDataException;
+import com.nextfit.exceptions.BusinessRuleException;
+import com.nextfit.model.RenewalDiscount;
+import com.nextfit.service.gamification.Achievements;
+import com.nextfit.service.gamification.Badge;
+import com.nextfit.service.gamification.GamificationService;
+import com.nextfit.service.gamification.RenewalBenefits;
 import com.nextfit.exceptions.PersistenceException;
 import com.nextfit.exceptions.ResourceNotFoundException;
 import com.nextfit.model.FixedDiscount;
@@ -67,6 +73,37 @@ class PaymentServiceTest {
         assertEquals("admin", sale.payment().getRegisteredBy());
         assertEquals(new NoDiscount().getType(), sale.payment().getDiscount().getType());
         assertEquals(true, subscriptions.hasActiveSubscription(member.getId()));
+    }
+
+    @Test
+    void earnedBenefitCanBeUsedOnlyOnceAfterTheFirstSale() {
+        MemberService members = new MemberService(new FakeMemberRepository(), new MemberValidator());
+        Member buyer = members.register(FakeRepositories.newMember("1065123456"));
+        MembershipPlanService plans = new MembershipPlanService(new FakePlanRepository(),
+                new MembershipPlanValidator());
+        MembershipPlan plan = plans.create(MembershipPlanServiceTest.newPlan("Mensual", 30, 80_000));
+        Clock clock = Clock.fixed(Instant.parse("2026-10-27T15:00:00Z"), ZONE);
+        SubscriptionService memberships = new SubscriptionService(new FakeSubscriptionRepository(), plans, members, clock);
+        GamificationService achievements = new GamificationService(members, null, clock) {
+            @Override
+            public Achievements achievementsOf(long memberId) {
+                return new Achievements(buyer, 10, null, List.of(Badge.FIRST_STEP, Badge.STEADY));
+            }
+        };
+        PaymentService billing = new PaymentService(new FakePaymentRepository(), memberships, plans,
+                new PaymentValidator(), clock, new RenewalBenefits(members, achievements));
+        assertEquals(List.of(), billing.availableBenefits(buyer.getId()));
+        assertThrows(BusinessRuleException.class, () -> billing.sellMembership(buyer.getId(), plan.getId(), null,
+                PaymentMethod.CASH, new PercentageDiscount(5), "reception"));
+        billing.sellMembership(buyer.getId(), plan.getId(), null, PaymentMethod.CASH, null, "reception");
+        RenewalDiscount earned = billing.availableBenefits(buyer.getId()).getFirst();
+        assertEquals(15, earned.getValue());
+        MembershipSale sale = billing.sellMembership(buyer.getId(), plan.getId(), null,
+                PaymentMethod.CASH, earned, "reception");
+        assertEquals(68_000, sale.payment().getTotal());
+        assertThrows(BusinessRuleException.class, () -> billing.sellMembership(buyer.getId(), plan.getId(), null,
+                PaymentMethod.CASH, earned, "reception"));
+        assertEquals(10, billing.availableBenefits(buyer.getId()).getFirst().getValue());
     }
 
     @Test

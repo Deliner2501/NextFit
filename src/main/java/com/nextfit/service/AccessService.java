@@ -81,8 +81,7 @@ public class AccessService {
      * @return the result to show
      */
     public synchronized AccessResult processMember(Member member) {
-        boolean inside = attendanceService.findInside().stream()
-                .anyMatch(r -> r.getMemberId() == member.getId());
+        boolean inside = attendanceService.isInside(member.getId());
         if (inside) {
             attendanceService.checkOut(member.getId());
             return publish(granted(Outcome.EXIT, member, "Hasta pronto, " + firstName(member)));

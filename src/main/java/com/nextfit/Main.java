@@ -27,6 +27,7 @@ import com.nextfit.service.alert.AlertMessages;
 import com.nextfit.service.alert.AlertService;
 import com.nextfit.service.alert.WhatsAppLink;
 import com.nextfit.service.gamification.GamificationService;
+import com.nextfit.service.gamification.RenewalBenefits;
 import com.nextfit.service.mail.EmailNotifications;
 import com.nextfit.service.suggest.BmiRule;
 import com.nextfit.service.suggest.MedicalConditionRule;
@@ -59,8 +60,7 @@ import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
 import com.nextfit.util.PhotoStorage;
 import com.nextfit.service.occupancy.OccupancyForecastService;
-import com.nextfit.service.occupancy.OccupancyService;
-import com.nextfit.ui.fx.OccupancyModule;
+import com.nextfit.service.occupancy.GymCapacity;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
 import com.nextfit.service.audit.AuditService;
 import com.nextfit.service.churn.ChurnService;
@@ -160,12 +160,15 @@ public final class Main {
         SubscriptionService subscriptionService = new SubscriptionService(
                 storage.subscriptions(),
                 planService, memberService, Clock.systemDefaultZone());
-        PaymentService paymentService = new PaymentService(
-                storage.payments(),
-                subscriptionService, planService, new PaymentValidator(), Clock.systemDefaultZone());
+        GymCapacity capacity = new GymCapacity(DATA_DIR.resolve("gym-capacity.txt"));
         AttendanceService attendanceService = new AttendanceService(memberService,
                 storage.attendance(),
-                subscriptionService);
+                subscriptionService, Clock.systemDefaultZone(), capacity::limit);
+        GamificationService gamificationService = new GamificationService(memberService, attendanceService,
+                Clock.systemDefaultZone());
+        PaymentService paymentService = new PaymentService(storage.payments(), subscriptionService,
+                planService, new PaymentValidator(), Clock.systemDefaultZone(),
+                new RenewalBenefits(memberService, gamificationService));
         AccessService accessService = new AccessService(memberService, attendanceService,
                 memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
                 Clock.systemDefaultZone());
@@ -195,8 +198,6 @@ public final class Main {
 
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(storage, memberService, subscriptionService);
-        GamificationService gamificationService = new GamificationService(memberService, attendanceService,
-                Clock.systemDefaultZone());
         AlertService alertService = AlertService.withStandardRules(subscriptionService, attendanceService,
                 memberService, Clock.systemDefaultZone());
         ChurnService churnService = ChurnService.withStandardRules(attendanceService, subscriptionService,
@@ -206,12 +207,10 @@ public final class Main {
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
 
-        OccupancyService occupancyService = new OccupancyService(attendanceService, memberService,
-                Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
         BestTimesAdvisor bestTimesAdvisor = new BestTimesAdvisor(
-                new OccupancyForecastService(attendanceService, Clock.systemDefaultZone()),
+                new OccupancyForecastService(attendanceService, capacity::limit, Clock.systemDefaultZone()),
                 Clock.systemDefaultZone());
         MemberPortal memberPortal = new MemberPortal(phoneAccess, subscriptionService, planService,
                 training.assignments(), training.routines(), training.exercises(), training.sessions(),
@@ -241,7 +240,7 @@ public final class Main {
                         new RoutineDraftChecker(Clock.systemDefaultZone())));
         PortalChatEndpoint portalChat = assistant
                 .map(ai -> new PortalChatService(ai, phoneAccess::findMember, Clock.systemDefaultZone()))
-                .map(service -> new PortalChatEndpoint(service::ask))
+                .map(service -> new PortalChatEndpoint(service::ask, service::dailyQuota))
                 .orElse(null);
 
         AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat,
@@ -258,20 +257,18 @@ public final class Main {
         try (EmailNotifications email = EmailNotifications.start(
                 DATA_DIR, paymentService, subscriptionService, memberService, Clock.systemDefaultZone())) {
             FxApp.run(auth, session, () -> List.of(
-                    new DashboardModule(dashboardService),
+                    new DashboardModule(dashboardService, attendanceService, capacity),
                     new MembersModule(memberService, healthService, attendanceService, gamificationService,
-                            new PhotoStorage(DATA_DIR.resolve("photos")), session),
+                            new PhotoStorage(DATA_DIR.resolve("photos")), session, subscriptionService, phoneAccess, phoneUrl),
                     new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
                     new ChurnModule(churnService),
                     new AssistantModule(assistantChat),
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session, email),
                     new TrainingFxModule(training, suggestionService,
                             DATA_DIR.resolve("images").resolve("exercises"), aiRoutines),
-                    new AccessModule(attendanceService, memberService, subscriptionService,
-                            phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
-                            selfAccess, memberPasswords),
+                    new AccessModule(attendanceService, memberService, faceAccess, faceEnrollment, DATA_DIR, actor,
+                            selfAccess, memberPasswords, capacity, session),
                     new AnalyticsModule(analyticsService, memberService),
-                    new OccupancyModule(occupancyService),
                     new ReportsModule(cashCloseService, reportService),
                     new UsersModule(userService, session),
                     new AuditModule(auditService),

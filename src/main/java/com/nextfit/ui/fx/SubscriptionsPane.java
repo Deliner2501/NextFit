@@ -8,6 +8,8 @@ import com.nextfit.model.SubscriptionStatus;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.MembershipPlanService;
 import com.nextfit.service.SubscriptionService;
+import com.nextfit.service.Session;
+import com.nextfit.model.Role;
 import com.nextfit.ui.Formats;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -54,6 +56,8 @@ final class SubscriptionsPane extends VBox {
     }
 
     private final SubscriptionService subscriptions;
+    private final Session session;
+    private final Button cancel = new Button("Cancelar membresía");
     private final MembershipPlanService plans;
     private final MemberService members;
     private final TableView<Row> table = new TableView<>();
@@ -66,9 +70,10 @@ final class SubscriptionsPane extends VBox {
      * @param plans         the service used to show plan names
      * @param members       the service used to show member names
      */
-    SubscriptionsPane(SubscriptionService subscriptions, MembershipPlanService plans, MemberService members) {
+    SubscriptionsPane(SubscriptionService subscriptions, MembershipPlanService plans, MemberService members, Session session) {
         super(16);
         this.subscriptions = subscriptions;
+        this.session = session;
         this.plans = plans;
         this.members = members;
         getChildren().addAll(buildHeader(), buildTable());
@@ -101,10 +106,11 @@ final class SubscriptionsPane extends VBox {
             }
         });
         filterBox.valueProperty().addListener((obs, old, now) -> refresh());
-        Button cancel = new Button("Cancelar membresía");
         cancel.getStyleClass().add("nf-secondary");
         cancel.setOnAction(e -> cancelSelected());
 
+        cancel.setVisible(false);
+        cancel.managedProperty().bind(cancel.visibleProperty());
         HBox header = new HBox(10, titles, searchField, filterBox, cancel);
         header.setAlignment(Pos.CENTER_LEFT);
         return header;
@@ -145,6 +151,7 @@ final class SubscriptionsPane extends VBox {
 
     /** Reloads the memberships from the service, applying the search text and the filter. */
     void refresh() {
+        cancel.setVisible(session.hasRole(Role.ADMIN));
         String wanted = searchField.getText().trim().toLowerCase();
         Filter filter = filterBox.getValue();
         dataLoader.load(this, () -> {
@@ -212,6 +219,7 @@ final class SubscriptionsPane extends VBox {
             return;
         }
         try {
+            session.requireAdmin();
             subscriptions.cancel(selected.subscription().getId());
             refresh();
         } catch (NextFitException e) {

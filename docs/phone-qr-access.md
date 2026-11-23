@@ -59,3 +59,9 @@ again after changing network. Typing the document in the access screen always wo
 
 The server is only for the local network. It is not meant to be exposed to the internet.
 A cloud server would be the next step.
+
+## Portal access and chatbot allowance
+
+Administrators and reception manage the QR cards in **Socios → Carnets**. The member needs an active membership to enter the portal. The same QR can be used after activation or renewal.
+
+The chatbot shows the remaining questions out of 20 per member per day. The counter resets at midnight in the reception computer's time zone. Restarting NextFit also resets it because the count is held in memory.

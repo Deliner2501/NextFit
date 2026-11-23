@@ -29,6 +29,12 @@ public class TrainingSessionService {
         this.subscriptions = subscriptions;
     }
 
+    /** @return member IDs for the training list filters */
+    public java.util.Set<Long> membersWithSessions() {
+        return sessions.findAll().stream().map(TrainingSession::getMemberId)
+                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     /** Returns the sessions of the member, newest first. */
     public List<TrainingSession> findByMember(long memberId) {
         return sessions.findByMemberId(memberId).stream()

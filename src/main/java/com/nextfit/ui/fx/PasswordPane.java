@@ -41,7 +41,7 @@ final class PasswordPane extends HBox {
     private final MemberPicker picker;
 
     PasswordPane(SelfAccessService selfAccess, MemberPasswordService passwords, MemberService members,
-                 Supplier<String> actor, Function<Member, List<String>> tags) {
+                 Supplier<String> actor, Function<List<Member>, java.util.Map<Long, List<String>>> tags) {
         super(24);
         this.selfAccess = selfAccess;
         this.passwords = passwords;
