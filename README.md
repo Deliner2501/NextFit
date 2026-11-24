@@ -46,7 +46,7 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 > This repository is the course project of *Programación III*.
 >
-> **Current state:** the interface is JavaFX, with a dark and a light theme, motion and a collapsible menu. Done: dashboard, members (table, form and member file), billing, training, access control, carnets, entry with the face (camera, offline) or with a password, personal portal on the phone, AI assistant, churn risk, analytics, TV screen, reports and cash close, alerts, users, audit log and backup. NextFit works with Oracle Cloud and with local CSV storage.
+> NextFit includes a JavaFX desktop application for gym staff and a mobile portal for members. The portal can run independently on the same Wi-Fi while the desktop window is closed.
 
 ---
 
@@ -63,17 +63,17 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 ### 👥 Members and health
 - **Members screen**: table with photo, document, phone and status, and a search box (name, document or phone).
-- Register, edit and deactivate members, with photo, emergency contact and validated personal data. The administrator and the reception can change data; the trainers can only read.
+- Register, edit and deactivate members, with photo, emergency contact and validated personal data. Birth dates can be typed directly or selected from the calendar. The administrator and the reception can change data; the trainers can only read.
 - **Health profile** (height, blood type, medical conditions, allergies), **measurements history** with automatic **BMI** and category, and the member **detail panel** live in the **member file** (button *Ver ficha*), with the tabs *Salud*, *Mediciones*, *Asistencia* and *Logros* (streaks and badges).
 - **Attendance**: check-in / check-out of members, with the list of members currently inside the gym (see Access control).
 - **Global search**: Ctrl+K or the magnifier in the top bar finds members (name, document, phone) and sections, ignoring case and accents; every module can add its own results through `FxModule.search`.
 - **Alerts engine**: birthdays, memberships about to expire and members who stopped coming, each with a ready WhatsApp message (`service.alert`). The **Alertas** screen shows them in cards and a list, writes the message for the member and opens WhatsApp or copies the text (administrator and reception).
 
 ### 💳 Memberships and billing
-- Membership plans (name, duration, price) that can be activated or retired.
-- Sale of a membership to a member with a **payment method** (cash, card, transfer) and an optional **discount** (percentage or fixed amount).
+- Administrators create, edit, retire and reactivate membership plans. Reception can sell available plans and view subscriptions and payments.
+- Sell memberships by cash, card or transfer. Eligible renewals can apply one benefit for an attendance achievement (10% to 40%) or a birthday (50% on the birth date, once per calendar year).
 - Automatic receipt with its number, subtotal, discount and total.
-- Subscription list with computed status: *upcoming, active, expired, cancelled*, with days left; subscriptions can be cancelled.
+- Subscription list with computed status: *upcoming, active, expired, cancelled*, with days left. Only administrators can cancel a subscription.
 - Payment history, with the delivery state of each receipt email.
 - **Automatic email** through Gmail (off by default): the receipt is sent after each payment and a reminder three days before a membership expires. Test mode sends only to the developer's inbox; failed receipts can be retried from the *Pagos* tab. See [`docs/automatic-email.md`](docs/automatic-email.md).
 
@@ -81,29 +81,32 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 - **Exercise catalog** with description, muscle group, difficulty and photo.
 - **Routines** organized by days and exercises (sets, repetitions, rest time), created by a trainer.
 - **Assignment** of routines to members who hold a valid membership (active, completed or cancelled).
-- **Training sessions** log per assignment (day, duration, notes).
-- Trainer management.
+- **Training sessions** log per assignment (day, duration, notes). Filter members by whether they have a routine assignment or recorded sessions in the corresponding tab.
+- Trainer management. Birth dates can be typed directly or selected from the calendar.
 
 ### 📊 Dashboard
-- Indicators for active memberships, memberships about to expire, today's attendance and the income of the month.
+- Indicators for active memberships, memberships about to expire, today's attendance, monthly income, and current occupancy with available spots.
 - **Trend chips**: income compared with the same days of the previous month, and today's entries compared with yesterday.
 - Charts: memberships by status (donut), attendance by weekday (bars) and income of the last months (line, in millions of pesos). They animate when the screen opens.
 
 ### 🚪 Access control
 - Check-in and check-out are done by the member alone, with the **face** or with the **document and a password**.
-- **Personal portal**: the QR of the carnet opens on the phone the portal of the member (day to train, next days, last visits, body progress, membership). The QR is read-only and never registers an entry or an exit ([details](docs/phone-qr-access.md)).
-- **Dentro ahora**: list of the people inside the gym; the staff can close the visit of a member who forgot to mark the exit.
-- **Carnets**: each member has a credit-card sized carnet (front and back) that can be saved as an image or as a **PDF**; one more button makes a single PDF with every active member, four carnets per A4 page, ready to print and cut. The QR is drawn as vectors so it scans at any size.
+- **Dentro ahora** shows visitors in arrival order and the available spots. Administrators can configure gym capacity here. Staff can record a missed exit. The system pauses new admissions when the gym is full.
+
+### 📱 Member cards and mobile portal
+- **Socios → Carnets** issues a branded card at registration with the name, document, photo or initials, and a QR code for the member portal. Export a PNG or a print-ready front-and-back PDF, up to four cards per A4 page.
+- Members with an active membership can use the portal to see routines, recent visits, progress, membership details and estimated occupancy by time. The QR opens the portal without recording a check-in or check-out.
+- The portal can run on the same Wi-Fi with the desktop window closed. See the [setup guide](docs/phone-qr-access.md).
 
 ### 🤖 AI assistant and churn risk
 - **Churn risk** (*Riesgo de abandono*): each member gets a risk level (low, medium, high) from rules that look at the days away, the drop in frequency and the memberships about to expire (`service.churn`). New rules are new `ChurnRule` classes.
 - **Assistant** (*Asistente*): a chat for the staff that answers about the gym (members at risk, best hours, revenue, alerts) by calling safe read-only tools, and that can suggest routines. It uses the Claude API; the key goes in `nextfit.properties` (`ai.apiKey`), has a daily limit of tokens and is never stored in the repository.
-- **Member chat** in the personal portal, limited to the data of that member (`PortalChatService`).
+- **Member chat** answers using the signed-in member data and shows how many of the 20 daily questions are left. The counter resets at midnight or when the portal process restarts.
 
 ### 🏅 Achievements
 - Streaks of attendance, badges and a ranking of members (`service.gamification`).
 
-### 📈 Analytics and TV screen
+### 📈 Analytics
 - **Analytics**: peak hour, average stay, renewal rate, members at risk of leaving, and a heat map of the busiest hours (last 8 weeks).
 - **TV screen** (*Pantalla TV*): live occupation of the gym (people inside, capacity, level, best hour to come), designed to be shown on a television in full screen.
 
@@ -130,7 +133,7 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 
 ## Screenshots
 
-> Screenshots live in [`docs/screenshots`](docs/screenshots). The face in the *Rostro* picture and the local folder in the *Backup* picture are blurred.
+> Screenshots live in [`docs/screenshots`](docs/screenshots). Some screenshots show earlier interface layouts. Identifying details and QR codes are covered in the updated access and card screenshots.
 
 | Login | Dashboard (dark) |
 |:--:|:--:|
@@ -152,9 +155,9 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 |:--:|:--:|
 | ![Exercises](docs/screenshots/training-exercises.png) | ![Routine assignment](docs/screenshots/training-assign.png) |
 
-| Inside now | Carnets |
+| Inside now and capacity | Member cards |
 |:--:|:--:|
-| ![Inside now](docs/screenshots/access-inside.png) | ![Carnets](docs/screenshots/access-carnets.png) |
+| ![Current visitors and capacity](docs/screenshots/access-inside.png) | ![Member card preview](docs/screenshots/access-carnets.png) |
 
 | Face entry | Password entry |
 |:--:|:--:|
@@ -168,10 +171,6 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 |:--:|:--:|
 | ![AI assistant](docs/screenshots/assistant.png) | ![Analytics](docs/screenshots/analytics.png) |
 
-| TV screen | Reports |
-|:--:|:--:|
-| ![TV screen](docs/screenshots/tv.png) | ![Reports](docs/screenshots/reports.png) |
-
 | Users | Audit log |
 |:--:|:--:|
 | ![Users](docs/screenshots/users.png) | ![Audit log](docs/screenshots/audit.png) |
@@ -180,11 +179,13 @@ It is built with **Java 21** and **JavaFX** (with the AtlantaFX theme and its ow
 |:--:|:--:|
 | ![Backup](docs/screenshots/backup.png) | ![Routines](docs/screenshots/training.png) |
 
-**Personal portal on the phone** (the QR of the carnet):
+See also the [reports screen](docs/screenshots/reports.png).
 
-| Today and membership | Chat and progress |
+**Member portal on a phone**
+
+| Training and membership | Occupancy, chat and progress |
 |:--:|:--:|
-| <img src="docs/screenshots/portal-phone.png" width="260"> | <img src="docs/screenshots/portal-chat.png" width="260"> |
+| <img src="docs/screenshots/portal-phone.png" width="260"> | <img src="docs/screenshots/portal-chat.png" width="260" alt="Estimated peak occupancy, remaining chatbot questions and training progress"> |
 
 ---
 
@@ -195,15 +196,14 @@ The sidebar only shows the modules that the logged-in role can use.
 | Module | Administrator | Reception | Trainer |
 |---|:--:|:--:|:--:|
 | Dashboard | ✅ | ✅ | ❌ |
-| Members | ✅ edit | ✅ edit | 👁️ read only |
-| Billing (plans, sales, payments) | ✅ | ✅ | ❌ |
+| Members and cards | ✅ edit and issue cards | ✅ edit and issue cards | 👁️ read members |
+| Billing (plans, sales, payments) | ✅ sales and administration | ✅ sales and history | ❌ |
 | Training (exercises, routines, assignments) | ✅ | ❌ | ✅ |
-| Access control (inside now, carnets, face, password) | ✅ | ✅ | ❌ |
+| Access control (inside now, face, password) | ✅ | ✅ | ❌ |
 | Analytics | ✅ | ✅ | ❌ |
 | Churn risk | ✅ | ✅ | ❌ |
 | AI assistant | ✅ | ✅ | ❌ |
 | Alerts | ✅ | ✅ | ❌ |
-| TV screen | ✅ | ✅ | ❌ |
 | Reports and cash close | ✅ | ✅ | ❌ |
 | Users | ✅ | ❌ | ❌ |
 | Audit log | ✅ | ❌ | ❌ |
@@ -354,7 +354,7 @@ NextFit/
 │   │   │   ├── face/          #   face recognition rules
 │   │   │   ├── gamification/  #   streaks, badges, ranking
 │   │   │   ├── portal/        #   data of the personal portal
-    │   │   │   ├── occupancy/     #   live occupation (TV screen)
+    │   │   │   ├── occupancy/     #   gym capacity and occupancy forecasts
     │   │   │   ├── security/      #   login lockout and inactivity
     │   │   │   └── suggest/       #   routine suggestions
     │   │   ├── validation/        # one validator per area
@@ -406,6 +406,14 @@ mvn clean compile exec:java
 Or from the IDE: open the project as a Maven project and run the class `com.nextfit.Main`.
 
 > The application must be started from the project root, because the `data/` and `backups/` folders are created relative to the working directory.
+
+### Run the member portal separately on Windows
+
+1. Add `portal.standaloneLan=true` to your local `nextfit.properties`. The default port is 8765. If it is already in use, set `portal.lanPort` to an available port.
+2. Run `start-portal-lan.cmd` from the project root and leave the portal process running. The host computer must stay awake.
+3. Connect the phone and computer to the same Wi-Fi or hotspot. Open the `/ping` address printed by the launcher, then generate and scan a card from **Socios → Carnets**.
+
+The desktop window can be closed once the standalone server is running. Generate a fresh QR when the host IP address or port changes. For more details, see the [phone portal setup guide](docs/phone-qr-access.md).
 
 ### Build a package
 
@@ -474,7 +482,7 @@ Relations between entities are stored as identifiers (for example a subscription
 
 ## Business rules
 
-Some of the rules enforced by the services (all of them covered by tests):
+Selected rules enforced by the services:
 
 - A member can only buy a membership if they are **active** and the plan is still **available**.
 - A subscription that already expired **cannot be cancelled**, and a cancelled one cannot be cancelled again.
@@ -485,7 +493,7 @@ Some of the rules enforced by the services (all of them covered by tests):
 - Usernames are unique; you cannot deactivate your own user, and at least one active administrator must remain.
 - Plan names are unique.
 - After 5 failed sign-ins a user is blocked for 5 minutes, and a session with no activity for 15 minutes is closed; both are written in the audit log.
-- A carnet code is not the document: it is an HMAC of it with a secret key, and the same code read twice in 10 seconds is counted once.
+- The member card uses a signed QR code. The portal checks for an active member account and an active membership before displaying personal information.
 - Restoring a backup first saves the current data, and refuses any zip that is not a NextFit backup or that has paths leaving the data folder.
 - Data validation, for example: age between 12 and 100 years, document between 5 and 12 digits, phone between 7 and 15 digits, height between 100 and 250 cm, weight between 20 and 400 kg, valid blood types only.
 
@@ -497,7 +505,7 @@ Some of the rules enforced by the services (all of them covered by tests):
 mvn test
 ```
 
-The suite covers services (members, health, attendance, access, plans, subscriptions, payments, cash close, reports, analytics, occupancy, alerts, churn, achievements, audit, security, exercises, routine assignments, training sessions, users, dashboard, backup), the face recognition rules, the assistant and its tools (with a fake model), the phone access server and portal, the PDF and Excel writers, the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. The JDBC repositories, the backup export and the CSV to Oracle migration are tested on an in-memory **H2** database built from `docs/sql/schema.sql`. The tests run on every pull request through GitHub Actions. Services are tested with in-memory fake repositories, so the tests need no files, no camera, no network and run fast.
+The suite covers services (members, health, attendance, access, plans, subscriptions, payments, cash close, reports, analytics, occupancy, alerts, churn, achievements, audit, security, exercises, routine assignments, training sessions, users, dashboard, backup), the face recognition rules, the assistant and its tools (with a fake model), the phone access server and portal, the PDF and Excel writers, the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. The JDBC repositories, the backup export and the CSV to Oracle migration are tested on an in-memory **H2** database built from `docs/sql/schema.sql`. The tests run on every pull request through GitHub Actions. The suite uses temporary files, test databases and local HTTP requests where needed. It does not require a camera, external Oracle access or a live AI API.
 
 ---
 
@@ -530,7 +538,7 @@ Some examples:
 | [Audit log and security](docs/audit-and-security.md) | Lockout, inactivity and what is recorded |
 | [Backup and restore](docs/backup-restore.md) | How the backups work and how to recover the data |
 | [Reports and cash close](docs/reports-cash-close.md) | The cash close and the PDF and Excel reports |
-| [Phone QR access](docs/phone-qr-access.md) | QR of the carnet: personal portal |
+| [Phone QR access](docs/phone-qr-access.md) | Member cards, portal access and standalone Wi-Fi setup |
 | [Face recognition](docs/face-recognition.md) | How the face entry works and its safety checks |
 | [Member password](docs/member-password.md) | Entry with document and password |
 | [Automatic email](docs/automatic-email.md) | Gmail setup, test and live modes, delivery records and receipt retry |
@@ -559,7 +567,7 @@ Some examples:
 
 ### Workflow
 
-- Work is done in **feature branches** (`feature/...`) that are merged into `develop` through **pull requests**; branches are not deleted after merging.
+- Feature and documentation branches are merged into `develop` through pull requests. Releases are promoted from `develop` to `main`.
 - Commits follow **Conventional Commits** (`feat`, `fix`, `docs`, `test`, `refactor`).
 - Code, comments and documentation are written in **English**; the user interface is in **Spanish**.
 
