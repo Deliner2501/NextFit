@@ -58,7 +58,7 @@ final class ShellView extends BorderPane {
     private final Label brandName = new Label("NextFit");
     private final List<Label> groupLabels = new ArrayList<>();
     private static final List<List<String>> NAVIGATION = List.of(
-            List.of("panel", "members", "billing", "access", "training", "occupancy"),
+            List.of("panel", "members", "billing", "access", "training"),
             List.of("alerts", "churn", "assistant", "analytics", "reports"),
             List.of("users", "audit", "backup"));
     private static final List<String> GROUP_TITLES = List.of("Operación", "Seguimiento", "Administración");

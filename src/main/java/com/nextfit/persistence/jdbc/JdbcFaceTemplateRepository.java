@@ -33,6 +33,12 @@ public final class JdbcFaceTemplateRepository implements FaceTemplateRepository 
     }
 
     @Override
+    public java.util.Set<Long> enrolledIds() {
+        return java.util.Set.copyOf(JdbcSupport.query(connections, "SELECT DISTINCT member_id FROM face_templates",
+                null, rows -> rows.getLong(1)));
+    }
+
+    @Override
     public List<FaceTemplate> findAll() {
         return JdbcSupport.query(connections, SELECT_ALL, null,
                 rows -> new FaceTemplate(rows.getLong("member_id"), parse(rows.getString("embedding"))));

@@ -27,9 +27,11 @@ public final class MemberPicker extends VBox {
 
     private final MemberService members;
     private final Consumer<Member> onSelected;
-    private final Function<Member, List<String>> tags;
+    private final Function<List<Member>, java.util.Map<Long, List<String>>> tags;
     private final TextField search = new TextField();
     private final ListView<Member> list = new ListView<>();
+    private final javafx.scene.control.ComboBox<String> classification = new javafx.scene.control.ComboBox<>();
+    private String classificationTag;
     private boolean reloading;
     private List<Member> loadedMembers = List.of();
     private java.util.Map<Long, List<String>> loadedTags = java.util.Map.of();
@@ -40,7 +42,7 @@ public final class MemberPicker extends VBox {
      * @param onSelected action to run with the chosen member, or null when the selection is cleared
      */
     public MemberPicker(String title, MemberService members, Consumer<Member> onSelected) {
-        this(title, members, onSelected, member -> List.of());
+        this(title, members, onSelected, found -> java.util.Map.of());
     }
 
     /**
@@ -50,7 +52,7 @@ public final class MemberPicker extends VBox {
      * @param tags       short labels shown at the right of each member (for example how he enters)
      */
     public MemberPicker(String title, MemberService members, Consumer<Member> onSelected,
-                        Function<Member, List<String>> tags) {
+                        Function<List<Member>, java.util.Map<Long, List<String>>> tags) {
         super(12);
         this.members = members;
         this.onSelected = onSelected;
@@ -117,15 +119,38 @@ public final class MemberPicker extends VBox {
         list.setPlaceholder(new Label("Cargando socios…"));
         dataLoader.load(this, () -> {
             List<Member> found = members.findAll();
-            java.util.Map<Long, List<String>> labels = new java.util.HashMap<>();
-            for (Member member : found) labels.put(member.getId(), List.copyOf(tags.apply(member)));
-            return new LoadedMembers(found, labels);
+            return new LoadedMembers(found, tags.apply(found));
         }, found -> {
             list.setPlaceholder(new Label("No hay socios para mostrar"));
             loadedMembers = found.members();
             loadedTags = found.tags();
             filterLoaded();
         });
+    }
+
+    /**
+     * Adds a filter for the presence or absence of a tag returned by the batch loader.
+     *
+     * @param tag the tag that marks a matching member
+     * @param withTag the filter label for matching members
+     * @param withoutTag the filter label for other members
+     */
+    void addClassification(String tag, String withTag, String withoutTag) {
+        classificationTag = tag;
+        classification.getItems().setAll("Todos los socios", withTag, withoutTag);
+        classification.getSelectionModel().selectFirst();
+        classification.setMaxWidth(Double.MAX_VALUE);
+        classification.valueProperty().addListener((observable, old, value) -> filterLoaded());
+        getChildren().add(2, classification);
+    }
+
+    private boolean matchesClassification(Member member) {
+        int filter = classification.getSelectionModel().getSelectedIndex();
+        if (filter <= 0) {
+            return true;
+        }
+        boolean tagged = loadedTags.getOrDefault(member.getId(), List.of()).contains(classificationTag);
+        return filter == 1 ? tagged : !tagged;
     }
 
     private record LoadedMembers(List<Member> members, java.util.Map<Long, List<String>> tags) {}
@@ -135,9 +160,11 @@ public final class MemberPicker extends VBox {
         long keepId = previous == null ? -1 : previous.getId();
         reloading = true;
         String wanted = search.getText().trim().toLowerCase();
-        list.getItems().setAll(loadedMembers.stream().filter(m -> wanted.isEmpty()
-                || m.getFullName().toLowerCase().contains(wanted)
-                || m.getDocumentNumber().contains(wanted) || m.getPhone().contains(wanted)).toList());
+        list.getItems().setAll(loadedMembers.stream()
+                .filter(this::matchesClassification)
+                .filter(m -> wanted.isEmpty()
+                        || GlobalSearch.matches(wanted, m.getFullName(), m.getDocumentNumber(), m.getPhone()))
+                .toList());
         boolean found = false;
         for (int i = 0; i < list.getItems().size(); i++) {
             if (list.getItems().get(i).getId() == keepId) {

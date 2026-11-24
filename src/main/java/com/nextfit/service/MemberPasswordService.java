@@ -44,6 +44,14 @@ public class MemberPasswordService {
     }
 
     /**
+     * @param members the candidates on the access screen
+     * @return the member IDs that have a password
+     */
+    public java.util.Set<Long> registeredIds(java.util.List<Member> members) {
+        return credentials.credentialIds(members.stream().map(Member::getId).toList());
+    }
+
+    /**
      * Creates the first password of a member.
      *
      * @param member       the member

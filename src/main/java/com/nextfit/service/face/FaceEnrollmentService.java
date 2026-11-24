@@ -96,6 +96,11 @@ public class FaceEnrollmentService {
         return templates.has(memberId);
     }
 
+    /** @return the IDs of members who have a face template */
+    public java.util.Set<Long> registeredIds() {
+        return templates.enrolledIds();
+    }
+
     /**
      * Deletes the faces of the members that are inactive or no longer exist.
      *

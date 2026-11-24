@@ -1,7 +1,9 @@
 package com.nextfit.ui.fx;
 
 import com.nextfit.model.Role;
+import com.nextfit.service.AttendanceService;
 import com.nextfit.service.DashboardService;
+import com.nextfit.service.occupancy.GymCapacity;
 import javafx.scene.Node;
 import java.util.List;
 
@@ -12,9 +14,11 @@ public final class DashboardModule implements FxModule {
 
     /**
      * @param service the source of the home screen numbers
+     * @param attendance the source of current visits
+     * @param capacity the configured admission limit
      */
-    public DashboardModule(DashboardService service) {
-        this.view = new DashboardView(service);
+    public DashboardModule(DashboardService service, AttendanceService attendance, GymCapacity capacity) {
+        this.view = new DashboardView(service, attendance, capacity);
     }
 
     @Override

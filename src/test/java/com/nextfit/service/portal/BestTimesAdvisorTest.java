@@ -74,6 +74,7 @@ class BestTimesAdvisorTest {
 
         assertEquals("Hoy", times.dayLabel());
         assertEquals(List.of(17, 19, 20), hoursOf(times));
+        assertEquals(16, times.peakHour().orElseThrow().hour());
     }
 
     @Test
@@ -83,6 +84,7 @@ class BestTimesAdvisorTest {
         PortalBestTimes times = advisorAt("2026-11-13T17:30:00Z").advise().orElseThrow();
 
         assertTrue(hoursOf(times).stream().allMatch(hour -> hour >= 18));
+        assertEquals(18, times.peakHour().orElseThrow().hour());
     }
 
     @Test

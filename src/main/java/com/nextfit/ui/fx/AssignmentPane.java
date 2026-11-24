@@ -49,7 +49,17 @@ final class AssignmentPane extends HBox {
         super(24);
         this.assignments = assignments;
         this.routines = routines;
-        this.picker = new MemberPicker("Asignación de rutinas", members, this::showMember);
+        this.picker = new MemberPicker("Asignación de rutinas", members, this::showMember, found -> {
+            var ids = assignments.activeMemberIds();
+            var tags = new java.util.HashMap<Long, List<String>>();
+            for (Member member : found) {
+                if (ids.contains(member.getId())) {
+                    tags.put(member.getId(), List.of("Rutina activa"));
+                }
+            }
+            return tags;
+        });
+        picker.addClassification("Rutina activa", "Con rutina asignada", "Sin rutina asignada");
         HBox.setHgrow(detail, Priority.ALWAYS);
         getChildren().addAll(picker, detail);
         render();
@@ -192,6 +202,7 @@ final class AssignmentPane extends HBox {
                 throw new BusinessRuleException("Elige la rutina que se va a asignar.");
             }
             assignments.assign(selected.getId(), box.getValue().getId());
+            picker.reload();
         });
         render();
     }
@@ -206,6 +217,7 @@ final class AssignmentPane extends HBox {
                 } else {
                     assignments.cancel(assignment.getId());
                 }
+                picker.reload();
             } catch (NextFitException e) {
                 FxDialogs.error(this, e);
             }

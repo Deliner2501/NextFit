@@ -27,6 +27,7 @@ import com.nextfit.service.alert.AlertMessages;
 import com.nextfit.service.alert.AlertService;
 import com.nextfit.service.alert.WhatsAppLink;
 import com.nextfit.service.gamification.GamificationService;
+import com.nextfit.service.gamification.RenewalBenefits;
 import com.nextfit.service.mail.EmailNotifications;
 import com.nextfit.service.suggest.BmiRule;
 import com.nextfit.service.suggest.MedicalConditionRule;
@@ -59,8 +60,7 @@ import com.nextfit.service.MemberService;
 import com.nextfit.validation.MemberValidator;
 import com.nextfit.util.PhotoStorage;
 import com.nextfit.service.occupancy.OccupancyForecastService;
-import com.nextfit.service.occupancy.OccupancyService;
-import com.nextfit.ui.fx.OccupancyModule;
+import com.nextfit.service.occupancy.GymCapacity;
 import com.nextfit.service.security.InMemoryAttemptLimiter;
 import com.nextfit.service.audit.AuditService;
 import com.nextfit.service.churn.ChurnService;
@@ -71,6 +71,7 @@ import com.nextfit.service.portal.BestTimesAdvisor;
 import com.nextfit.service.portal.MemberPortal;
 import com.nextfit.service.portal.ProgressReportService;
 import com.nextfit.web.AccessServer;
+import com.nextfit.web.PortalUrl;
 import com.nextfit.web.LanAddress;
 import com.nextfit.web.PortalChatEndpoint;
 import java.io.IOException;
@@ -112,38 +113,31 @@ public final class Main {
     /**
      * Starts the application with the JavaFX interface.
      *
-     * @param args unused
+     * @param args pass --portal-lan to serve the local network or --portal-only for loopback only
      */
     public static void main(String[] args) {
         // First run only: fills an empty installation with example data.
-        DemoData.seedIfEmpty(DATA_DIR);
+        boolean portalLan = args.length == 1 && "--portal-lan".equals(args[0]);
+        boolean portalOnly = portalLan || (args.length == 1 && "--portal-only".equals(args[0]));
+        if (!portalOnly) {
+            DemoData.seedIfEmpty(DATA_DIR);
+        }
 
         // Storage: Oracle when nextfit.properties says db.enabled=true and the database answers; CSV files otherwise.
-        Storage storage = StorageSetup.create(DATA_DIR, Path.of(DatabaseConfig.FILE_NAME));
+        Path settings = Path.of(DatabaseConfig.FILE_NAME);
+        Optional<String> publicPortal = PortalUrl.load(settings);
+        boolean standaloneLan = !portalOnly && PortalUrl.usesStandaloneLan(settings);
+        int accessPort = portalLan || standaloneLan ? PortalUrl.standaloneLanPort(settings, ACCESS_PORT) : ACCESS_PORT;
+        Storage storage = StorageSetup.create(DATA_DIR, settings);
+        if (publicPortal.isPresent() && !(storage instanceof JdbcStorage)) {
+            throw new IllegalStateException("El portal remoto necesita la base de datos Oracle compartida.");
+        }
         System.out.println("Almacenamiento: " + storage.description());
 
         byte[] accessKey = storage.accessKey(DATA_DIR.resolve("access.key"));
 
-        // Repositories come from the storage chosen at the start (CSV files or Oracle).
-        UserRepository users = storage.users();
-
-        // Services
         AuditService auditService = new AuditService(
                 storage.audit(), Clock.systemDefaultZone());
-        AuthService auth = new AuthService(users, new InMemoryAttemptLimiter(), auditService);
-        auth.ensureDefaultAdmin();
-        Session session = new Session();
-        // Who is acting now, for the audit log ("" before anybody signs in).
-        Supplier<String> actor = () -> session.getCurrentUser().map(User::getUsername).orElse("");
-        UserService userService = new UserService(users, new UserValidator(), auditService, actor);
-
-        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone(),
-                auditService, actor, storage instanceof JdbcStorage database ? database::exportBackup : null);
-        try {
-            backups.backupIfNoneToday(14);
-        } catch (RuntimeException e) {
-            System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
-        }
 
         // Members module
         MemberRepository memberRepository = storage.members();
@@ -160,31 +154,17 @@ public final class Main {
         SubscriptionService subscriptionService = new SubscriptionService(
                 storage.subscriptions(),
                 planService, memberService, Clock.systemDefaultZone());
-        PaymentService paymentService = new PaymentService(
-                storage.payments(),
-                subscriptionService, planService, new PaymentValidator(), Clock.systemDefaultZone());
+        GymCapacity capacity = new GymCapacity(DATA_DIR.resolve("gym-capacity.txt"));
         AttendanceService attendanceService = new AttendanceService(memberService,
                 storage.attendance(),
-                subscriptionService);
-        AccessService accessService = new AccessService(memberService, attendanceService,
-                memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
+                subscriptionService, Clock.systemDefaultZone(), capacity::limit);
+        GamificationService gamificationService = new GamificationService(memberService, attendanceService,
                 Clock.systemDefaultZone());
+        PaymentService paymentService = new PaymentService(storage.payments(), subscriptionService,
+                planService, new PaymentValidator(), Clock.systemDefaultZone(),
+                new RenewalBenefits(memberService, gamificationService));
         PhoneAccess phoneAccess = new PhoneAccess(memberService,
                 new AccessTokens(accessKey));
-        // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
-        FaceTemplateRepository faceTemplates = storage.faceTemplates();
-        FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
-        FaceAccessService faceAccess = new FaceAccessService(faceTemplates, MemberLookup.of(memberService),
-                accessService::processMember, accessService::deny, Clock.systemDefaultZone());
-        // Members can also enter with the document and a password they create themselves
-        MemberCredentialRepository memberCredentials =
-                storage.memberCredentials();
-        InMemoryAttemptLimiter memberLimiter = new InMemoryAttemptLimiter();
-        MemberPasswordService memberPasswords = new MemberPasswordService(memberCredentials, memberLimiter, auditService);
-        SelfAccessService selfAccess = new SelfAccessService(memberService::findByDocumentNumber, memberPasswords,
-                memberLimiter, auditService, accessService::processMember, accessService::deny);
-        // Faces of members who left are deleted automatically.
-        faceEnrollment.purgeInactive(memberService.findAll());
         CashCloseService cashCloseService = new CashCloseService(paymentService, memberService);
         ReportService reportService = new ReportService(cashCloseService, memberService, subscriptionService,
                 attendanceService);
@@ -195,8 +175,6 @@ public final class Main {
 
         // Training module (exercises, routines, assignments and sessions)
         TrainingModule training = new TrainingModule(storage, memberService, subscriptionService);
-        GamificationService gamificationService = new GamificationService(memberService, attendanceService,
-                Clock.systemDefaultZone());
         AlertService alertService = AlertService.withStandardRules(subscriptionService, attendanceService,
                 memberService, Clock.systemDefaultZone());
         ChurnService churnService = ChurnService.withStandardRules(attendanceService, subscriptionService,
@@ -206,12 +184,10 @@ public final class Main {
         SuggestionService suggestionService = new SuggestionService(training.exercises(), healthService,
                 List.<SuggestionRule>of(new BmiRule(), new MedicalConditionRule()), Clock.systemDefaultZone());
 
-        OccupancyService occupancyService = new OccupancyService(attendanceService, memberService,
-                Clock.systemDefaultZone());
 
         // Phones that scan a carnet QR talk to this small server of the reception computer.
         BestTimesAdvisor bestTimesAdvisor = new BestTimesAdvisor(
-                new OccupancyForecastService(attendanceService, Clock.systemDefaultZone()),
+                new OccupancyForecastService(attendanceService, capacity::limit, Clock.systemDefaultZone()),
                 Clock.systemDefaultZone());
         MemberPortal memberPortal = new MemberPortal(phoneAccess, subscriptionService, planService,
                 training.assignments(), training.routines(), training.exercises(), training.sessions(),
@@ -231,6 +207,55 @@ public final class Main {
                 new BestHoursTool(memberSummaries));
         Optional<AiAssistant> assistant = AiSetup
                 .create(Path.of(DatabaseConfig.FILE_NAME), aiTools, Clock.systemDefaultZone(), auditService);
+        PortalChatEndpoint portalChat = assistant
+                .map(ai -> new PortalChatService(ai, phoneAccess::findMember, Clock.systemDefaultZone()))
+                .map(service -> new PortalChatEndpoint(service::ask, service::dailyQuota))
+                .orElse(null);
+
+        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat,
+                new ProgressReportService(training.assignments(), training.routines(), training.sessions(),
+                        attendanceService, healthService), accessPort);
+        if (portalOnly) {
+            runIndependentPortal(accessServer, portalLan);
+            return;
+        }
+        // Repositories come from the storage chosen at the start (CSV files or Oracle).
+        UserRepository users = storage.users();
+
+        // Services
+        AuthService auth = new AuthService(users, new InMemoryAttemptLimiter(), auditService);
+        auth.ensureDefaultAdmin();
+        Session session = new Session();
+        // Who is acting now, for the audit log ("" before anybody signs in).
+        Supplier<String> actor = () -> session.getCurrentUser().map(User::getUsername).orElse("");
+        UserService userService = new UserService(users, new UserValidator(), auditService, actor);
+
+        BackupService backups = new BackupService(DATA_DIR, Path.of("backups"), Clock.systemDefaultZone(),
+                auditService, actor, storage instanceof JdbcStorage database ? database::exportBackup : null);
+        try {
+            backups.backupIfNoneToday(14);
+        } catch (RuntimeException e) {
+            System.err.println("No se pudo hacer el respaldo automático: " + e.getMessage());
+        }
+
+        AccessService accessService = new AccessService(memberService, attendanceService,
+                memberId -> subscriptionService.findCurrentFor(memberId).map(Subscription::getEndDate),
+                Clock.systemDefaultZone());
+        // Face recognition (only a numeric code of the face is stored; see docs/face-recognition.md)
+        FaceTemplateRepository faceTemplates = storage.faceTemplates();
+        FaceEnrollmentService faceEnrollment = new FaceEnrollmentService(faceTemplates, auditService);
+        FaceAccessService faceAccess = new FaceAccessService(faceTemplates, MemberLookup.of(memberService),
+                accessService::processMember, accessService::deny, Clock.systemDefaultZone());
+        // Members can also enter with the document and a password they create themselves
+        MemberCredentialRepository memberCredentials =
+                storage.memberCredentials();
+        InMemoryAttemptLimiter memberLimiter = new InMemoryAttemptLimiter();
+        MemberPasswordService memberPasswords = new MemberPasswordService(memberCredentials, memberLimiter, auditService);
+        SelfAccessService selfAccess = new SelfAccessService(memberService::findByDocumentNumber, memberPasswords,
+                memberLimiter, auditService, accessService::processMember, accessService::deny);
+        // Faces of members who left are deleted automatically.
+        faceEnrollment.purgeInactive(memberService.findAll());
+
         Optional<AssistantChat> assistantChat = assistant
                 .map(ai -> new AssistantChat(ai, () -> session.getCurrentUser()
                         .map(user -> AiUser.staff(user.getRole(), user.getUsername()))
@@ -239,39 +264,32 @@ public final class Main {
         Optional<AiRoutineService> aiRoutines = assistant
                 .map(ai -> new AiRoutineService(ai, suggestionService, training.exercises(),
                         new RoutineDraftChecker(Clock.systemDefaultZone())));
-        PortalChatEndpoint portalChat = assistant
-                .map(ai -> new PortalChatService(ai, phoneAccess::findMember, Clock.systemDefaultZone()))
-                .map(service -> new PortalChatEndpoint(service::ask))
-                .orElse(null);
-
-        AccessServer accessServer = new AccessServer(phoneAccess, memberPortal, portalChat,
-                new ProgressReportService(training.assignments(), training.routines(), training.sessions(),
-                        attendanceService, healthService), ACCESS_PORT);
-        try {
-            accessServer.start();
-        } catch (IOException e) {
-            System.err.println("No se pudo abrir el servidor del QR: " + e.getMessage());
+        if (publicPortal.isEmpty() && !standaloneLan) {
+            try {
+                accessServer.start();
+            } catch (IOException e) {
+                System.err.println("No se pudo abrir el servidor del QR: " + e.getMessage());
+            }
         }
-        Supplier<String> phoneUrl = () -> "http://" + LanAddress.find() + ":" + accessServer.port();
+        Supplier<String> phoneUrl = () -> publicPortal.orElseGet(
+                () -> lanPortalUrl(standaloneLan ? accessPort : accessServer.port()));
 
         // The modules are built by a supplier because JavaFX controls can only be created after the toolkit starts.
         try (EmailNotifications email = EmailNotifications.start(
                 DATA_DIR, paymentService, subscriptionService, memberService, Clock.systemDefaultZone())) {
             FxApp.run(auth, session, () -> List.of(
-                    new DashboardModule(dashboardService),
+                    new DashboardModule(dashboardService, attendanceService, capacity),
                     new MembersModule(memberService, healthService, attendanceService, gamificationService,
-                            new PhotoStorage(DATA_DIR.resolve("photos")), session),
+                            new PhotoStorage(DATA_DIR.resolve("photos")), session, phoneAccess, phoneUrl),
                     new AlertsModule(alertService, new AlertMessages("NextFit"), new WhatsAppLink()),
                     new ChurnModule(churnService),
                     new AssistantModule(assistantChat),
                     new BillingModule(planService, subscriptionService, paymentService, memberService, session, email),
                     new TrainingFxModule(training, suggestionService,
                             DATA_DIR.resolve("images").resolve("exercises"), aiRoutines),
-                    new AccessModule(attendanceService, memberService, subscriptionService,
-                            phoneAccess, phoneUrl, faceAccess, faceEnrollment, DATA_DIR, actor,
-                            selfAccess, memberPasswords),
+                    new AccessModule(attendanceService, memberService, faceAccess, faceEnrollment, DATA_DIR, actor,
+                            selfAccess, memberPasswords, capacity, session),
                     new AnalyticsModule(analyticsService, memberService),
-                    new OccupancyModule(occupancyService),
                     new ReportsModule(cashCloseService, reportService),
                     new UsersModule(userService, session),
                     new AuditModule(auditService),
@@ -279,5 +297,24 @@ public final class Main {
         } finally {
             accessServer.stop();
         }
+    }
+
+    private static String lanPortalUrl(int port) {
+        return "http://" + LanAddress.find() + ":" + port;
+    }
+
+    private static void runIndependentPortal(AccessServer accessServer, boolean lan) {
+        try {
+            if (lan) {
+                accessServer.startStandaloneLan();
+            } else {
+                accessServer.startLocal();
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("No se pudo iniciar el portal independiente", e);
+        }
+        Runtime.getRuntime().addShutdownHook(new Thread(accessServer::stop, "nextfit-portal-shutdown"));
+        String address = lan ? lanPortalUrl(accessServer.port()) : "http://localhost:" + accessServer.port();
+        System.out.println("Portal independiente: " + address + "/ping");
     }
 }

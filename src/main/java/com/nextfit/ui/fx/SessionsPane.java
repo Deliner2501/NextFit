@@ -60,7 +60,17 @@ final class SessionsPane extends HBox {
         this.sessions = sessions;
         this.assignments = assignments;
         this.routines = routines;
-        this.picker = new MemberPicker("Sesiones de entrenamiento", members, this::showMember);
+        this.picker = new MemberPicker("Sesiones de entrenamiento", members, this::showMember, found -> {
+            var ids = sessions.membersWithSessions();
+            var tags = new java.util.HashMap<Long, List<String>>();
+            for (Member member : found) {
+                if (ids.contains(member.getId())) {
+                    tags.put(member.getId(), List.of("Sesiones registradas"));
+                }
+            }
+            return tags;
+        });
+        picker.addClassification("Sesiones registradas", "Con sesiones registradas", "Sin sesiones registradas");
         HBox.setHgrow(detail, Priority.ALWAYS);
         getChildren().addAll(picker, detail);
         render();
@@ -179,6 +189,7 @@ final class SessionsPane extends HBox {
             }
             sessions.log(new TrainingSession(0, selected.getId(), assignment.getId(),
                     dayName == null ? "" : dayName, date, minutes, notes));
+            picker.reload();
             render();
         } catch (NextFitException e) {
             FxDialogs.error(this, e);

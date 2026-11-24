@@ -107,15 +107,16 @@ class PortalPageTest {
     void showsTheBestHoursToTrain() {
         PortalBestTimes times = new PortalBestTimes("Hoy", List.of(
                 new HourForecast(17, 0.0, 0, OccupancyLevel.QUIET),
-                new HourForecast(19, 40.0, 67, OccupancyLevel.BUSY)));
+                new HourForecast(19, 40.0, 67, OccupancyLevel.BUSY)), Optional.of(new HourForecast(20, 60.0, 100, OccupancyLevel.FULL)));
 
         String html = PortalPage.render(new PortalSummary(member("Ana Gómez"), Optional.empty(),
                 Optional.empty(), nothingYet(), Optional.of(times)), "ABCDEFGHJK");
 
         assertTrue(html.contains("Mejor hora para entrenar"));
-        assertTrue(html.contains("Hoy el gimnasio estará más tranquilo"));
+        assertTrue(html.contains("Hoy · Horas que suelen ser más tranquilas"));
         assertTrue(html.contains("17:00 · Tranquilo"));
         assertTrue(html.contains("19:00 · Concurrido"));
+        assertTrue(html.contains("Pico estimado del día · 20:00</strong><br>100 % del aforo previsto"));
     }
 
     @Test

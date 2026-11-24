@@ -5,13 +5,18 @@ import com.nextfit.model.Role;
 import com.nextfit.service.AttendanceService;
 import com.nextfit.service.HealthService;
 import com.nextfit.service.MemberService;
+import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.Session;
 import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.util.PhotoStorage;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Members module in JavaFX. The administrator, the reception and the trainers can
@@ -30,6 +35,10 @@ public final class MembersModule implements FxModule {
     private final AttendanceService attendanceService;
     private final GamificationService gamificationService;
     private final MembersPane list;
+    private final CarnetPane carnets;
+    private final TabPane tabs = new TabPane();
+    private final Tab listTab;
+    private final Tab carnetTab;
     private final StackPane root = new StackPane();
 
     /**
@@ -39,17 +48,33 @@ public final class MembersModule implements FxModule {
      * @param gamificationService the service of the streaks and the badges
      * @param photoStorage      where the photos of the members are copied
      * @param session           the session, to know who is working
+     * @param phone             issues the mobile portal QR codes
+     * @param phoneUrl          supplies the mobile portal address
      */
     public MembersModule(MemberService memberService, HealthService healthService,
                          AttendanceService attendanceService, GamificationService gamificationService,
-                         PhotoStorage photoStorage, Session session) {
+                         PhotoStorage photoStorage, Session session,
+                         PhoneAccess phone, Supplier<String> phoneUrl) {
         this.memberService = memberService;
         this.session = session;
         this.healthService = healthService;
         this.attendanceService = attendanceService;
         this.gamificationService = gamificationService;
         this.list = new MembersPane(memberService, photoStorage, this::canEdit, this::openFicha);
-        root.getChildren().add(list);
+        this.carnets = new CarnetPane(memberService, phone, phoneUrl);
+        listTab = tab("Listado", list);
+        carnetTab = tab("Carnets", carnets);
+        tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        tabs.getStyleClass().add("nf-tabs");
+        tabs.getTabs().add(listTab);
+        tabs.getSelectionModel().selectedItemProperty().addListener((obs, old, selected) -> {
+            if (selected == carnetTab && canEdit()) {
+                carnets.refresh();
+            } else if (selected == listTab) {
+                list.refresh();
+            }
+        });
+        root.getChildren().add(tabs);
     }
 
     @Override
@@ -59,7 +84,7 @@ public final class MembersModule implements FxModule {
 
     @Override
     public List<String> keywords() {
-        return List.of("socios", "clientes", "carnet", "ficha", "salud", "medidas");
+        return List.of("socios", "clientes", "carnet", "qr", "ficha", "salud", "medidas");
     }
 
     @Override
@@ -79,6 +104,13 @@ public final class MembersModule implements FxModule {
 
     @Override
     public void onShow() {
+        if (canEdit()) {
+            if (!tabs.getTabs().contains(carnetTab)) {
+                tabs.getTabs().add(carnetTab);
+            }
+        } else {
+            tabs.getTabs().remove(carnetTab);
+        }
         showList();
     }
 
@@ -109,8 +141,18 @@ public final class MembersModule implements FxModule {
     }
 
     private void showList() {
-        root.getChildren().setAll(list);
-        list.refresh();
+        root.getChildren().setAll(tabs);
+        if (tabs.getSelectionModel().getSelectedItem() == listTab) {
+            list.refresh();
+        } else {
+            tabs.getSelectionModel().select(listTab);
+        }
+    }
+
+    private static Tab tab(String title, Node content) {
+        StackPane holder = new StackPane(content);
+        holder.setPadding(new Insets(18, 0, 0, 0));
+        return new Tab(title, holder);
     }
 
     private boolean canEdit() {

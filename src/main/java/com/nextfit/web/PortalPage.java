@@ -1,5 +1,6 @@
 package com.nextfit.web;
 
+import com.nextfit.ai.PortalChatService.DailyQuota;
 import com.nextfit.model.Member;
 import com.nextfit.service.gamification.Achievements;
 import com.nextfit.service.gamification.Badge;
@@ -66,6 +67,19 @@ public final class PortalPage {
      */
     public static String render(PortalSummary summary, String token, boolean chatEnabled,
                                 Optional<ProgressReport> report) {
+        return render(summary, token, chatEnabled, report, Optional.empty());
+    }
+
+    /**
+     * @param summary what the member sees
+     * @param token the member's carnet code
+     * @param chatEnabled whether the chat is available
+     * @param report additional progress information
+     * @param quota the remaining questions and daily limit for the member
+     * @return the complete portal page
+     */
+    public static String render(PortalSummary summary, String token, boolean chatEnabled,
+                                Optional<ProgressReport> report, Optional<DailyQuota> quota) {
         StringBuilder body = new StringBuilder();
         header(body, summary.member(), token);
         workout(body, summary);
@@ -73,7 +87,7 @@ public final class PortalPage {
         report.ifPresent(data -> upcoming(body, data));
         bestTimes(body, summary);
         if (chatEnabled) {
-            chat(body, token);
+            chat(body, token, quota);
         }
         progress(body, summary.achievements());
         report.ifPresent(data -> {
@@ -91,6 +105,15 @@ public final class PortalPage {
     public static String invalid() {
         return page("<section class=\"card center\"><h2>Código no válido</h2>"
                 + "<p class=\"muted\">Escanea de nuevo el QR de tu carnet o pide uno nuevo en recepción.</p></section>");
+    }
+
+    /**
+     * @param reason the membership restriction to explain to the member
+     * @return the HTML page displayed while portal access is restricted
+     */
+    public static String membershipRequired(String reason) {
+        return page("<section class=\"card center\"><h2>Necesitas una membresía activa</h2>"
+                + "<p class=\"muted\">" + esc(reason) + "</p></section>");
     }
 
     private static void header(StringBuilder body, Member member, String token) {
@@ -149,17 +172,20 @@ public final class PortalPage {
     private static void bestTimes(StringBuilder body, PortalSummary summary) {
         body.append("<section class=\"card\"><h2>Mejor hora para entrenar</h2>");
         if (summary.bestTimes().isEmpty()) {
-            body.append("<p class=\"muted\">Aún no hay suficientes visitas para recomendarte una hora.</p>");
+            body.append("<p class=\"muted\">Aún no hay suficientes visitas registradas para estimar la ocupación y recomendarte una hora.</p>");
         } else {
             PortalBestTimes times = summary.bestTimes().get();
             body.append("<p class=\"muted\">").append(esc(times.dayLabel()))
-                    .append(" el gimnasio estará más tranquilo a las:</p><div class=\"chips\">");
+                    .append(" · Horas que suelen ser más tranquilas:</p><div class=\"chips\">");
             for (HourForecast hour : times.hours()) {
                 body.append("<span class=\"chip ").append(styleOf(hour.level())).append("\">")
                         .append(String.format("%02d:00", hour.hour())).append(" · ")
                         .append(esc(hour.level().getLabel())).append("</span>");
             }
             body.append("</div>");
+            times.peakHour().ifPresent(hour -> body.append("<p class=\"muted occupancy-peak\"><strong>Pico estimado del día · ")
+                    .append(String.format("%02d:00", hour.hour())).append("</strong><br>")
+                    .append(hour.percent()).append(" % del aforo previsto</p>"));
         }
         body.append("</section>");
     }
@@ -175,14 +201,17 @@ public final class PortalPage {
 
     // EXPLICACIÓN: el código va en un atributo data-, no dentro del script; y la respuesta se escribe con
     // textContent, así que lo que diga la IA nunca se interpreta como HTML
-    private static void chat(StringBuilder body, String token) {
+    private static void chat(StringBuilder body, String token, Optional<DailyQuota> quota) {
         body.append("<section class=\"card\" id=\"chat\" data-token=\"").append(esc(token)).append("\">")
                 .append("<h2>Pregúntale a tu gimnasio</h2>")
                 .append("<div id=\"chat-log\" class=\"chat-log\"></div>")
                 .append("<form id=\"chat-form\" class=\"chat-form\">")
                 .append("<input id=\"chat-input\" type=\"text\" maxlength=\"500\" autocomplete=\"off\" ")
-                .append("placeholder=\"¿Qué me toca hoy?\"><button type=\"submit\">Enviar</button></form>")
-                .append("<p class=\"muted small\">Solo responde sobre tus propios datos.</p>")
+                .append("placeholder=\"¿Qué me toca hoy?\"><button type=\"submit\">Enviar</button></form>");
+        quota.ifPresent(daily -> body.append("<p class=\"muted small\" aria-live=\"polite\">")
+                .append("Preguntas disponibles hoy · <strong id=\"chat-remaining\">").append(daily.remaining())
+                .append("</strong> de ").append(daily.limit()).append("</p>"));
+        body.append("<p class=\"muted small\">Solo responde sobre tus propios datos.</p>")
                 .append("<script>").append(CHAT_SCRIPT).append("</script></section>");
     }
 
@@ -273,7 +302,7 @@ public final class PortalPage {
             (function(){
             var box=document.getElementById('chat'),log=document.getElementById('chat-log'),
             form=document.getElementById('chat-form'),input=document.getElementById('chat-input'),
-            button=form.querySelector('button');
+            button=form.querySelector('button'),remaining=document.getElementById('chat-remaining');
             function add(text,cls){var p=document.createElement('p');p.className='bubble '+cls;
             p.textContent=text;log.appendChild(p);p.scrollIntoView({block:'nearest'});return p;}
             form.addEventListener('submit',function(e){
@@ -282,7 +311,10 @@ public final class PortalPage {
             input.disabled=true;button.disabled=true;
             fetch('/m/'+encodeURIComponent(box.dataset.token)+'/chat',{method:'POST',
             headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})})
-            .then(function(r){return r.json().catch(function(){return {error:'No pude responder. Intenta de nuevo'};});})
+            .then(function(r){
+            var count=r.headers.get('X-Questions-Remaining');
+            if(remaining&&count!==null){remaining.textContent=count;}
+            return r.json().catch(function(){return {error:'No pude responder. Intenta de nuevo'};});})
             .then(function(d){wait.textContent=d.answer||d.error||'No pude responder. Intenta de nuevo';
             if(!d.answer){wait.className='bubble err';}})
             .catch(function(){wait.textContent='No hay conexión con el gimnasio. Intenta de nuevo';
@@ -315,6 +347,7 @@ public final class PortalPage {
             .muted{margin:0;color:#B9AFD6;font-size:15px;line-height:1.4}
             .small{font-size:12px;margin-top:10px}
             .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+            .occupancy-peak{margin-top:14px;line-height:1.5}
             .chip{padding:8px 14px;border-radius:999px;font-size:14px;background:rgba(122,53,232,.35);border:1px solid rgba(255,255,255,.14)}
             .chip.warn{background:rgba(255,176,32,.18);border-color:rgba(255,176,32,.55);color:#FFD27A;font-weight:600}
             .chip.badge{background:rgba(167,246,38,.14);border-color:rgba(167,246,38,.5);color:#D8FF8A;font-weight:600}

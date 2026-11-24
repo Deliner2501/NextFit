@@ -94,6 +94,18 @@ class AttendanceServiceTest {
     }
 
     @Test
+    void capacityBlocksASecondEntryAndAFinishedVisitFreesTheSpot() {
+        Member other = memberService.register(FakeRepositories.newMember("1065123457"));
+        var limited = new AttendanceService(memberService, new FakeAttendanceRepository(),
+                id -> true, Clock.systemUTC(), () -> 1);
+        limited.checkIn(member.getId());
+        assertThrows(BusinessRuleException.class, () -> limited.checkIn(other.getId()));
+        limited.checkOut(member.getId());
+        assertTrue(limited.checkIn(other.getId()).isOpen());
+        assertEquals(1, limited.findInside().size());
+    }
+
+    @Test
     void countCheckInsOnCountsOnlyThatDay() {
         membersWithSubscription.add(member.getId());
         service.checkIn(member.getId());

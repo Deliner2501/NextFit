@@ -1,5 +1,6 @@
 package com.nextfit.web;
 
+import com.nextfit.ai.Json;
 import com.nextfit.model.Member;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.portal.MemberPortal;
@@ -11,11 +12,13 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -100,14 +103,36 @@ public final class AccessServer {
      * @throws IOException when no port could be opened
      */
     public synchronized void start() throws IOException {
+        start(null, PORT_TRIES);
+    }
+
+    /**
+     * Starts the portal on the local machine only, suitable for a local HTTPS reverse proxy.
+     *
+     * @throws IOException when no port could be opened
+     */
+    public synchronized void startLocal() throws IOException {
+        start(InetAddress.getLoopbackAddress(), PORT_TRIES);
+    }
+
+    /**
+     * Starts the independent LAN server on the exact port encoded in member cards.
+     *
+     * @throws IOException when the port is already in use or cannot be opened
+     */
+    public synchronized void startStandaloneLan() throws IOException {
+        start(null, 1);
+    }
+
+    private void start(InetAddress bindAddress, int attempts) throws IOException {
         if (server != null) {
             return;
         }
         IOException last = null;
-        for (int i = 0; i < PORT_TRIES; i++) {
+        for (int i = 0; i < attempts; i++) {
             int port = preferredPort == 0 ? 0 : preferredPort + i;
             try {
-                server = HttpServer.create(new InetSocketAddress(port), 0);
+                server = HttpServer.create(new InetSocketAddress(bindAddress, port), 0);
                 break;
             } catch (IOException e) {
                 last = e;
@@ -176,24 +201,43 @@ public final class AccessServer {
     }
 
     private void sendChat(HttpExchange exchange, String token) throws IOException {
+        Optional<Member> member = phone.findMember(token);
+        Optional<String> restriction = member.flatMap(portal::accessRestriction);
+        if (member.isEmpty() || restriction.isPresent()) {
+            String message = restriction.orElse("Código no válido");
+            send(exchange, member.isEmpty() ? 404 : 403, "application/json; charset=utf-8",
+                    Json.write(Map.of("error", message)).getBytes(StandardCharsets.UTF_8));
+            return;
+        }
         // At most MAX+1 bytes are read; the endpoint rejects bigger bodies without loading them all.
         byte[] raw = exchange.getRequestBody().readNBytes(PortalChatEndpoint.MAX_BODY_CHARS + 1);
         String body = new String(raw, StandardCharsets.UTF_8);
         PortalChatEndpoint.Response response = chat.post(token,
                 exchange.getRequestHeaders().getFirst("Content-Type"), body);
+        chat.dailyQuota(member.get().getId()).ifPresent(quota -> {
+            exchange.getResponseHeaders().set("X-Questions-Remaining", Integer.toString(quota.remaining()));
+        });
         send(exchange, response.status(), "application/json; charset=utf-8",
                 response.json().getBytes(StandardCharsets.UTF_8));
     }
 
     private void sendPortal(HttpExchange exchange, String token) throws IOException {
-        Optional<PortalSummary> summary = portal.summaryFor(token);
-        if (summary.isEmpty()) {
+        Optional<Member> member = phone.findMember(token);
+        if (member.isEmpty()) {
             sendHtml(exchange, 404, PortalPage.invalid());
             return;
         }
+        Optional<String> restriction = portal.accessRestriction(member.get());
+        if (restriction.isPresent()) {
+            sendHtml(exchange, 403, PortalPage.membershipRequired(restriction.get()));
+            return;
+        }
+        PortalSummary summary = portal.summaryOf(member.get());
         Optional<ProgressReport> report = progress == null ? Optional.empty()
-                : Optional.of(progress.of(summary.get().member()));
-        sendHtml(exchange, 200, PortalPage.render(summary.get(), token, chat != null, report));
+                : Optional.of(progress.of(summary.member()));
+        var quota = chat == null ? Optional.<com.nextfit.ai.PortalChatService.DailyQuota>empty()
+                : chat.dailyQuota(summary.member().getId());
+        sendHtml(exchange, 200, PortalPage.render(summary, token, chat != null, report, quota));
     }
 
     private void sendLogo(HttpExchange exchange) throws IOException {
@@ -207,7 +251,8 @@ public final class AccessServer {
     }
 
     private void sendPhoto(HttpExchange exchange, String token) throws IOException {
-        Optional<Member> member = phone.findMember(token);
+        Optional<Member> member = portal == null ? Optional.empty()
+                : phone.findMember(token).filter(person -> portal.accessRestriction(person).isEmpty());
         Path file = member.map(Member::getPhotoPath).filter(p -> !p.isBlank()).map(Path::of).orElse(null);
         if (file == null || !Files.isRegularFile(file) || Files.size(file) > MAX_PHOTO_BYTES) {
             send(exchange, 404, "text/plain; charset=utf-8", new byte[0]);

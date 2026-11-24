@@ -1,6 +1,9 @@
 package com.nextfit.service;
 
 import com.nextfit.exceptions.InvalidDataException;
+import com.nextfit.exceptions.BusinessRuleException;
+import com.nextfit.model.RenewalDiscount;
+import com.nextfit.service.gamification.RenewalBenefits;
 import com.nextfit.exceptions.ResourceNotFoundException;
 import com.nextfit.model.Discount;
 import com.nextfit.model.MembershipPlan;
@@ -33,6 +36,7 @@ public class PaymentService {
     private final MembershipPlanService plans;
     private final PaymentValidator validator;
     private final Clock clock;
+    private final RenewalBenefits benefits;
 
     /**
      * Creates the service.
@@ -45,6 +49,23 @@ public class PaymentService {
      */
     public PaymentService(PaymentRepository payments, SubscriptionService subscriptions,
                           MembershipPlanService plans, PaymentValidator validator, Clock clock) {
+        this(payments, subscriptions, plans, validator, clock, null);
+    }
+
+    /**
+     * Creates a payment service that validates discounts against earned benefits.
+     *
+     * @param payments the payment repository
+     * @param subscriptions the membership rules
+     * @param plans the plans on sale
+     * @param validator validates the payment details
+     * @param clock the current time
+     * @param benefits the renewal rules
+     */
+    public PaymentService(PaymentRepository payments, SubscriptionService subscriptions,
+                          MembershipPlanService plans, PaymentValidator validator, Clock clock,
+                          RenewalBenefits benefits) {
+        this.benefits = benefits;
         this.payments = payments;
         this.subscriptions = subscriptions;
         this.plans = plans;
@@ -67,12 +88,17 @@ public class PaymentService {
      * @throws InvalidDataException      when the method or the seller is missing, or the start is in the past
      * @throws ResourceNotFoundException when the member or the plan does not exist
      */
-    public MembershipSale sellMembership(long memberId, long planId, LocalDate requestedStart,
+    public synchronized MembershipSale sellMembership(long memberId, long planId, LocalDate requestedStart,
                                          PaymentMethod method, Discount discount, String registeredBy) {
         validator.validateSale(method, registeredBy);
         MembershipPlan plan = plans.findById(planId);
-        Subscription subscription = subscriptions.subscribe(memberId, planId, requestedStart);
         Discount applied = discount == null ? new NoDiscount() : discount;
+        if (benefits != null && !(applied instanceof NoDiscount)
+                && availableBenefits(memberId).stream().noneMatch(option ->
+                        option.getType().equals(applied.getType()) && option.getValue() == applied.getValue())) {
+            throw new BusinessRuleException("El descuento ya no está disponible para esta renovación.");
+        }
+        Subscription subscription = subscriptions.subscribe(memberId, planId, requestedStart);
         try {
             Payment saved = payments.save(new Payment(0, subscription.getId(), memberId,
                     LocalDateTime.now(clock), method, plan.getPrice(), applied, registeredBy.trim()));
@@ -85,6 +111,15 @@ public class PaymentService {
             }
             throw e;
         }
+    }
+
+    /**
+     * @param memberId the member renewing a membership
+     * @return the benefits currently eligible for that member
+     */
+    public List<RenewalDiscount> availableBenefits(long memberId) {
+        return benefits == null ? List.of() : benefits.available(memberId,
+                payments.findByMemberId(memberId), LocalDate.now(clock));
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.nextfit.service;
 
+import com.nextfit.exceptions.BusinessRuleException;
 import com.nextfit.model.Role;
 import com.nextfit.model.User;
 
@@ -20,6 +21,13 @@ public class Session {
      */
     public void start(User user) {
         this.currentUser = user;
+    }
+
+    /** Rejects administrative actions outside an administrator session. */
+    public void requireAdmin() {
+        if (!hasRole(Role.ADMIN)) {
+            throw new BusinessRuleException("Esta acción solo está disponible para administración.");
+        }
     }
 
     /** Ends the current session. */

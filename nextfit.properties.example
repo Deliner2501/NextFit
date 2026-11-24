@@ -7,3 +7,10 @@ db.password=PON_AQUI_LA_CLAVE_DE_NEXTFIT_APP
 # true = use the Oracle database (needs the db.* lines above and the tables from OracleSchemaInstaller).
 # false or missing = NextFit works with the CSV files.
 db.enabled=false
+
+# Optional HTTPS origin for the QR cards. Both installations must use the same Oracle database.
+# portal.publicUrl=https://portal.example.com
+
+# Use the independent Wi-Fi server instead of starting one with the desktop.
+# portal.standaloneLan=true
+# portal.lanPort=8765
