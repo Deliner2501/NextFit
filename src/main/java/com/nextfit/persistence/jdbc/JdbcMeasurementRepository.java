@@ -13,9 +13,6 @@ import java.util.Optional;
  */
 public final class JdbcMeasurementRepository implements MeasurementRepository {
 
-    private static final String TABLE = "measurements";
-    private static final String[] DATA = {"member_id", "measured_on", "weight_kg", "waist_cm", "chest_cm", "hips_cm"};
-    private static final String SELECT = "SELECT id, member_id, measured_on, weight_kg, waist_cm, chest_cm, hips_cm FROM measurements";
 
     private final ConnectionSource connections;
 
@@ -30,13 +27,13 @@ public final class JdbcMeasurementRepository implements MeasurementRepository {
 
     @Override
     public List<Measurement> findByMemberId(long memberId) {
-        return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY measured_on, id",
+        return JdbcSupport.query(connections, "pkg_nf_members.measurements_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcMeasurementRepository::toEntity);
     }
 
     @Override
     public Measurement save(Measurement value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_members.measurements_save", value.getId(), 6, statement -> {
             statement.setLong(1, value.getMemberId());
             statement.setObject(2, value.getDate());
             statement.setDouble(3, value.getWeightKg());

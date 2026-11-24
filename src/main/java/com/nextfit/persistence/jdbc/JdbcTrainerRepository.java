@@ -13,9 +13,6 @@ import java.util.Optional;
  */
 public final class JdbcTrainerRepository implements TrainerRepository {
 
-    private static final String TABLE = "trainers";
-    private static final String[] DATA = {"full_name", "document_number", "phone", "email", "birth_date", "specialty", "photo_path", "active"};
-    private static final String SELECT = "SELECT id, full_name, document_number, phone, email, birth_date, specialty, photo_path, active FROM trainers";
 
     private final ConnectionSource connections;
 
@@ -30,24 +27,24 @@ public final class JdbcTrainerRepository implements TrainerRepository {
 
     @Override
     public List<Trainer> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcTrainerRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_training.trainers_all", 0, null, JdbcTrainerRepository::toEntity);
     }
 
     @Override
     public Optional<Trainer> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_training.trainers_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcTrainerRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public Optional<Trainer> findByDocumentNumber(String documentNumber) {
-        return JdbcSupport.query(connections, SELECT + " WHERE document_number = ?",
+        return JdbcSupport.query(connections, "pkg_nf_training.trainers_by_document", 1,
                 statement -> statement.setString(1, documentNumber), JdbcTrainerRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public Trainer save(Trainer value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_training.trainers_save", value.getId(), 8, statement -> {
             statement.setString(1, value.getFullName());
             statement.setString(2, value.getDocumentNumber());
             statement.setString(3, value.getPhone());

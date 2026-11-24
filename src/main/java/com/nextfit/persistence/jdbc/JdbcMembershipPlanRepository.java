@@ -12,9 +12,6 @@ import java.util.Optional;
  */
 public final class JdbcMembershipPlanRepository implements MembershipPlanRepository {
 
-    private static final String TABLE = "membership_plans";
-    private static final String[] DATA = {"name", "description", "duration_days", "price", "active"};
-    private static final String SELECT = "SELECT id, name, description, duration_days, price, active FROM membership_plans";
 
     private final ConnectionSource connections;
 
@@ -29,24 +26,24 @@ public final class JdbcMembershipPlanRepository implements MembershipPlanReposit
 
     @Override
     public List<MembershipPlan> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcMembershipPlanRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_billing.membership_plans_all", 0, null, JdbcMembershipPlanRepository::toEntity);
     }
 
     @Override
     public Optional<MembershipPlan> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_billing.membership_plans_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcMembershipPlanRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public Optional<MembershipPlan> findByName(String name) {
-        return JdbcSupport.query(connections, SELECT + " WHERE LOWER(name) = LOWER(?)",
+        return JdbcSupport.query(connections, "pkg_nf_billing.membership_plans_by_name", 1,
                 statement -> statement.setString(1, name), JdbcMembershipPlanRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public MembershipPlan save(MembershipPlan value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_billing.membership_plans_save", value.getId(), 5, statement -> {
             statement.setString(1, value.getName());
             statement.setString(2, value.getDescription());
             statement.setInt(3, value.getDurationDays());

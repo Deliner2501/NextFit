@@ -13,9 +13,6 @@ import java.util.Optional;
  */
 public final class JdbcTrainingSessionRepository implements TrainingSessionRepository {
 
-    private static final String TABLE = "training_sessions";
-    private static final String[] DATA = {"member_id", "assignment_id", "day_name", "session_date", "duration_minutes", "notes"};
-    private static final String SELECT = "SELECT id, member_id, assignment_id, day_name, session_date, duration_minutes, notes FROM training_sessions";
 
     private final ConnectionSource connections;
 
@@ -30,24 +27,24 @@ public final class JdbcTrainingSessionRepository implements TrainingSessionRepos
 
     @Override
     public List<TrainingSession> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcTrainingSessionRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_training.training_sessions_all", 0, null, JdbcTrainingSessionRepository::toEntity);
     }
 
     @Override
     public Optional<TrainingSession> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_training.training_sessions_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcTrainingSessionRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public List<TrainingSession> findByMemberId(long memberId) {
-        return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY id",
+        return JdbcSupport.query(connections, "pkg_nf_training.training_sessions_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcTrainingSessionRepository::toEntity);
     }
 
     @Override
     public TrainingSession save(TrainingSession value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_training.training_sessions_save", value.getId(), 6, statement -> {
             statement.setLong(1, value.getMemberId());
             statement.setLong(2, value.getAssignmentId());
             statement.setString(3, value.getDayName());

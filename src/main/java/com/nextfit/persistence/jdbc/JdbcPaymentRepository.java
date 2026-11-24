@@ -21,11 +21,6 @@ import java.util.Optional;
  */
 public final class JdbcPaymentRepository implements PaymentRepository {
 
-    private static final String TABLE = "payments";
-    private static final String[] DATA = {"subscription_id", "member_id", "paid_at", "method", "subtotal",
-            "discount_type", "discount_value", "registered_by"};
-    private static final String SELECT = "SELECT id, subscription_id, member_id, paid_at, method, subtotal, "
-            + "discount_type, discount_value, registered_by FROM payments";
 
     private final ConnectionSource connections;
 
@@ -40,24 +35,24 @@ public final class JdbcPaymentRepository implements PaymentRepository {
 
     @Override
     public List<Payment> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcPaymentRepository::toPayment);
+        return JdbcSupport.query(connections, "pkg_nf_billing.payments_all", 0, null, JdbcPaymentRepository::toPayment);
     }
 
     @Override
     public Optional<Payment> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_billing.payments_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcPaymentRepository::toPayment).stream().findFirst();
     }
 
     @Override
     public List<Payment> findByMemberId(long memberId) {
-        return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY id",
+        return JdbcSupport.query(connections, "pkg_nf_billing.payments_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcPaymentRepository::toPayment);
     }
 
     @Override
     public Payment save(Payment value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_billing.payments_save", value.getId(), 8, statement -> {
             statement.setLong(1, value.getSubscriptionId());
             statement.setLong(2, value.getMemberId());
             JdbcSupport.setTimestamp(statement, 3, value.getPaidAt());
