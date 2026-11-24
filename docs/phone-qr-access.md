@@ -65,3 +65,21 @@ A cloud server would be the next step.
 Administrators and reception manage the QR cards in **Socios → Carnets**. The member needs an active membership to enter the portal. The same QR can be used after activation or renewal.
 
 The chatbot shows the remaining questions out of 20 per member per day. The counter resets at midnight in the reception computer's time zone. Restarting NextFit also resets it because the count is held in memory.
+
+## Standalone portal
+
+Run NextFit's main class with the program argument `--portal-only` from the installation directory. The process reads the same storage settings and serves the existing portal without launching JavaFX, creating demo data or starting desktop jobs. It prints the selected port on startup. To check it from the same machine, open `http://localhost:8765/ping` using the printed port if it differs.
+
+This mode listens on loopback. A public deployment still needs a host, HTTPS and a shared source of current gym data. The existing desktop launch continues to serve the QR portal over the local network.
+
+### Preparing a public address
+
+Set `portal.publicUrl` in `nextfit.properties` on the desktop and on the portal host once the HTTPS origin is available. Use an origin such as `https://portal.example.com` without a path. The application requires Oracle when this setting is present. Point both installations at the same database so the current memberships, routines and card keys agree. Cards generated after the setting is applied use the HTTPS origin. Re-export cards previously printed with the LAN address.
+
+Run the portal host with `--portal-only` and route HTTPS to its local listening port. Check the public `/ping` route first, then test a card with Wi-Fi disabled and NextFit desktop closed.
+
+### Keeping the portal available over Wi-Fi
+
+Add `portal.standaloneLan=true` to the local `nextfit.properties` on the reception computer. Launch `start-portal-lan.cmd` from the project folder on Windows. It uses Maven and Java, accepts a Maven installation on PATH or the bundled Maven at `C:\netbeans-30-bin`, and runs the server with `--portal-lan` on port 8765 by default. If the port is already in use, set `portal.lanPort` to an available port in the same settings file.
+
+Keep the portal console running and the computer awake. The desktop can open and close separately. To test from a phone on the same Wi-Fi, use the `/ping` URL shown in the console. Re-export older cards if their QR encodes a different IP address or port.
