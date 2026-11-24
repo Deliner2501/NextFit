@@ -90,11 +90,7 @@ public final class StorageSetup {
         });
         try {
             executor.submit(() -> {
-                try (Connection connection = connections.open();
-                     Statement statement = connection.createStatement();
-                     ResultSet rows = statement.executeQuery("SELECT COUNT(*) FROM members")) {
-                    rows.next();
-                }
+                com.nextfit.persistence.jdbc.OraclePackageApi.check(connections);
                 return null;
             }).get(CHECK_SECONDS, TimeUnit.SECONDS);
         } finally {

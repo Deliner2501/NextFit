@@ -14,9 +14,6 @@ import java.util.Optional;
  */
 public final class JdbcAuditRepository implements AuditRepository {
 
-    private static final String TABLE = "audit_log";
-    private static final String[] DATA = {"event_time", "username", "action", "detail"};
-    private static final String SELECT = "SELECT id, event_time, username, action, detail FROM audit_log";
 
     private final ConnectionSource connections;
 
@@ -31,12 +28,12 @@ public final class JdbcAuditRepository implements AuditRepository {
 
     @Override
     public List<AuditEntry> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcAuditRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_system.audit_log_all", 0, null, JdbcAuditRepository::toEntity);
     }
 
     @Override
     public AuditEntry append(AuditEntry entry) {
-        long id = JdbcSupport.insertOnly(connections, TABLE, entry.id(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_system.audit_log_save", entry.id(), 4, statement -> {
             JdbcSupport.setTimestamp(statement, 1, entry.timestamp());
             statement.setString(2, entry.username());
             statement.setString(3, entry.action().name());

@@ -446,7 +446,7 @@ To make the application look alive from the very first run, `DemoData` fills an 
 
 ## Data storage
 
-NextFit can use a shared Oracle Cloud database or the local CSV files in `data/`. To use Oracle, follow the [team setup guide](docs/oracle-setup.md). If Oracle is disabled or unreachable at startup, the app opens with the local CSV data. That local copy is independent of later changes made in Oracle.
+NextFit can use a shared Oracle Cloud database or the local CSV files in `data/`. Oracle repositories call PL/SQL packages through JDBC. Install the package API once per Oracle schema before starting this version. Follow the [team setup guide](docs/oracle-setup.md#instalar-los-paquetes-de-oracle). If Oracle is disabled or unreachable at startup, the app opens with the local CSV data. That local copy is independent of later changes made in Oracle.
 
 Oracle shares the carnet signing key and caches it as `data/access.key` for offline use. Member photos and exercise images remain local. Copy the files privately with the same relative paths if the team needs them on more than one computer.
 
@@ -505,7 +505,7 @@ Selected rules enforced by the services:
 mvn test
 ```
 
-The suite covers services (members, health, attendance, access, plans, subscriptions, payments, cash close, reports, analytics, occupancy, alerts, churn, achievements, audit, security, exercises, routine assignments, training sessions, users, dashboard, backup), the face recognition rules, the assistant and its tools (with a fake model), the phone access server and portal, the PDF and Excel writers, the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. The JDBC repositories, the backup export and the CSV to Oracle migration are tested on an in-memory **H2** database built from `docs/sql/schema.sql`. The tests run on every pull request through GitHub Actions. The suite uses temporary files, test databases and local HTTP requests where needed. It does not require a camera, external Oracle access or a live AI API.
+The suite covers services (members, health, attendance, access, plans, subscriptions, payments, cash close, reports, analytics, occupancy, alerts, churn, achievements, audit, security, exercises, routine assignments, training sessions, users, dashboard, backup), the face recognition rules, the assistant and its tools (with a fake model), the phone access server and portal, the PDF and Excel writers, the demo data seeder, formatting and receipt helpers, photo storage and UI helper components. The JDBC repositories, the backup export and the CSV to Oracle migration are tested on an in-memory **H2** database using a test-only emulator for package calls. These tests do not compile or run Oracle PL/SQL. The tests run on every pull request through GitHub Actions. The suite uses temporary files, test databases and local HTTP requests where needed. It does not require a camera, external Oracle access or a live AI API.
 
 ---
 
