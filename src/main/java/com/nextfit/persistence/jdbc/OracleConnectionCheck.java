@@ -29,12 +29,8 @@ public final class OracleConnectionCheck {
             System.out.println("No existe " + DatabaseConfig.FILE_NAME + ": NextFit usaría los archivos CSV.");
             return;
         }
-        try (Connection connection = new OracleConnectionProvider(config.get()).open();
-             Statement statement = connection.createStatement();
-             ResultSet result = statement.executeQuery("SELECT USER FROM DUAL")) {
-            if (result.next()) {
-                System.out.println("Conectado a Oracle como " + result.getString(1));
-            }
+        try (Connection connection = new OracleConnectionProvider(config.get()).open()) {
+            System.out.println("Conectado a Oracle como " + connection.getMetaData().getUserName());
         } catch (PersistenceException | SQLException e) {
             Throwable reason = e.getCause() != null ? e.getCause() : e;
             System.err.println("No se pudo conectar: " + reason.getMessage());

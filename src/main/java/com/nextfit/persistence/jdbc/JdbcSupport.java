@@ -11,166 +11,78 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Small helpers shared by the JDBC repositories, so each repository only says
- * which table it uses and how a row becomes an object. Table and column names
- * always come from constants in the code, never from user input.
- */
+/** Binds values and maps rows; every database operation is a named PL/SQL call. */
 final class JdbcSupport {
+    private JdbcSupport() { }
 
-    private JdbcSupport() {
-    }
-
-    /** Puts the values of an object into the parameters of a statement. */
     @FunctionalInterface
     interface StatementBinder {
         void bind(PreparedStatement statement) throws SQLException;
     }
 
-    /** Turns the current row of a result into an object. */
     @FunctionalInterface
     interface RowMapper<T> {
         T map(ResultSet rows) throws SQLException;
     }
 
-    /**
-     * Runs a query and converts every row.
-     *
-     * @param connections where the connection comes from
-     * @param sql         the query
-     * @param binder      sets the parameters, or null when there are none
-     * @param mapper      converts one row
-     * @param <T>         the type of the objects
-     * @return the objects, in the order of the query
-     */
-    static <T> List<T> query(ConnectionSource connections, String sql, StatementBinder binder, RowMapper<T> mapper) {
+    static java.sql.CallableStatement prepare(Connection connection, String procedure, int parameters)
+            throws SQLException {
+        if (!procedure.matches("pkg_nf_[a-z]+\\.[a-z_]+") || parameters < 0) {
+            throw new IllegalArgumentException("Procedimiento Oracle no permitido: " + procedure);
+        }
+        String marks = String.join(", ", java.util.Collections.nCopies(parameters, "?"));
+        return connection.prepareCall("{call " + procedure + "(" + marks + ")}");
+    }
+
+    static <T> List<T> query(ConnectionSource connections, String procedure, int inputs,
+                            StatementBinder binder, RowMapper<T> mapper) {
         try (Connection connection = connections.open();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            if (binder != null) {
-                binder.bind(statement);
-            }
-            try (ResultSet rows = statement.executeQuery()) {
+             var call = prepare(connection, procedure, inputs + 1)) {
+            if (binder != null) binder.bind(call);
+            call.registerOutParameter(inputs + 1, Types.REF_CURSOR);
+            call.execute();
+            try (ResultSet rows = (ResultSet) call.getObject(inputs + 1)) {
                 List<T> result = new ArrayList<>();
-                while (rows.next()) {
-                    result.add(mapper.map(rows));
-                }
+                while (rows.next()) result.add(mapper.map(rows));
                 return result;
             }
         } catch (SQLException e) {
-            throw new PersistenceException("No se pudo leer de la base de datos", e);
+            throw new PersistenceException("No se pudo consultar " + procedure, e);
         }
     }
 
-    /**
-     * Updates the row with the given id, or inserts it when it does not exist
-     * (id 0 lets the database assign the id; another id keeps it, for the migration).
-     *
-     * @param connections where the connection comes from
-     * @param table       the table
-     * @param id          the identifier, 0 for a new row
-     * @param columns     the data columns, without the id
-     * @param binder      sets the values of the columns, from parameter 1
-     * @return the identifier of the stored row
-     */
-    static long save(ConnectionSource connections, String table, long id, String[] columns, StatementBinder binder) {
+    static long save(ConnectionSource connections, String procedure, long id, int inputs, StatementBinder binder) {
         try (Connection connection = connections.open()) {
-            return save(connection, table, id, columns, binder);
+            return save(connection, procedure, id, inputs, binder);
         } catch (SQLException e) {
-            throw new PersistenceException("No se pudo guardar en la tabla " + table, e);
+            throw new PersistenceException("No se pudo guardar mediante " + procedure, e);
         }
     }
 
-    /**
-     * Same as the version above, but on a connection the caller already has, so
-     * several writes can share one transaction (a routine and its lines).
-     *
-     * @param connection the open connection
-     * @param table      the table
-     * @param id         the identifier, 0 for a new row
-     * @param columns    the data columns, without the id
-     * @param binder     sets the values of the columns, from parameter 1
-     * @return the identifier of the stored row
-     * @throws SQLException when the database refuses the write
-     */
-    static long save(Connection connection, String table, long id, String[] columns, StatementBinder binder)
+    static long save(Connection connection, String procedure, long id, int inputs, StatementBinder binder)
             throws SQLException {
-        if (id != 0 && update(connection, table, id, columns, binder) > 0) {
-            return id;
+        try (var call = prepare(connection, procedure, inputs + 2)) {
+            binder.bind(call);
+            call.setLong(inputs + 1, id);
+            call.registerOutParameter(inputs + 2, Types.NUMERIC);
+            call.execute();
+            return call.getLong(inputs + 2);
         }
-        return insert(connection, table, id, columns, binder);
     }
 
-    /**
-     * Inserts a new row and never updates an existing one.
-     *
-     * @param connections where the connection comes from
-     * @param table       the table
-     * @param id          the identifier, 0 to let the database assign it
-     * @param columns     the data columns, without the id
-     * @param binder      sets the values of the columns, from parameter 1
-     * @return the identifier of the new row
-     */
-    static long insertOnly(ConnectionSource connections, String table, long id, String[] columns,
-                           StatementBinder binder) {
-        try (Connection connection = connections.open()) {
-            return insert(connection, table, id, columns, binder);
+    static void execute(ConnectionSource connections, String procedure, int inputs, StatementBinder binder) {
+        try (Connection connection = connections.open(); var call = prepare(connection, procedure, inputs)) {
+            if (binder != null) binder.bind(call);
+            call.execute();
         } catch (SQLException e) {
-            throw new PersistenceException("No se pudo guardar en la tabla " + table, e);
+            throw new PersistenceException("No se pudo ejecutar " + procedure, e);
         }
     }
 
-    /** Oracle stores an empty text as NULL, so NULL is turned back into "". */
-    static String emptyIfNull(String text) {
-        return text == null ? "" : text;
-    }
+    static String emptyIfNull(String text) { return text == null ? "" : text; }
 
-    /** Sets a date and time that may be missing. */
     static void setTimestamp(PreparedStatement statement, int index, LocalDateTime value) throws SQLException {
-        if (value == null) {
-            statement.setNull(index, Types.TIMESTAMP);
-        } else {
-            statement.setObject(index, value);
-        }
-    }
-
-    private static int update(Connection connection, String table, long id, String[] columns,
-                              StatementBinder binder) throws SQLException {
-        StringBuilder assignments = new StringBuilder();
-        for (String column : columns) {
-            if (assignments.length() > 0) {
-                assignments.append(", ");
-            }
-            assignments.append(column).append(" = ?");
-        }
-        String sql = "UPDATE " + table + " SET " + assignments + " WHERE id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            binder.bind(statement);
-            statement.setLong(columns.length + 1, id);
-            return statement.executeUpdate();
-        }
-    }
-
-    private static long insert(Connection connection, String table, long id, String[] columns,
-                               StatementBinder binder) throws SQLException {
-        boolean hasId = id != 0;
-        String names = String.join(", ", columns) + (hasId ? ", id" : "");
-        String marks = "?" + ", ?".repeat(columns.length - 1) + (hasId ? ", ?" : "");
-        String sql = "INSERT INTO " + table + " (" + names + ") VALUES (" + marks + ")";
-        try (PreparedStatement statement = connection.prepareStatement(sql, new String[]{"ID"})) {
-            binder.bind(statement);
-            if (hasId) {
-                statement.setLong(columns.length + 1, id);
-            }
-            statement.executeUpdate();
-            if (hasId) {
-                return id;
-            }
-            try (ResultSet keys = statement.getGeneratedKeys()) {
-                if (!keys.next()) {
-                    throw new PersistenceException("La base de datos no devolvió el identificador en " + table, null);
-                }
-                return keys.getLong(1);
-            }
-        }
+        if (value == null) statement.setNull(index, Types.TIMESTAMP);
+        else statement.setObject(index, value);
     }
 }

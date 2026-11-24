@@ -35,7 +35,7 @@ final class H2Database implements ConnectionSource {
     @Override
     public Connection open() {
         try {
-            return DriverManager.getConnection(url);
+            return H2PackageEmulator.wrap(DriverManager.getConnection(url));
         } catch (SQLException e) {
             throw new PersistenceException("No se pudo abrir H2", e);
         }

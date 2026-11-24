@@ -13,9 +13,6 @@ import java.util.Optional;
  */
 public final class JdbcAttendanceRepository implements AttendanceRepository {
 
-    private static final String TABLE = "attendance";
-    private static final String[] DATA = {"member_id", "check_in", "check_out"};
-    private static final String SELECT = "SELECT id, member_id, check_in, check_out FROM attendance";
 
     private final ConnectionSource connections;
 
@@ -30,37 +27,37 @@ public final class JdbcAttendanceRepository implements AttendanceRepository {
 
     @Override
     public List<AttendanceRecord> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcAttendanceRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_access.attendance_all", 0, null, JdbcAttendanceRepository::toEntity);
     }
 
     @Override
     public List<AttendanceRecord> findOpen() {
-        return JdbcSupport.query(connections, SELECT + " WHERE check_out IS NULL ORDER BY check_in DESC",
+        return JdbcSupport.query(connections, "pkg_nf_access.attendance_open", 0,
                 null, JdbcAttendanceRepository::toEntity);
     }
 
     @Override
     public long countOpen() {
-        return JdbcSupport.query(connections, "SELECT COUNT(*) FROM attendance WHERE check_out IS NULL",
+        return JdbcSupport.query(connections, "pkg_nf_access.attendance_count_open", 0,
                 null, rows -> rows.getLong(1)).getFirst();
     }
 
     @Override
     public List<AttendanceRecord> findByMemberId(long memberId) {
-        return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY id",
+        return JdbcSupport.query(connections, "pkg_nf_access.attendance_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcAttendanceRepository::toEntity);
     }
 
     @Override
     public Optional<AttendanceRecord> findOpenByMemberId(long memberId) {
         return JdbcSupport.query(connections,
-                SELECT + " WHERE member_id = ? AND check_out IS NULL ORDER BY check_in DESC FETCH FIRST 1 ROWS ONLY",
+                "pkg_nf_access.attendance_open_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcAttendanceRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public AttendanceRecord save(AttendanceRecord value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_access.attendance_save", value.getId(), 3, statement -> {
             statement.setLong(1, value.getMemberId());
             JdbcSupport.setTimestamp(statement, 2, value.getCheckIn());
             JdbcSupport.setTimestamp(statement, 3, value.getCheckOut().orElse(null));

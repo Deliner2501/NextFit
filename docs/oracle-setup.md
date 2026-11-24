@@ -9,7 +9,7 @@ la base del equipo, instala las tablas con el usuario de la aplicación.
 mvn compile exec:java "-Dexec.mainClass=com.nextfit.persistence.jdbc.OracleSchemaInstaller"
 ```
 
-Confirma que la última línea diga **0 con error**. Si Oracle ya tiene los datos del equipo,
+Confirma que la última línea diga **0 con error** e instala los paquetes siguiendo la sección siguiente. Si Oracle ya tiene los datos del equipo,
 continúa con el arranque. Para cargar una base nueva, usa los CSV acordados por el equipo:
 
 ```powershell
@@ -26,6 +26,19 @@ clave en Oracle. Abre los otros equipos después. Cada uno guarda la clave compa
 usarla también al arrancar en modo CSV. Los carnets que se hayan firmado con otra clave se
 deben reemitir. La dirección del portal que está impresa en un QR también debe ser accesible
 desde el celular.
+
+## Instalar los paquetes de Oracle
+
+Este paso se hace una vez por esquema, tanto en instalaciones nuevas como al
+actualizar una base existente. Si falta el permiso, desde la cuenta ADMIN de
+esa base ejecuta `GRANT CREATE PROCEDURE TO NEXTFIT_APP;`.
+
+Conéctate como NEXTFIT_APP y ejecuta `src/main/resources/db/package-api.sql`
+como script (F5 en SQL Developer). Esto instala las especificaciones y los
+cuerpos de los cinco paquetes que usa Java. En la base compartida basta con
+que una persona haga este paso. En una base nueva, instala los paquetes
+después de crear las tablas y antes de importar los CSV.
+
 
 ## Tres pasos para Deiner y Santiago
 

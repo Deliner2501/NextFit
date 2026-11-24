@@ -16,10 +16,6 @@ import java.util.List;
  */
 public final class JdbcFaceTemplateRepository implements FaceTemplateRepository {
 
-    private static final String SELECT_ALL = "SELECT member_id, embedding FROM face_templates ORDER BY id";
-    private static final String COUNT_BY_MEMBER = "SELECT COUNT(*) FROM face_templates WHERE member_id = ?";
-    private static final String DELETE_BY_MEMBER = "DELETE FROM face_templates WHERE member_id = ?";
-    private static final String INSERT = "INSERT INTO face_templates (member_id, embedding) VALUES (?, ?)";
 
     private final ConnectionSource connections;
 
@@ -34,19 +30,19 @@ public final class JdbcFaceTemplateRepository implements FaceTemplateRepository 
 
     @Override
     public java.util.Set<Long> enrolledIds() {
-        return java.util.Set.copyOf(JdbcSupport.query(connections, "SELECT DISTINCT member_id FROM face_templates",
+        return java.util.Set.copyOf(JdbcSupport.query(connections, "pkg_nf_access.faces_ids", 0,
                 null, rows -> rows.getLong(1)));
     }
 
     @Override
     public List<FaceTemplate> findAll() {
-        return JdbcSupport.query(connections, SELECT_ALL, null,
+        return JdbcSupport.query(connections, "pkg_nf_access.faces_all", 0, null,
                 rows -> new FaceTemplate(rows.getLong("member_id"), parse(rows.getString("embedding"))));
     }
 
     @Override
     public boolean has(long memberId) {
-        return JdbcSupport.query(connections, COUNT_BY_MEMBER,
+        return JdbcSupport.query(connections, "pkg_nf_access.faces_count", 1,
                 statement -> statement.setLong(1, memberId), rows -> rows.getLong(1)).get(0) > 0;
     }
 
@@ -81,21 +77,20 @@ public final class JdbcFaceTemplateRepository implements FaceTemplateRepository 
     }
 
     private static void deleteRows(Connection connection, long memberId) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(DELETE_BY_MEMBER)) {
+        try (PreparedStatement statement = JdbcSupport.prepare(connection, "pkg_nf_access.faces_delete", 1)) {
             statement.setLong(1, memberId);
-            statement.executeUpdate();
+            statement.execute();
         }
     }
 
     private static void insertRows(Connection connection, long memberId, List<float[]> vectors)
             throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(INSERT)) {
+        try (PreparedStatement statement = JdbcSupport.prepare(connection, "pkg_nf_access.faces_insert", 2)) {
             for (float[] vector : vectors) {
                 statement.setLong(1, memberId);
                 statement.setString(2, format(vector));
-                statement.addBatch();
+                statement.execute();
             }
-            statement.executeBatch();
         }
     }
 

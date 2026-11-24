@@ -16,13 +16,6 @@ import java.util.Optional;
  */
 public final class JdbcMemberCredentialRepository implements MemberCredentialRepository {
 
-    private static final String SELECT =
-            "SELECT member_id, password_hash FROM member_credentials WHERE member_id = ?";
-    private static final String UPDATE =
-            "UPDATE member_credentials SET password_hash = ? WHERE member_id = ?";
-    private static final String INSERT =
-            "INSERT INTO member_credentials (password_hash, member_id) VALUES (?, ?)";
-    private static final String DELETE = "DELETE FROM member_credentials WHERE member_id = ?";
 
     private final ConnectionSource connections;
 
@@ -37,7 +30,7 @@ public final class JdbcMemberCredentialRepository implements MemberCredentialRep
 
     @Override
     public Optional<MemberCredential> find(long memberId) {
-        return JdbcSupport.query(connections, SELECT, statement -> statement.setLong(1, memberId),
+        return JdbcSupport.query(connections, "pkg_nf_access.member_credentials_by_member", 1, statement -> statement.setLong(1, memberId),
                 rows -> new MemberCredential(rows.getLong("member_id"), rows.getString("password_hash")))
                 .stream().findFirst();
     }
@@ -45,37 +38,19 @@ public final class JdbcMemberCredentialRepository implements MemberCredentialRep
     /** Replaces the credential the member had: it updates the row and inserts it when there was none. */
     @Override
     public java.util.Set<Long> credentialIds(java.util.List<Long> members) {
-        return java.util.Set.copyOf(JdbcSupport.query(connections, "SELECT member_id FROM member_credentials",
+        return java.util.Set.copyOf(JdbcSupport.query(connections, "pkg_nf_access.member_credentials_ids", 0,
                 null, rows -> rows.getLong(1)));
     }
 
     @Override
     public void save(MemberCredential credential) {
-        try (Connection connection = connections.open()) {
-            if (write(connection, UPDATE, credential) == 0) {
-                write(connection, INSERT, credential);
-            }
-        } catch (SQLException e) {
-            throw new PersistenceException("No se pudo guardar la contraseña del socio en la base de datos", e);
-        }
+        JdbcSupport.save(connections, "pkg_nf_access.member_credentials_save", credential.memberId(), 1,
+                statement -> statement.setString(1, credential.passwordHash()));
     }
 
     @Override
     public void delete(long memberId) {
-        try (Connection connection = connections.open();
-             PreparedStatement statement = connection.prepareStatement(DELETE)) {
-            statement.setLong(1, memberId);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new PersistenceException("No se pudo borrar la contraseña del socio de la base de datos", e);
-        }
-    }
-
-    private static int write(Connection connection, String sql, MemberCredential credential) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, credential.passwordHash());
-            statement.setLong(2, credential.memberId());
-            return statement.executeUpdate();
-        }
+        JdbcSupport.execute(connections, "pkg_nf_access.member_credentials_delete", 1,
+                statement -> statement.setLong(1, memberId));
     }
 }

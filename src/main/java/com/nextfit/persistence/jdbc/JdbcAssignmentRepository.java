@@ -14,9 +14,6 @@ import java.util.Optional;
  */
 public final class JdbcAssignmentRepository implements AssignmentRepository {
 
-    private static final String TABLE = "assignments";
-    private static final String[] DATA = {"member_id", "routine_id", "assigned_at", "status"};
-    private static final String SELECT = "SELECT id, member_id, routine_id, assigned_at, status FROM assignments";
 
     private final ConnectionSource connections;
 
@@ -31,24 +28,24 @@ public final class JdbcAssignmentRepository implements AssignmentRepository {
 
     @Override
     public List<RoutineAssignment> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcAssignmentRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_training.assignments_all", 0, null, JdbcAssignmentRepository::toEntity);
     }
 
     @Override
     public Optional<RoutineAssignment> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_training.assignments_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcAssignmentRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public List<RoutineAssignment> findByMemberId(long memberId) {
-        return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY id",
+        return JdbcSupport.query(connections, "pkg_nf_training.assignments_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcAssignmentRepository::toEntity);
     }
 
     @Override
     public RoutineAssignment save(RoutineAssignment value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_training.assignments_save", value.getId(), 4, statement -> {
             statement.setLong(1, value.getMemberId());
             statement.setLong(2, value.getRoutineId());
             statement.setObject(3, value.getAssignedAt());

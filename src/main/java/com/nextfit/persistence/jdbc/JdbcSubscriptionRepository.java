@@ -13,9 +13,6 @@ import java.util.Optional;
  */
 public final class JdbcSubscriptionRepository implements SubscriptionRepository {
 
-    private static final String TABLE = "subscriptions";
-    private static final String[] DATA = {"member_id", "plan_id", "start_date", "end_date", "cancelled"};
-    private static final String SELECT = "SELECT id, member_id, plan_id, start_date, end_date, cancelled FROM subscriptions";
 
     private final ConnectionSource connections;
 
@@ -30,24 +27,24 @@ public final class JdbcSubscriptionRepository implements SubscriptionRepository 
 
     @Override
     public List<Subscription> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcSubscriptionRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_billing.subscriptions_all", 0, null, JdbcSubscriptionRepository::toEntity);
     }
 
     @Override
     public Optional<Subscription> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_billing.subscriptions_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcSubscriptionRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public List<Subscription> findByMemberId(long memberId) {
-        return JdbcSupport.query(connections, SELECT + " WHERE member_id = ? ORDER BY id",
+        return JdbcSupport.query(connections, "pkg_nf_billing.subscriptions_by_member", 1,
                 statement -> statement.setLong(1, memberId), JdbcSubscriptionRepository::toEntity);
     }
 
     @Override
     public Subscription save(Subscription value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_billing.subscriptions_save", value.getId(), 5, statement -> {
             statement.setLong(1, value.getMemberId());
             statement.setLong(2, value.getPlanId());
             statement.setObject(3, value.getStartDate());

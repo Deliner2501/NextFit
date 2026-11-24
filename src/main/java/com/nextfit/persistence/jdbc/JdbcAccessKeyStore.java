@@ -34,29 +34,19 @@ final class JdbcAccessKeyStore {
     }
 
     private static byte[] insertOrReadWinner(Connection connection, byte[] candidate) throws SQLException {
-        try (PreparedStatement insert = connection.prepareStatement(
-                "INSERT INTO access_settings (id, access_key) VALUES (1, ?)")) {
-            insert.setBytes(1, candidate);
-            insert.executeUpdate();
-            return candidate;
-        } catch (SQLException e) {
-            if (e.getErrorCode() != 1 && !"23505".equals(e.getSQLState())) {
-                throw e;
-            }
-            // A concurrent first start already inserted its key.
-            byte[] winner = read(connection);
-            if (winner == null) {
-                throw e;
-            }
-            return winner;
+        try (var call = JdbcSupport.prepare(connection, "pkg_nf_access.key_initialize", 2)) {
+            call.setBytes(1, candidate);
+            call.registerOutParameter(2, java.sql.Types.BLOB);
+            call.execute();
+            return call.getBytes(2);
         }
     }
 
     static byte[] read(Connection connection) throws SQLException {
-        try (PreparedStatement select = connection.prepareStatement(
-                     "SELECT access_key FROM access_settings WHERE id = 1");
-             ResultSet rows = select.executeQuery()) {
-            return rows.next() ? rows.getBytes(1) : null;
+        try (var call = JdbcSupport.prepare(connection, "pkg_nf_access.key_read", 1)) {
+            call.registerOutParameter(1, java.sql.Types.BLOB);
+            call.execute();
+            return call.getBytes(1);
         }
     }
 }

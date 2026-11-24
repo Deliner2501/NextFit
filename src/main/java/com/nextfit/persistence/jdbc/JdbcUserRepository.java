@@ -13,9 +13,6 @@ import java.util.Optional;
  */
 public final class JdbcUserRepository implements UserRepository {
 
-    private static final String TABLE = "users";
-    private static final String[] DATA = {"username", "full_name", "password_hash", "role", "active"};
-    private static final String SELECT = "SELECT id, username, full_name, password_hash, role, active FROM users";
 
     private final ConnectionSource connections;
 
@@ -30,24 +27,24 @@ public final class JdbcUserRepository implements UserRepository {
 
     @Override
     public List<User> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcUserRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_system.users_all", 0, null, JdbcUserRepository::toEntity);
     }
 
     @Override
     public Optional<User> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_system.users_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcUserRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return JdbcSupport.query(connections, SELECT + " WHERE LOWER(username) = LOWER(?)",
+        return JdbcSupport.query(connections, "pkg_nf_system.users_by_username", 1,
                 statement -> statement.setString(1, username), JdbcUserRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public User save(User value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_system.users_save", value.getId(), 5, statement -> {
             statement.setString(1, value.getUsername());
             statement.setString(2, value.getFullName());
             statement.setString(3, value.getPasswordHash());

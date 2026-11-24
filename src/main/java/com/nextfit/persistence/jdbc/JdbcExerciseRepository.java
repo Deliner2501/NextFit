@@ -14,9 +14,6 @@ import java.util.Optional;
  */
 public final class JdbcExerciseRepository implements ExerciseRepository {
 
-    private static final String TABLE = "exercises";
-    private static final String[] DATA = {"name", "description", "muscle_group", "difficulty", "image_path"};
-    private static final String SELECT = "SELECT id, name, description, muscle_group, difficulty, image_path FROM exercises";
 
     private final ConnectionSource connections;
 
@@ -31,24 +28,24 @@ public final class JdbcExerciseRepository implements ExerciseRepository {
 
     @Override
     public List<Exercise> findAll() {
-        return JdbcSupport.query(connections, SELECT + " ORDER BY id", null, JdbcExerciseRepository::toEntity);
+        return JdbcSupport.query(connections, "pkg_nf_training.exercises_all", 0, null, JdbcExerciseRepository::toEntity);
     }
 
     @Override
     public Optional<Exercise> findById(long id) {
-        return JdbcSupport.query(connections, SELECT + " WHERE id = ?",
+        return JdbcSupport.query(connections, "pkg_nf_training.exercises_by_id", 1,
                 statement -> statement.setLong(1, id), JdbcExerciseRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public Optional<Exercise> findByName(String name) {
-        return JdbcSupport.query(connections, SELECT + " WHERE LOWER(name) = LOWER(?)",
+        return JdbcSupport.query(connections, "pkg_nf_training.exercises_by_name", 1,
                 statement -> statement.setString(1, name), JdbcExerciseRepository::toEntity).stream().findFirst();
     }
 
     @Override
     public Exercise save(Exercise value) {
-        long id = JdbcSupport.save(connections, TABLE, value.getId(), DATA, statement -> {
+        long id = JdbcSupport.save(connections, "pkg_nf_training.exercises_save", value.getId(), 5, statement -> {
             statement.setString(1, value.getName());
             statement.setString(2, value.getDescription());
             statement.setString(3, value.getMuscleGroup().name());

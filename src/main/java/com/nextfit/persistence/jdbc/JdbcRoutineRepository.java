@@ -26,14 +26,6 @@ import java.util.TreeMap;
  */
 public final class JdbcRoutineRepository implements RoutineRepository {
 
-    private static final String TABLE = "routines";
-    private static final String[] DATA = {"name", "objective", "trainer_id", "created_at"};
-    private static final String ROUTINE_SELECT = "SELECT id, name, objective, trainer_id, created_at FROM routines";
-    private static final String LINE_SELECT = "SELECT routine_id, day_index, day_name, exercise_id, sets, "
-            + "repetitions, rest_seconds FROM routine_lines";
-    private static final String DELETE_LINES = "DELETE FROM routine_lines WHERE routine_id = ?";
-    private static final String INSERT_LINE = "INSERT INTO routine_lines (routine_id, day_index, line_no, "
-            + "day_name, exercise_id, sets, repetitions, rest_seconds) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     private final ConnectionSource connections;
 
@@ -48,17 +40,17 @@ public final class JdbcRoutineRepository implements RoutineRepository {
 
     @Override
     public List<Routine> findAll() {
-        return load("", null);
+        return load("all", 0, null);
     }
 
     @Override
     public Optional<Routine> findById(long id) {
-        return load(" WHERE id = ?", statement -> statement.setLong(1, id)).stream().findFirst();
+        return load("by_id", 1, statement -> statement.setLong(1, id)).stream().findFirst();
     }
 
     @Override
     public List<Routine> findByTrainerId(long trainerId) {
-        return load(" WHERE trainer_id = ?", statement -> statement.setLong(1, trainerId));
+        return load("by_trainer", 1, statement -> statement.setLong(1, trainerId));
     }
 
     /** Saves the routine and replaces all its lines, in one transaction. */
@@ -68,7 +60,7 @@ public final class JdbcRoutineRepository implements RoutineRepository {
             boolean autoCommit = connection.getAutoCommit();
             connection.setAutoCommit(false);
             try {
-                long id = JdbcSupport.save(connection, TABLE, routine.getId(), DATA, statement -> {
+                long id = JdbcSupport.save(connection, "pkg_nf_training.routines_save", routine.getId(), 4, statement -> {
                     statement.setString(1, routine.getName());
                     statement.setString(2, routine.getObjective());
                     if (routine.getTrainerId() == 0) {
@@ -93,11 +85,11 @@ public final class JdbcRoutineRepository implements RoutineRepository {
     }
 
     private static void replaceLines(Connection connection, long routineId, Routine routine) throws SQLException {
-        try (PreparedStatement delete = connection.prepareStatement(DELETE_LINES)) {
+        try (PreparedStatement delete = JdbcSupport.prepare(connection, "pkg_nf_training.lines_delete", 1)) {
             delete.setLong(1, routineId);
-            delete.executeUpdate();
+            delete.execute();
         }
-        try (PreparedStatement insert = connection.prepareStatement(INSERT_LINE)) {
+        try (PreparedStatement insert = JdbcSupport.prepare(connection, "pkg_nf_training.lines_insert", 8)) {
             List<RoutineDay> days = routine.getDays();
             for (int dayIndex = 0; dayIndex < days.size(); dayIndex++) {
                 RoutineDay day = days.get(dayIndex);
@@ -111,24 +103,21 @@ public final class JdbcRoutineRepository implements RoutineRepository {
                     insert.setInt(6, line.getSets());
                     insert.setInt(7, line.getRepetitions());
                     insert.setInt(8, line.getRestSeconds());
-                    insert.addBatch();
+                    insert.execute();
                 }
             }
-            insert.executeBatch();
         }
     }
 
     /** Reads the routines that match the condition and then their lines, with two queries. */
-    private List<Routine> load(String where, JdbcSupport.StatementBinder binder) {
+    private List<Routine> load(String operation, int inputs, JdbcSupport.StatementBinder binder) {
         List<RoutineRow> routines = JdbcSupport.query(connections,
-                ROUTINE_SELECT + where + " ORDER BY id", binder, JdbcRoutineRepository::toRoutineRow);
+                "pkg_nf_training.routines_" + operation, inputs, binder, JdbcRoutineRepository::toRoutineRow);
         if (routines.isEmpty()) {
             return new ArrayList<>();
         }
         List<LineRow> lines = JdbcSupport.query(connections,
-                LINE_SELECT + " WHERE routine_id IN (SELECT id FROM routines" + where + ")"
-                        + " ORDER BY routine_id, day_index, line_no",
-                binder, JdbcRoutineRepository::toLineRow);
+                "pkg_nf_training.lines_" + operation, inputs, binder, JdbcRoutineRepository::toLineRow);
         Map<Long, Map<Integer, DayDraft>> draftsByRoutine = new HashMap<>();
         for (LineRow line : lines) {
             draftsByRoutine.computeIfAbsent(line.routineId(), key -> new TreeMap<>())
