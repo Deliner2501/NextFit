@@ -13,14 +13,15 @@ import java.util.Locale;
 public final class CarnetPdf {
 
     /** What one carnet shows. */
-    public record Card(String fullName, String document, String validity, boolean[][] qr, Path photo) {
+    public record Card(String fullName, String document, boolean[][] qr, Path photo) {
     }
 
     private static final int VIOLET = 0x5A22B8;
     private static final int LIME = 0xA7F626;
     private static final int INK = 0x1A1330;
     private static final int MUTED = 0x5B5575;
-    private static final int LINE = 0xDDD5F0;
+    private static final int CARD_BG = 0x1B112F;
+    private static final int CARD_ACCENT = 0x39205C;
     private static final int SOFT = 0xE4DDF5;
     private static final int WHITE = 0xFFFFFF;
 
@@ -88,7 +89,8 @@ public final class CarnetPdf {
     }
 
     private static void front(PdfDocument.Page page, double x, double y, Card card, int photo, int logo) {
-        page.fillRoundRect(x, y, W, H, 9, VIOLET);
+        page.fillRoundRect(x, y, W, H, 9, CARD_BG);
+        page.fillRoundRect(x + 8, y + 7, W - 16, 33, 6, CARD_ACCENT);
         double textX = x + 14;
         if (logo >= 0) {
             page.image(logo, x + 12, y + 10, 22, 22);
@@ -99,12 +101,12 @@ public final class CarnetPdf {
 
         double photoX = x + 14;
         double photoY = y + 46;
-        page.fillRoundRect(photoX - 2, photoY - 2, PHOTO_W + 4, PHOTO_H + 4, 5, WHITE);
+        page.fillRoundRect(photoX - 2, photoY - 2, PHOTO_W + 4, PHOTO_H + 4, 5, CARD_ACCENT);
         if (photo >= 0) {
             page.image(photo, photoX, photoY, PHOTO_W, PHOTO_H);
         } else {
-            page.fillRoundRect(photoX, photoY, PHOTO_W, PHOTO_H, 4, LIME);
-            page.textCenter(photoX + PHOTO_W / 2, photoY + PHOTO_H / 2 + 8, initials(card.fullName()), 24, true, INK);
+            page.fillRoundRect(photoX, photoY, PHOTO_W, PHOTO_H, 4, CARD_ACCENT);
+            page.textCenter(photoX + PHOTO_W / 2, photoY + PHOTO_H / 2 + 8, initials(card.fullName()), 24, true, LIME);
         }
 
         double infoX = photoX + PHOTO_W + 14;
@@ -117,26 +119,26 @@ public final class CarnetPdf {
         ty += 4;
         page.text(infoX, ty, "Documento", 6.5, false, SOFT);
         page.text(infoX, ty + 10, PdfFonts.fit(card.document(), 9.5, true, infoW), 9.5, true, WHITE);
-        page.text(infoX, ty + 24, PdfFonts.fit(card.validity(), 7, false, infoW), 7, false, SOFT);
         page.fillRoundRect(x + 14, y + H - 11, W - 28, 2.5, 1.2, LIME);
     }
 
     private static void back(PdfDocument.Page page, double x, double y, Card card) {
-        page.fillRoundRect(x, y, W, H, 9, WHITE);
-        page.strokeRoundRect(x, y, W, H, 9, LINE, 0.8);
-        double qrX = x + W - QR_SIZE - 14;
+        page.fillRoundRect(x, y, W, H, 9, CARD_BG);
+        double qrX = x + W - QR_SIZE - 20;
         double qrY = y + (H - QR_SIZE) / 2;
+        page.fillRoundRect(qrX - 7, qrY - 7, QR_SIZE + 14, QR_SIZE + 14, 6, WHITE);
         drawQr(page, card.qr(), qrX, qrY, QR_SIZE);
 
-        double textW = qrX - (x + 14) - 8;
-        page.text(x + 14, y + 26, "NEXTFIT", 12, true, VIOLET);
-        double ty = y + 42;
-        for (String line : wrap("Escanea el código con la cámara del celular para registrar tu entrada o salida.",
-                7, false, textW, 5)) {
-            page.text(x + 14, ty, line, 7, false, MUTED);
-            ty += 9;
+        double textW = qrX - x - 26;
+        page.text(x + 14, y + 37, "NEXTFIT", 13, true, WHITE);
+        page.text(x + 14, y + 53, "PORTAL DEL SOCIO", 7, true, LIME);
+        double ty = y + 75;
+        for (String line : wrap("Escanea el QR con la cámara de tu celular para abrir tu portal personal.",
+                8, false, textW, 5)) {
+            page.text(x + 14, ty, line, 8, false, SOFT);
+            ty += 11;
         }
-        page.text(x + 14, y + H - 14, "Personal e intransferible", 6.5, true, VIOLET);
+        page.text(x + 14, y + H - 16, "Personal e intransferible", 6.5, true, LIME);
     }
 
     /** Draws the dark modules as rectangles, joining the neighbors of a row into a single bar. */

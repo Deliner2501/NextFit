@@ -7,7 +7,6 @@ import com.nextfit.service.HealthService;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.PhoneAccess;
 import com.nextfit.service.Session;
-import com.nextfit.service.SubscriptionService;
 import com.nextfit.service.gamification.GamificationService;
 import com.nextfit.util.PhotoStorage;
 import javafx.geometry.Insets;
@@ -49,13 +48,12 @@ public final class MembersModule implements FxModule {
      * @param gamificationService the service of the streaks and the badges
      * @param photoStorage      where the photos of the members are copied
      * @param session           the session, to know who is working
-     * @param subscriptions     the membership data shown on the carnet
      * @param phone             issues the mobile portal QR codes
      * @param phoneUrl          supplies the mobile portal address
      */
     public MembersModule(MemberService memberService, HealthService healthService,
                          AttendanceService attendanceService, GamificationService gamificationService,
-                         PhotoStorage photoStorage, Session session, SubscriptionService subscriptions,
+                         PhotoStorage photoStorage, Session session,
                          PhoneAccess phone, Supplier<String> phoneUrl) {
         this.memberService = memberService;
         this.session = session;
@@ -63,7 +61,7 @@ public final class MembersModule implements FxModule {
         this.attendanceService = attendanceService;
         this.gamificationService = gamificationService;
         this.list = new MembersPane(memberService, photoStorage, this::canEdit, this::openFicha);
-        this.carnets = new CarnetPane(memberService, subscriptions, phone, phoneUrl);
+        this.carnets = new CarnetPane(memberService, phone, phoneUrl);
         listTab = tab("Listado", list);
         carnetTab = tab("Carnets", carnets);
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);

@@ -351,19 +351,20 @@
 .nf-avatar { -fx-background-color: -nf-accent-soft; }
 .nf-avatar-initials { -fx-text-fill: -nf-accent; -fx-font-weight: bold; }
 
-/* The carnet is printed on paper, so it keeps its own colors in both themes. */
+/* The carnet uses fixed brand colors in both application themes and in the PNG. */
 .nf-carnet {
-    -fx-background-color: white;
+    -fx-background-color: linear-gradient(to bottom right, #150d25, #25133e 70%, #3b1c6b);
     -fx-background-radius: 18;
-    -fx-border-color: #D0D7DE;
+    -fx-border-color: #8052bd;
     -fx-border-radius: 18;
 }
-.nf-carnet-brand { -fx-text-fill: #0F9D6B; -fx-font-size: 26px; -fx-font-weight: bold; }
-.nf-carnet-kind  { -fx-text-fill: #57606A; -fx-font-size: 11px; -fx-font-weight: bold; }
-.nf-carnet-name  { -fx-text-fill: #1F2328; -fx-font-size: 20px; -fx-font-weight: bold; }
-.nf-carnet-text  { -fx-text-fill: #57606A; -fx-font-size: 13px; }
-.nf-carnet .nf-avatar { -fx-background-color: #DDF3E8; }
-.nf-carnet .nf-avatar-initials { -fx-text-fill: #0B7A53; }
+.nf-carnet-brand { -fx-text-fill: #FFFFFF; -fx-font-size: 26px; -fx-font-weight: bold; }
+.nf-carnet-kind  { -fx-text-fill: #A7F626; -fx-font-size: 11px; -fx-font-weight: bold; }
+.nf-carnet-name  { -fx-text-fill: #FFFFFF; -fx-font-size: 21px; -fx-font-weight: bold; }
+.nf-carnet-text  { -fx-text-fill: #E4DDF5; -fx-font-size: 13px; }
+.nf-carnet-qr { -fx-background-color: #FFFFFF; -fx-background-radius: 10; -fx-padding: 12; }
+.nf-carnet .nf-avatar { -fx-background-color: #492673; }
+.nf-carnet .nf-avatar-initials { -fx-text-fill: #A7F626; }
 
 /* ---------- Analítica: mapa de calor ---------- */
 .nf-heat-empty { -fx-background-color: -nf-surface-alt; -fx-background-radius: 6; }

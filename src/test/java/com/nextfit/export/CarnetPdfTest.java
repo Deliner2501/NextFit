@@ -32,7 +32,7 @@ class CarnetPdfTest {
     }
 
     private static CarnetPdf.Card card(String name, Path photo) {
-        return new CarnetPdf.Card(name, "1065400000", "Membresía hasta 30/12/2026", checker(29), photo);
+        return new CarnetPdf.Card(name, "1065400000", checker(29), photo);
     }
 
     private static int pages(byte[] pdf) {

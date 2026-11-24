@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -102,14 +103,36 @@ public final class AccessServer {
      * @throws IOException when no port could be opened
      */
     public synchronized void start() throws IOException {
+        start(null, PORT_TRIES);
+    }
+
+    /**
+     * Starts the portal on the local machine only, suitable for a local HTTPS reverse proxy.
+     *
+     * @throws IOException when no port could be opened
+     */
+    public synchronized void startLocal() throws IOException {
+        start(InetAddress.getLoopbackAddress(), PORT_TRIES);
+    }
+
+    /**
+     * Starts the independent LAN server on the exact port encoded in member cards.
+     *
+     * @throws IOException when the port is already in use or cannot be opened
+     */
+    public synchronized void startStandaloneLan() throws IOException {
+        start(null, 1);
+    }
+
+    private void start(InetAddress bindAddress, int attempts) throws IOException {
         if (server != null) {
             return;
         }
         IOException last = null;
-        for (int i = 0; i < PORT_TRIES; i++) {
+        for (int i = 0; i < attempts; i++) {
             int port = preferredPort == 0 ? 0 : preferredPort + i;
             try {
-                server = HttpServer.create(new InetSocketAddress(port), 0);
+                server = HttpServer.create(new InetSocketAddress(bindAddress, port), 0);
                 break;
             } catch (IOException e) {
                 last = e;
