@@ -6,12 +6,12 @@ import com.nextfit.export.QrMatrix;
 import com.nextfit.model.Member;
 import com.nextfit.service.MemberService;
 import com.nextfit.service.PhoneAccess;
-import com.nextfit.service.SubscriptionService;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -27,21 +27,16 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 import java.util.function.Supplier;
 
 /**
  * Carnet screen: pick a member, see the carnet (photo, name, document and QR)
- * and save it as a PNG image to print. The carnet keeps its own light colors in
- * both themes, because it is meant to be printed on paper.
+ * and save it as a PNG image to print. The carnet keeps the NextFit brand colors in
+ * both application themes.
  */
 final class CarnetPane extends HBox {
 
-    private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("d/MM/yyyy", Locale.forLanguageTag("es-CO"));
-
     private final MemberService members;
-    private final SubscriptionService subscriptions;
     private final PhoneAccess phone;
     private final Supplier<String> phoneUrl;
     private final MemberPicker picker;
@@ -53,18 +48,17 @@ final class CarnetPane extends HBox {
     private VBox carnet;
     private Member current;
 
-    CarnetPane(MemberService members, SubscriptionService subscriptions, PhoneAccess phone,
+    CarnetPane(MemberService members, PhoneAccess phone,
                Supplier<String> phoneUrl) {
         super(24);
         this.members = members;
-        this.subscriptions = subscriptions;
         this.phone = phone;
         this.phoneUrl = phoneUrl;
         this.picker = new MemberPicker("Socios", members, this::select);
 
         Label title = new Label("Carnet del socio");
         title.getStyleClass().add("nf-section-title");
-        Label hint = new Label("Elige un socio para ver su carnet. El QR abre en el celular su portal personal: su rutina, sus próximos días y su progreso. No registra la entrada ni la salida.");
+        Label hint = new Label("Elige un socio para emitir su carnet. El QR abre el portal personal cuando el socio tiene una membresía activa.");
         hint.getStyleClass().add("nf-muted-small");
         hint.setWrapText(true);
         save.getStyleClass().add("nf-primary");
@@ -89,7 +83,10 @@ final class CarnetPane extends HBox {
 
     void refresh() {
         picker.reload();
-        phoneInfo.setText("Para probar la conexión del celular (misma red Wi-Fi) abre " + phoneUrl.get() + "/ping");
+        String portal = phoneUrl.get();
+        phoneInfo.setText(portal.startsWith("https://")
+                ? "Para comprobar el portal en el celular, abre " + portal + "/ping"
+                : "Para probar la conexión del celular (misma red Wi-Fi) abre " + portal + "/ping");
         // The address of this computer may have changed, so the QR is drawn again.
         if (current != null) {
             select(current);
@@ -113,43 +110,46 @@ final class CarnetPane extends HBox {
     }
 
     private VBox buildCarnet(Member member) {
-        Label brand = new Label("NEXTFIT");
+        Label brand = new Label("NextFit");
         brand.getStyleClass().add("nf-carnet-brand");
         Label kind = new Label("CARNET DE SOCIO");
         kind.getStyleClass().add("nf-carnet-kind");
-        VBox header = new VBox(2, brand, kind);
+        ImageView logo = new ImageView(new Image(
+                CarnetPane.class.getResource("/images/logo/nextfit-logo-128.png").toExternalForm()));
+        logo.setFitWidth(42);
+        logo.setFitHeight(42);
+        HBox header = new HBox(12, logo, new VBox(2, brand, kind));
+        header.setAlignment(Pos.CENTER_LEFT);
 
         Label name = new Label(member.getFullName());
         name.getStyleClass().add("nf-carnet-name");
         name.setWrapText(true);
-        String validity = subscriptions.findCurrentFor(member.getId())
-                .map(s -> "Membresía hasta " + s.getEndDate().format(DAY))
-                .orElse("Sin membresía vigente");
-        Label until = new Label(validity);
-        until.getStyleClass().add("nf-carnet-text");
-        VBox data = new VBox(6, name, until);
+        name.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+        Label document = new Label("Documento · " + member.getDocumentNumber());
+        document.getStyleClass().add("nf-carnet-text");
+        document.setWrapText(true);
+        VBox identity = new VBox(12, MemberAvatar.of(member, 84), name, document);
+        HBox.setHgrow(identity, Priority.ALWAYS);
 
-        VBox identity = new VBox(14, MemberAvatar.of(member, 120), data);
-        identity.setAlignment(Pos.TOP_LEFT);
-
-        ImageView qr = new ImageView(QrImage.of(phoneUrl.get() + "/m/" + phone.tokenOf(member), 6));
-        qr.setFitWidth(170);
-        qr.setFitHeight(170);
+        ImageView qr = new ImageView(QrImage.of(qrAddress(member), 6));
+        qr.setFitWidth(148);
+        qr.setFitHeight(148);
         qr.setSmooth(false);
         qr.setPreserveRatio(true);
-        Label scanHint = new Label("Escanea para ver tu progreso");
-        scanHint.getStyleClass().add("nf-carnet-text");
-        VBox qrBox = new VBox(8, qr, scanHint);
+        StackPane qrSurface = new StackPane(qr);
+        qrSurface.getStyleClass().add("nf-carnet-qr");
+        Label scanHint = new Label("PORTAL DEL SOCIO");
+        scanHint.getStyleClass().add("nf-carnet-kind");
+        VBox qrBox = new VBox(8, qrSurface, scanHint);
         qrBox.setAlignment(Pos.CENTER);
 
-        HBox body = new HBox(28, identity, qrBox);
+        HBox body = new HBox(22, identity, qrBox);
         body.setAlignment(Pos.CENTER_LEFT);
-        VBox card = new VBox(18, header, body);
+        VBox card = new VBox(16, header, body);
         card.getStyleClass().add("nf-carnet");
-        card.setPadding(new Insets(24));
-        card.setPrefWidth(620);
-        card.setMinWidth(620);
-        card.setMaxWidth(620);
+        card.setPadding(new Insets(22));
+        card.setPrefWidth(500);
+        card.setMaxWidth(500);
         return card;
     }
 
@@ -204,13 +204,14 @@ final class CarnetPane extends HBox {
         }
     }
 
+    private String qrAddress(Member member) {
+        return phoneUrl.get() + "/m/" + phone.tokenOf(member);
+    }
+
     private CarnetPdf.Card cardOf(Member member) {
-        String validity = subscriptions.findCurrentFor(member.getId())
-                .map(s -> "Membresía hasta " + s.getEndDate().format(DAY))
-                .orElse("Sin membresía vigente");
         String photo = member.getPhotoPath();
-        return new CarnetPdf.Card(member.getFullName(), member.getDocumentNumber(), validity,
-                QrMatrix.of(phoneUrl.get() + "/m/" + phone.tokenOf(member)),
+        return new CarnetPdf.Card(member.getFullName(), member.getDocumentNumber(),
+                QrMatrix.of(qrAddress(member)),
                 photo == null || photo.isBlank() ? null : Path.of(photo));
     }
 }
